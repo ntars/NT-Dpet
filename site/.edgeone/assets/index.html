@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>NT-Dpet - 玄宠，从代码到身边</title>
+<meta name="description" content="NT-Dpet 玄宠，是 DeepSeek Harness 的发行版：把人格、记忆、情绪、声音、身体装配成一个装好就能用的 AI 拟人伴侣。当前为设计定稿、骨架搭建中，尚未具备可用功能。">
+<meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="NT-Dpet - 玄宠，从代码到身边">
+<meta property="og:description" content="把人格、记忆、情绪、声音、身体装配成一个装好就能用的 AI 拟人伴侣。">
+<meta property="og:image" content="./assets/icon-2000.png">
+
+<link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./assets/icon-192.png">
+<link rel="stylesheet" href="./css/site.css">
+</head>
+
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="./">
+      <img class="brand__mark" src="./assets/icon.svg" alt="" width="28" height="28">
+      <span class="brand__name">NT-Dpet</span>
+      <span class="brand__sub">玄宠</span>
+    </a>
+    <nav class="topnav" aria-label="页面导航">
+      <a href="#what">是什么</a>
+      <a href="#abilities">能力</a>
+      <a href="#isolation">隔离</a>
+      <a href="#roadmap">路线图</a>
+      <a class="topnav__gh" href="https://github.com/ntars/NT-Dpet" target="_blank" rel="noopener">
+        GitHub
+        <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M3 9 9 3M4.2 3H9v4.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ══ 首屏 ══ -->
+  <section class="hero">
+    <div class="hero__mark">
+      <img src="./assets/icon.svg" alt="NT-Dpet 玄宠 图标" width="96" height="96">
+    </div>
+
+    <h1 class="hero__title">
+      <span class="hero__title-main">玄宠</span>
+      <span class="hero__title-sub">从代码到身边</span>
+    </h1>
+
+    <p class="hero__lede">
+      一个住在你消息里的她。人格、记忆、情绪、声音、身体，装好就能用。
+    </p>
+
+    <p class="hero__status">
+      <span class="pill pill--live"><i class="dot dot--warn"></i>设计定稿 · 骨架搭建中</span>
+      <span class="pill">尚未具备可用功能</span>
+    </p>
+
+    <div class="hero__actions">
+      <a class="btn btn--primary" href="https://github.com/ntars/NT-Dpet" target="_blank" rel="noopener">查看源码</a>
+      <a class="btn btn--ghost" href="#abilities">它能做什么</a>
+    </div>
+
+    <p class="hero__note">
+      本页是项目介绍页。软件本身仍在施工，现在下载不到可运行版本。
+    </p>
+  </section>
+
+  <!-- ══ 它是什么 ══ -->
+  <section class="sec" id="what">
+    <div class="sec__head">
+      <p class="sec__eyebrow">它是什么</p>
+      <h2 class="sec__title">不是又一个框架，是一个发行版</h2>
+      <p class="sec__lede">
+        NT-Dpet 建立在 <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener">DeepSeek Harness</a>
+        之上。类比：DSH 相当于内核，玄宠相当于一个预配置好的发行版——不重写内核，只提供装配好的完整体验。
+      </p>
+    </div>
+
+    <div class="grid grid--3">
+      <article class="card">
+        <span class="card__idx">01</span>
+        <h3 class="card__title">装配</h3>
+        <p class="card__body">
+          把分散的能力——人格、记忆、情感、通道、声音、行动——装成一个能跑的整体，
+          而不是丢给你一堆需要自己拼的零件。
+        </p>
+      </article>
+      <article class="card">
+        <span class="card__idx">02</span>
+        <h3 class="card__title">看住</h3>
+        <p class="card__body">
+          任何一个环节挂了，其余照常工作。挂掉的那块单独重启，不牵连整个系统。
+        </p>
+      </article>
+      <article class="card">
+        <span class="card__idx">03</span>
+        <h3 class="card__title">兜底</h3>
+        <p class="card__body">
+          增强能力失败时静默退回基础能力。你看到的是它在，而不是一串报错。
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ══ 它不是什么 ══ -->
+  <section class="sec sec--tight">
+    <div class="sec__head">
+      <p class="sec__eyebrow">它不是什么</p>
+      <h2 class="sec__title">先把话说清楚</h2>
+    </div>
+
+    <ul class="neglist">
+      <li>不是自研大模型，只做接入。</li>
+      <li>不是协议逆向，只用现成协议端。</li>
+      <li>不是又一个插件市场，做的是「整装组合包」，不是零件货架。</li>
+      <li>不承诺账号安全——个人号通道存在封号风险，文档里反复写明，不做美化。</li>
+    </ul>
+  </section>
+
+  <!-- ══ 能力 ══ -->
+  <section class="sec" id="abilities">
+    <div class="sec__head">
+      <p class="sec__eyebrow">能力分区</p>
+      <h2 class="sec__title">七组，各管一段</h2>
+      <p class="sec__lede">
+        按功能域分组挂在 DSH 的插件树上。日常聊天不走 DSH 的 agent loop——它太重；
+        只有需要动手（操作手机、开浏览器、玩游戏）时才唤起工具链。
+      </p>
+    </div>
+
+    <div class="grid grid--2">
+      <article class="card card--group">
+        <h3 class="card__title">内核<span class="card__count">5</span></h3>
+        <p class="card__body">情感、记忆、世界书、节奏、主动消息。决定她像不像一个人，而不是一台应答机。</p>
+      </article>
+      <article class="card card--group">
+        <h3 class="card__title">对话<span class="card__count">2</span></h3>
+        <p class="card__body">轻量对话通道、人格包。日常说话走这条路，不惊动工具链。</p>
+      </article>
+      <article class="card card--group">
+        <h3 class="card__title">通道<span class="card__count">8</span></h3>
+        <p class="card__body">QQ（官方 / 个人号）、飞书、钉钉、企微、Telegram、Discord，以及唤醒路由。</p>
+      </article>
+      <article class="card card--group">
+        <h3 class="card__title">表达<span class="card__count">5</span></h3>
+        <p class="card__body">语音合成、表情包、立绘、桌宠、表达决策。让她有声音，也有身体。</p>
+      </article>
+      <article class="card card--group">
+        <h3 class="card__title">行动<span class="card__count">4</span></h3>
+        <p class="card__body">手机、浏览器、Minecraft、GUI 决策环。需要真正动手时才启动。</p>
+      </article>
+      <article class="card card--group">
+        <h3 class="card__title">系统<span class="card__count">4</span></h3>
+        <p class="card__body">隐私、市场、还原点、中文日志。看不见，但决定敢不敢长期用。</p>
+      </article>
+    </div>
+
+    <p class="sec__foot">
+      另有一个界面包。包结构正在按「复用优先、只做差异」的原则重划，上表为规划状态，不是已完成清单。
+    </p>
+  </section>
+
+  <!-- ══ 隔离 ══ -->
+  <section class="sec" id="isolation">
+    <div class="sec__head">
+      <p class="sec__eyebrow">隔离</p>
+      <h2 class="sec__title">装它，不会动你已有的 DSH</h2>
+      <p class="sec__lede">
+        从目录到进程完全分开。两边可以同时存在、同时运行，互不占位。
+      </p>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <caption class="sr-only">官方 DSH 与 NT-Dpet 的隔离范围对照</caption>
+        <thead>
+          <tr><th scope="col">隔离层</th><th scope="col">官方 DSH</th><th scope="col">NT-Dpet</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">数据目录</th><td><code>~/.dsh</code></td><td>自带的 <code>dsh-home</code></td></tr>
+          <tr><th scope="row">技能与指令</th><td><code>~/.agents</code></td><td>自带的 <code>agents</code></td></tr>
+          <tr><th scope="row">配置方案</th><td><code>desktop</code></td><td><code>nt-dpet</code></td></tr>
+          <tr><th scope="row">端口</th><td>3080</td><td>3180</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="sec__foot">
+      唯一的跨界读取，是首次启动时<strong>只读</strong>看一眼你已配好的密钥，问要不要沿用。同意才复制一份过去，绝不回写。
+    </p>
+  </section>
+
+  <!-- ══ 路线图 ══ -->
+  <section class="sec" id="roadmap">
+    <div class="sec__head">
+      <p class="sec__eyebrow">路线图</p>
+      <h2 class="sec__title">现在在第零步之前</h2>
+      <p class="sec__lede">S0 之前不会有任何可运行的东西。这句话写在文档里，也写在这里。</p>
+    </div>
+
+    <ol class="road">
+      <li class="road__item is-next">
+        <span class="road__step">S0</span>
+        <span class="road__name">骨架 + 桌面能聊</span>
+        <span class="road__desc">文本、记忆、情感三件套跑通</span>
+      </li>
+      <li class="road__item">
+        <span class="road__step">S1</span>
+        <span class="road__name">三端打包</span>
+        <span class="road__desc">Windows → macOS → Linux</span>
+      </li>
+      <li class="road__item">
+        <span class="road__step">S2</span>
+        <span class="road__name">官方 QQ 机器人</span>
+        <span class="road__desc">合规通道，BOT 身份自带标识</span>
+      </li>
+      <li class="road__item">
+        <span class="road__step">S3</span>
+        <span class="road__name">组合包市场</span>
+        <span class="road__desc">整装包与一键还原点</span>
+      </li>
+      <li class="road__item">
+        <span class="road__step">S4</span>
+        <span class="road__name">语音与表情包</span>
+        <span class="road__desc">让她有声音</span>
+      </li>
+      <li class="road__item">
+        <span class="road__step">S5</span>
+        <span class="road__name">桌宠</span>
+        <span class="road__desc">从消息里走到桌面上</span>
+      </li>
+      <li class="road__item">
+        <span class="road__step">S6</span>
+        <span class="road__name">手机操作</span>
+        <span class="road__desc">需要动手时才动手</span>
+      </li>
+      <li class="road__item">
+        <span class="road__step">S7</span>
+        <span class="road__name">其余通道</span>
+        <span class="road__desc">飞书、钉钉、企微等</span>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ══ 风险 ══ -->
+  <section class="sec" id="risk">
+    <div class="sec__head">
+      <p class="sec__eyebrow">风险声明</p>
+      <h2 class="sec__title">该说的难听话</h2>
+    </div>
+
+    <div class="grid grid--3">
+      <article class="card card--warn">
+        <h3 class="card__title">账号风险</h3>
+        <p class="card__body">
+          接入个人 QQ 号可能导致<strong>永久封号</strong>，并可能波及所在群聊与关联账号。
+          软件无法保证账号安全，风险由使用者自行承担。官方机器人通道无此风险。
+        </p>
+      </article>
+      <article class="card card--warn">
+        <h3 class="card__title">AI 内容标识</h3>
+        <p class="card__body">
+          本软件不代替使用者添加 AI 生成内容标识。在公开平台使用其输出时，
+          标识义务在《人工智能生成合成内容标识办法》下由使用者承担。
+        </p>
+      </article>
+      <article class="card card--warn">
+        <h3 class="card__title">隐私</h3>
+        <p class="card__body">
+          对话与记忆默认全部存放本机。上游默认会把会话日志随模型请求上传，
+          本软件在安装时强制关闭并在每次启动时校验。
+        </p>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot__inner">
+    <div class="foot__brand">
+      <img src="./assets/icon.svg" alt="" width="22" height="22">
+      <span>NT-Dpet · 玄宠</span>
+    </div>
+
+    <nav class="foot__links" aria-label="页脚导航">
+      <a href="https://github.com/ntars/NT-Dpet" target="_blank" rel="noopener">源码仓库</a>
+      <a href="https://github.com/ntars/NT-Dpet/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener">架构设计</a>
+      <a href="https://github.com/ntars/NT-Dpet/blob/main/docs/DECISIONS.md" target="_blank" rel="noopener">决策记录</a>
+      <a href="https://github.com/ntars/NT-Dpet/blob/main/docs/CREDITS.md" target="_blank" rel="noopener">致谢</a>
+    </nav>
+
+    <div class="foot__meta">
+      <span>AGPL-3.0</span>
+      <span class="foot__dot" aria-hidden="true">·</span>
+      <span>星玖工作室</span>
+      <span class="foot__dot" aria-hidden="true">·</span>
+      <span>2026</span>
+    </div>
+
+    <!-- ICP 备案号待取得后填在此处，位置固定于版权区下方 -->
+  </div>
+</footer>
+
+</body>
+</html>
