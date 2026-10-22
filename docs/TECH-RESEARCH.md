@@ -336,6 +336,90 @@ for await (const chunk of ctx.llm.stream({
 | 模型选择 | `dsh-client-ui-model-selection` |
 | 多模型适配 | `dsh-llm-deepseek`、`dsh-llm-pi-ai` |
 
+### 5.7 外部项目核查（第二轮，2026-10-22）
+
+主人点名四个项目：WXAUTO、AIRI、dsh-bili-whale、yangyu-bot。逐个查证结果如下。**其中一项不成立、一项查无此项目**，先说清楚，再谈怎么用。
+
+#### 5.7.1 WXAUTO：原版跑不了，等价物有，但依然不建议做核心
+
+| 事实 | 依据 |
+|---|---|
+| 原版是 `cluic/wxauto`，Python，约 7.4k star | 仓库首页 |
+| **仅支持 Windows 10/11**，基于微软 UIAutomation 框架 | README「环境」小节 |
+| README 原文：「代码仅用于对 UIAutomation 技术的交流学习使用，**禁止用于实际生产项目**，请勿用于非法用途和商业用途」 | 仓库 README |
+
+**这台机器是 macOS，原版 wxauto 根本装不上。** 这是硬前提错误，不是配置问题。
+
+macOS 上确实有等价物，且都是「AppleScript + Accessibility API」而非 UIAutomation：
+
+| 项目 | 形态 | 能力 |
+|---|---|---|
+| `PatrickHua/wxauto-mac` | Python 库，`pip install wxauto-mac` | `GetAllFriends()` / `SendToFriend()` / `GetChatHistory()`，API 刻意对齐 wxauto |
+| `s7arfish/wxauto-mcp-macos` | MCP Server | `send_message` / `get_recent_messages` / `check_unread` |
+| `Good0007/opencli` 的 wechat 适配器 | CLI | 状态、发送、读取、搜索、切页 |
+
+但它们的实现原理决定了三件事，必须正视：
+
+1. **需要「辅助功能」系统授权**——等于把整台电脑的 UI 控制权交出去，不只微信。
+2. **读取靠 `Cmd+A → Cmd+C` 全选复制**，发送靠剪贴板粘贴 + 回车。这不是「接口」，是「替你点鼠标」，微信一改界面就碎。
+3. 会动到**全部聊天记录**。这直接撞上主人的隐私红线。
+
+叠加 §9 已登记的事实——2025-12 豆包手机助手因模拟点击被强制下线——结论是：
+
+> **不作为核心通道，不做默认开启项。** 若主人坚持要，只做「只发不收」的可选外部桥（我们自己生成的内容发出去，不读任何历史消息），默认关闭并带风险弹窗。
+
+#### 5.7.2 AIRI：形象层的真正答案，但不能当依赖装
+
+`moeru-ai/airi`，MIT，TypeScript + Vue3 + pnpm/turborepo，约 5 万 star，当前版本 `v0.12.0-beta.5`。有 Web / macOS / Windows 三态。
+
+它的包拆分几乎就是我们要的 `avatar` + `pet` 的完整答案：
+
+| AIRI 包 | 对应我们的 | 说明 |
+|---|---|---|
+| `model-driver-magic-live2d` | `@nt-dpet/avatar` | Live2D 模型驱动 |
+| `model-driver-lipsync` | `@nt-dpet/avatar` | 嘴型同步，底层是 `wlipsync` |
+| `model-driver-mediapipe` | — | 摄像头面部追踪（让它看见主人的表情） |
+| `core-character` | `@nt-dpet/persona` | 角色内核 |
+| `pipelines-audio` | `@nt-dpet/tts` | VAD / ASR / TTS 管线 |
+| `electron-native-backdrop` | `@nt-dpet/pet` | **macOS 透明 Electron 窗的区域模糊**，含原生构建 |
+| `electron-screen-capture` | — | 屏幕捕获 |
+
+**关键约束（这决定我们只能怎么用）**：AIRI 的全部 `packages/*` 都是 `"private": true` + `workspace:^` 引用，**没有发布到 npm，无法 `npm i @proj-airi/xxx`**。所以只有两条路：
+
+- **参考实现**（推荐）：读它的设计，用我们自己的 PixiJS + pixi-live2d-display 重写。我们技术栈本来就一致（CREDITS 已列这两个 MIT 库）。
+- **按 MIT 单文件 vendor**：只搬必要时长的具体实现，保留版权声明。整包搬会连带扛上它的 3110 个依赖。
+
+唯一可以**直接依赖**的是 `wlipsync`（MIT，npm 最新 1.3.1）——独立库，不绑 AIRI。
+
+#### 5.7.3 dsh-bili-whale：不是形象参考，是「主动性」的教科书
+
+`Alterssss/dsh-bili-whale`，MIT，JavaScript，当前 `v0.4.5`，2026-10-17 建仓。它是个 DSH 插件：按作息自己刷 B 站、读字幕弹幕评论抽帧、写两本日记、挑值得的 @ 主人。
+
+它做的功能（刷 B 站）对我们没用，**但它的克制机制正中我们 `@nt-dpet/proactive` 的空白**：
+
+| 它的设计 | 我们现在的状态 | 价值 |
+|---|---|---|
+| 窗口内**随机一个时刻**醒，不是整点 | 决策 74 只定了「唤醒随机开口 10%」 | 补上「什么时候醒」这一层 |
+| **30% 概率今天不想看**（它也有权利不看） | **没有** | 宠物必须有不主动的自由，否则是机器人 |
+| **两本日记**：给主人的信（有细节有情绪）+ 自己那本（不加滤镜） | `memory` 只有双层存储，无视角区分 | 主动性与隐私分离的正确做法 |
+| **沉默衰减**：连续 3 天无表态 → 分享额度降 → 第 7 天归零，但日记照写 | **没有** | 这是情感逻辑不是限流逻辑：不是「少打扰」，是「不被回应就收起心事」 |
+| 主人直接回；**其他人先写草稿送审** | `privacy` 包未细化到此 | 对外发言一律走草稿 |
+| 撞风控**立刻停手并报告** | 风控三层有，缺「停手后怎么办」 | 补停机上报 |
+| 人设存 `~/.bili-ai/persona.md`，**五段式，取前 3000 字** | `personas/xiaojingyu/` 的 L1 四变体 content 全是 `null` | **直接可用的撰写模板** |
+| 数据目录 `~/.bili-ai/`（人设 + 凭据 + 账本同放），换机器拷目录就走 | `dsh-home` 与用户资产未分层 | 对应我们该有的 `…/NT-Dpet/user/`（见 DECISIONS S4），不能混进 `dsh-home` |
+| 插件**不内置任何人格**，默认中性 | 与我们的「人格包外置」一致 | 互相印证 |
+
+人设五段式（顺序即优先级，因为只取前 3000 字）：`# 我是谁` / `# 说话` / `# 我在意什么` / `# 我绝不会` / `# 日记怎么写 / 分享的标准`。
+
+#### 5.7.4 yangyu-bot：查无此项目
+
+按这个名字在 GitHub、npm、dsh.pub 插件目录检索，**没有找到对应项目**。撞名但不相关的有两个：
+
+- `YangYu-bot-droid`——一个 GitHub **用户**（中国石油大学学生），仓库是 CFD-DEM 多相流仿真，与此无关。
+- `YTCdev/yangubot`——Discord + WooCommerce 商店机器人，2023 年已归档。
+
+**需要主人补一个仓库链接或准确名字。** 在拿到确切来源前，不为它做任何设计假设。
+
 ---
 
 ## 6. 参考项目清单
@@ -352,6 +436,11 @@ for await (const chunk of ctx.llm.stream({
 | so-vits-svc | Python | AGPL-3.0 | 歌声转换（音质优先） | 二期备选 |
 | Mineflayer | Node.js | MIT | Minecraft 机器人 | 游戏能力 |
 | pixi-live2d-display | TypeScript | MIT | Live2D 渲染 | 需配 Cubism Core |
+| **AIRI** | TypeScript | MIT | 虚拟伴侣整体实现：Live2D/VRM、嘴型、语音管线、透明 Electron 窗 | 包全 `private`，**只能参考不能装**；见 §5.7.2 |
+| **wlipsync** | TypeScript | MIT | Live2D 嘴型同步，从 AIRI 抽出的独立库 | 唯一可直接依赖的一项，npm 1.3.1 |
+| **dsh-bili-whale** | JavaScript | MIT | DSH 插件的「主动性克制」范式：生物钟、拒绝权、双日记、沉默衰减 | 功能无用，机制有用；见 §5.7.3 |
+| **wxauto** | Python | Apache-2.0（作者声明禁止生产使用） | Windows 微信 UI 自动化 | **仅 Windows，本项目用不上**；见 §5.7.1 |
+| **wxauto-mac** | Python | 未核 | macOS 微信 UI 自动化（Accessibility API） | 原理同上，风险同 §9 |
 
 star 数、最新提交时间等动态数据未写入本文档——此类数据变化快，用到时现场核对。
 
@@ -378,7 +467,7 @@ star 数、最新提交时间等动态数据未写入本文档——此类数据
 | 3 | 飞书 / 钉钉 / 企微机器人对**语音消息**与**图片**的发送限制 | 决定「会说话」在各平台能否落地 |
 | 4 | NapCat 当前版本对 OneBot 12 的支持度 | 决定协议层按 11 还是 12 设计 |
 | 5 | Live2D Cubism Core 的下载与商用授权具体条款 | 决定桌宠实现路线 |
-| 6 | OpenClaw 的许可类型与微信通道稳定性 | 决定微信私聊是否纳入 |
+| 6 | ~~OpenClaw 的许可类型与微信通道稳定性~~ → 已由 §5.7.1 取代：原版 wxauto 仅 Windows 且作者禁止生产使用；macOS 等价物为 AppleScript + Accessibility，风险已定性 | **已定性，待主人裁决是否要** |
 | 7 | phone-mcp 的 34 个工具在非中文输入法、非标准分辨率下的兼容性 | 决定手机操控的通用性 |
 | 8 | `desktop` profile 被 Electron 独占时，第三方安装器如何合法写入 | 决定安装器实现路径（§5.2） |
 | 9 | dialogue 不建 Session 时，`dsh-llm.stream()` 是否仍要求会话上下文 | 决定对话通道能否彻底脱离会话体系（§5.4） |
@@ -391,10 +480,11 @@ star 数、最新提交时间等动态数据未写入本文档——此类数据
 ## 8. 未决问题（需主人决策）
 
 1. `kernel/` 代码同步策略：内置副本 + 变更记录人工合并，还是别的机制
-2. 虚拟形象路线：用户自取 Cubism Core / 自研渲染 / 一期不做
-3. 微信私聊通道是否纳入（第三方依赖 + 仅私聊 + 额外运行时）
+2. 虚拟形象路线：用户自取 Cubism Core / 自研渲染 / 一期不做（AIRI 已给出参考实现，见 §5.7.2，但仍受 Cubism Core 授权约束）
+3. 微信私聊通道是否纳入——**现状已查清**（§5.7.1）：原版仅 Windows 且禁止生产使用；macOS 等价物存在但需辅助功能授权、读全量聊天记录。建议不做，或只做「只发不收」的可选桥
 4. 首发 MVP 的功能边界
-5. 桌面端是否需要 Electron 桌宠组件，还是仅 Web UI
+5. 桌面端是否需要 Electron 桌宠组件，还是仅 Web UI（AIRI 的 `electron-native-backdrop` 证明 macOS 透明窗可行，见 §5.7.2）
+6. `yangyu-bot` 具体指哪个仓库——**查无此项目**（§5.7.4），需主人补链接
 
 ---
 
@@ -403,7 +493,8 @@ star 数、最新提交时间等动态数据未写入本文档——此类数据
 | 风险 | 等级 | 说明 | 缓解 |
 |---|---|---|---|
 | **账号封禁** | 高 | 2025-09 NapCat WebUI 默认监听 `0.0.0.0` + 固定 token，被扫描后操纵 API 发违法信息，波及账号与群永久封禁 `[第三方，NapCat 前群管自述]` | 默认只监听 `127.0.0.1`；强制随机 token；首次启动安全自检 |
-| **个人微信违规** | 高 | 腾讯三重锁死：协议层封禁、法律风险、行为学风控。2025-12 豆包手机助手因模拟点击被强制下线 `[第三方，多来源一致]` | 不做，或做成默认关闭+风险弹窗的可选插件 |
+| **个人微信违规** | 高 | 腾讯三重锁死：协议层封禁、法律风险、行为学风控。2025-12 豆包手机助手因模拟点击被强制下线 `[第三方，多来源一致]`。wxauto 作者本人也写明「禁止用于实际生产项目」（§5.7.1） | 不做，或做成默认关闭+风险弹窗的可选插件 |
+| **辅助功能授权的溢出风险** | 高 | macOS 微信自动化需授予「辅助功能」权限，拿到的是**整机 UI 控制权**而非仅微信；且读取靠全选复制，会触碰全部聊天记录 | 即使做也只「只发不收」，不申请读权限；权限用途在授权前明示 |
 | **许可污染** | 高 | NapCat 要求衍生授权；Cubism Core 为专有 | 见 §3 许可矩阵 |
 | **上游变更** | 中 | NapCat 发版密集（同日多次 patch），无迁移指南与回滚文档 `[第三方]` | 锁版本 + 保留旧产物 + 适配器隔离 |
 | **硬件门槛** | 中 | 本地音色需 8GB+ 显存，普通轻薄本不可用 | 云端优先 + 能力探测 + 灰态提示 |
