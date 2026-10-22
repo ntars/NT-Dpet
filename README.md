@@ -1,6 +1,6 @@
-# NT-Dpet
+# NT-Dpet · 玄宠
 
-> 一个住在你消息里的她。人格、记忆、情绪、声音、身体，装好就能用。
+> **从代码到身边。** 一个住在你消息里的她。人格、记忆、情绪、声音、身体，装好就能用。
 
 **当前状态：设计定稿，骨架搭建中，尚未具备任何可用功能。**
 
@@ -57,6 +57,17 @@ NT-Dpet 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 
 | [`docs/CREDITS.md`](docs/CREDITS.md) | 致谢与第三方依赖：用了谁、怎么用、许可边界在哪 |
 
 设计过程中的关键判断（含被否掉的方案和理由）都写在这三份文档里，没有藏在对话里。
+
+## 项目主页
+
+`site/` 是项目介绍页（[NT-Dpet - 玄宠，从代码到身边](site/index.html)），纯静态、零依赖、单一 HTML + 一份 CSS。
+
+```bash
+cd site && python3 -m http.server 8920
+# 打开 http://127.0.0.1:8920/
+```
+
+深浅色跟随系统，不提供手动切换。颜色令牌与软件界面同源，改配色只改 `site/css/site.css` 顶部的两组变量。
 
 ## 界面
 
