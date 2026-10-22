@@ -52,8 +52,21 @@ NT-Dpet 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 
 | [`docs/TECH-RESEARCH.md`](docs/TECH-RESEARCH.md) | 技术底账：能力域选型、许可矩阵、硬件基线、待验证清单 |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 架构设计：进程拓扑、数据模型、接口契约、施工顺序 |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 决策记录：82 项已确认决策，全部可溯源 |
+| [`docs/CREDITS.md`](docs/CREDITS.md) | 致谢与第三方依赖：用了谁、怎么用、许可边界在哪 |
 
 设计过程中的关键判断（含被否掉的方案和理由）都写在这三份文档里，没有藏在对话里。
+
+## 界面
+
+界面壳已完成，可直接在浏览器里看：`packages/ui/web/`。三栏布局（会话 / 对话 / 她的状态），对话与工作双视图切换，深浅色跟随系统或按日出日落切换。
+
+```bash
+cd packages/ui/web && python3 -m http.server 8731
+# 打开 http://127.0.0.1:8731/
+# 工作模式：http://127.0.0.1:8731/#work
+```
+
+当前是**纯静态壳**，数据全部来自 `js/data.js` 的演示数据，没有连接任何后端。
 
 ## 技术栈
 

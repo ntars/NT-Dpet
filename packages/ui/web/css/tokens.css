@@ -1,0 +1,155 @@
+/* ─────────────────────────────────────────────
+   NT-Dpet 设计令牌
+   依据：docs/ARCHITECTURE.md §14.2
+   规则：字体单位只用 px / rem，禁用 rpx
+   ───────────────────────────────────────────── */
+
+:root {
+  /* 字体：优先系统字体，macOS 上走 SF Pro / 苹方 */
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+             "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* 字号档位 */
+  --text-2xs: 10px;
+  --text-xs:  11px;
+  --text-sm:  12px;
+  --text-md:  13px;
+  --text-base: 14px;
+  --text-lg:  15px;
+  --text-xl:  17px;
+  --text-2xl: 22px;
+
+  --leading-tight: 1.3;
+  --leading-base: 1.55;
+
+  /* 间距：4px 基数 */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+
+  /* 圆角 */
+  --r-xs: 4px; --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+  --r-xl: 18px; --r-full: 999px;
+
+  /* 布局尺寸 */
+  --sidebar-w: 264px;
+  --panel-w: 304px;
+  --row-h: 34px;
+  --topbar-h: 52px;
+  --statusbar-h: 28px;
+
+  /* 动效 */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+}
+
+/* ── 浅色（默认） ── */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-window:      #F5F5F7;
+  --bg-sidebar:     rgba(248, 248, 250, 0.78);
+  --bg-panel:       rgba(250, 250, 252, 0.72);
+  --bg-surface:     #FFFFFF;
+  --bg-hover:       rgba(0, 0, 0, 0.045);
+  --bg-active:      rgba(0, 0, 0, 0.075);
+  --bg-input:       #FFFFFF;
+  --bg-inset:       rgba(120, 120, 128, 0.085);
+
+  --label:          #1D1D1F;
+  --label-2:        rgba(60, 60, 67, 0.62);
+  --label-3:        rgba(60, 60, 67, 0.38);
+  --label-4:        rgba(60, 60, 67, 0.20);
+
+  --separator:      rgba(60, 60, 67, 0.13);
+  --separator-soft: rgba(60, 60, 67, 0.07);
+  --border:         rgba(0, 0, 0, 0.075);
+
+  --accent:         #3D7CA8;
+  --accent-hover:   #356F97;
+  --accent-soft:    rgba(61, 124, 168, 0.10);
+  --on-accent:      #FFFFFF;
+
+  --bubble-them:    #FFFFFF;
+  --bubble-me:      #3D7CA8;
+  --on-bubble-me:   #FFFFFF;
+
+  --shadow-card:    0 1px 2px rgba(0, 0, 0, 0.045), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-pop:     0 8px 28px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0, 0, 0, 0.05);
+
+  /* 情绪五维：低饱和，同明度，避免花哨 */
+  --emo-mood:       #DB8B3F;
+  --emo-energy:     #BFA22B;
+  --emo-affection:  #D4697F;
+  --emo-trust:      #3D8CB8;
+  --emo-intimacy:   #8570C4;
+
+  --dot-online:     #34C759;
+  --dot-offline:    #A1A1A6;
+  --dot-warn:       #FF9F0A;
+
+  --tag-channel:    #3D8CB8;
+  --tag-router:     #8570C4;
+  --tag-memory:     #BFA22B;
+  --tag-model:      #D4697F;
+  --tag-rhythm:     #5B9E7A;
+
+  --level-error:    #C9403A;
+}
+
+/* ── 深色 ── */
+/* 层级参照 macOS 深色模式：窗口最低、侧栏居中、卡片最高，
+   相邻层明度差保持在 8 以上，否则层次会糊成一片 */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-window:      #1C1C1E;
+  --bg-sidebar:     rgba(37, 37, 40, 0.82);
+  --bg-panel:       rgba(40, 40, 43, 0.74);
+  --bg-surface:     #2C2C2F;
+  --bg-hover:       rgba(255, 255, 255, 0.06);
+  --bg-active:      rgba(255, 255, 255, 0.10);
+  --bg-input:       #2C2C2F;
+  --bg-inset:       rgba(140, 140, 150, 0.20);
+
+  --label:          #F2F2F7;
+  --label-2:        rgba(235, 235, 245, 0.62);
+  --label-3:        rgba(235, 235, 245, 0.40);
+  --label-4:        rgba(235, 235, 245, 0.22);
+
+  --separator:      rgba(235, 235, 245, 0.14);
+  --separator-soft: rgba(235, 235, 245, 0.08);
+  --border:         rgba(255, 255, 255, 0.10);
+
+  --accent:         #6FB3D8;
+  --accent-hover:   #82C0E2;
+  --accent-soft:    rgba(111, 179, 216, 0.16);
+  --on-accent:      #10212B;
+
+  --bubble-them:    #2C2C2F;
+  --bubble-me:      #3E7DA6;
+  --on-bubble-me:   #FFFFFF;
+
+  --shadow-card:    0 1px 2px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(255, 255, 255, 0.075);
+  --shadow-pop:     0 10px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.10);
+
+  --emo-mood:       #F0A561;
+  --emo-energy:     #DCC04A;
+  --emo-affection:  #EC8FA4;
+  --emo-trust:      #6FB3D8;
+  --emo-intimacy:   #A995DC;
+
+  --dot-online:     #32D74B;
+  --dot-offline:    #6E6E73;
+  --dot-warn:       #FFB340;
+
+  --tag-channel:    #6FB3D8;
+  --tag-router:     #A995DC;
+  --tag-model:      #EC8FA4;
+  --tag-memory:     #DCC04A;
+  --tag-rhythm:     #7FC49A;
+
+  --level-error:    #FF6B60;
+}

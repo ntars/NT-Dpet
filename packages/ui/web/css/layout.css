@@ -1,0 +1,237 @@
+/* ─────────────────────────────────────────────
+   三栏布局与状态栏
+   结构：侧栏全高 / 中间与右栏分上下 / 状态栏横跨中右
+   ───────────────────────────────────────────── */
+
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--panel-w);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "sidebar main    panel"
+    "sidebar status  status";
+  height: 100%;
+  width: 100%;
+}
+
+/* ══ 左栏 ══ */
+
+.sidebar {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-right: 1px solid var(--separator);
+}
+
+.sidebar__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+  /* 顶部留出原生窗口拖拽区的高度 */
+  min-height: var(--topbar-h);
+}
+
+.sidebar__scroll {
+  flex: 1;
+  min-height: 0;
+  padding: var(--sp-2) var(--sp-2) var(--sp-3);
+}
+
+.sidebar__foot {
+  padding: var(--sp-2);
+  border-top: 1px solid var(--separator-soft);
+}
+
+/* ══ 中间 ══ */
+
+.main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-window);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  height: var(--topbar-h);
+  padding: 0 var(--sp-4) 0 var(--sp-5);
+  border-bottom: 1px solid var(--separator-soft);
+  /* 毛玻璃顶栏，滚动时内容从下方穿过 */
+  background: color-mix(in srgb, var(--bg-window) 82%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  flex: 0 0 auto;
+}
+
+.topbar__lead {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.topbar__title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar__sub {
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  color: var(--label-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar__trail {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex: 0 0 auto;
+}
+
+/* 窄屏下侧栏收起，视图切换移到顶栏。
+   用双类选择器提高权重，否则会被后加载的 .icon-btn { display: grid } 覆盖 */
+.icon-btn.view-toggle {
+  display: none;
+}
+
+/* 视图容器 */
+.view {
+  display: none;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.view.is-active {
+  display: flex;
+}
+
+/* ══ 右栏 ══ */
+
+.panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-panel);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-left: 1px solid var(--separator);
+}
+
+.panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  height: var(--topbar-h);
+  padding: 0 var(--sp-4);
+  border-bottom: 1px solid var(--separator-soft);
+  flex: 0 0 auto;
+}
+
+.panel__title {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.panel__meta {
+  font-size: var(--text-xs);
+  color: var(--label-3);
+}
+
+.panel__scroll {
+  flex: 1;
+  min-height: 0;
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* ══ 状态栏 ══ */
+
+.statusbar {
+  grid-area: status;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--statusbar-h);
+  padding: 0 var(--sp-4);
+  border-top: 1px solid var(--separator-soft);
+  background: color-mix(in srgb, var(--bg-window) 88%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  font-size: var(--text-xs);
+  color: var(--label-2);
+}
+
+.statusbar__spacer {
+  flex: 1;
+}
+
+.statusbar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  white-space: nowrap;
+}
+
+.statusbar__muted {
+  color: var(--label-3);
+}
+
+/* ══ 窄窗口降级：右栏收起 ══ */
+
+@media (max-width: 1080px) {
+  .app {
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    grid-template-areas:
+      "sidebar main"
+      "sidebar status";
+  }
+  .panel {
+    display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "main"
+      "status";
+  }
+  .sidebar {
+    display: none;
+  }
+  .icon-btn.view-toggle {
+    display: grid;
+  }
+  /* 窄屏空间不足，提示文字让位给筛选与层级切换 */
+  .logbar__hint {
+    display: none;
+  }
+  .devnotice {
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+}

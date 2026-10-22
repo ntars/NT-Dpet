@@ -74,7 +74,9 @@
 
 **架构要求**：上层内核不认识任何平台，只认统一消息模型（发送者 / 会话 / 文本 / 附件 / 时间 / 引用）。平台差异全部收在适配器内。
 
-**参考实现**：AstrBot（MIT，约 18.3k star `[第三方]`）已支持 QQ / 微信 / 飞书 / 钉钉 / Lark 等 10+ 平台，其适配器抽象可作设计参考。MIT 许可可并入 AGPL 项目，需保留版权声明。
+**参考实现**：AstrBot（**AGPL-3.0**，2026-10-22 核实约 42.8k star `[已核实]`）已支持 QQ / 微信 / 飞书 / 钉钉 / Lark 等 10+ 平台，其适配器抽象可作设计参考。AGPL-3.0 与本项目许可一致，可并入，需保留版权声明。
+
+> 更正记录（2026-10-22）：本文档早期版本将 AstrBot 记为 MIT，经查其仓库 `LICENSE` 实为 **AGPL-3.0**。已修正全部三处。
 
 ### 2.3 表达能力
 
@@ -172,7 +174,7 @@
 |---|---|---|---|
 | NT-Sine | AGPL-3.0 | 可以（同族） | 直接采纳，保留版权与来源标注 |
 | ai-companion-kit | MIT | 可以 | 保留原版权声明 |
-| AstrBot | MIT | 可以 | 保留原版权声明 |
+| AstrBot | **AGPL-3.0** | 可以（同许可） | 保留原版权声明 |
 | GPT-SoVITS | MIT | 可以 | 保留原版权声明 |
 | Mineflayer | MIT | 可以 | 保留原版权声明 |
 | RVC | MIT | 可以 | 保留原版权声明 |
@@ -209,7 +211,7 @@
 | NT-Sine | Python | AGPL-3.0 | 情感陪伴引擎（五层架构） | 主人自有，本项目内核来源 |
 | ai-companion-kit | Node.js | MIT | 记忆/拟人化/手机操控/QQ空间 | 音色包 `her-voice` 已从仓库撤下 |
 | NapCat | TypeScript | 混合 | QQ 协议端（OneBot 11） | 不可内置 |
-| AstrBot | Python | MIT | 多平台机器人框架 | 通道抽象参考 |
+| AstrBot | Python | AGPL-3.0 | 多平台机器人框架 | 通道抽象参考 |
 | MaiBot | Python | GPL-3.0 | 拟人化 QQ 群聊智能体 | 记忆/人格设计参考 |
 | GPT-SoVITS | Python | MIT | TTS / 少样本音色克隆 | 表达层核心 |
 | RVC | Python | MIT | 歌声/音色转换 | SVC 首选 |

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>NT-Dpet</title>
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/layout.css">
+  <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+  <!--
+    NT-Dpet 主界面骨架
+    设计依据：docs/ARCHITECTURE.md §14
+    决策依据：docs/DECISIONS.md 决策 62-65
+
+    当前为纯静态壳，数据全部来自 js/data.js 的演示数据。
+    接入后端时只需替换 data.js 的数据源，DOM 结构与样式无需改动。
+  -->
+  <div class="app">
+
+    <!-- ══ 左栏 ══ -->
+    <aside class="sidebar">
+      <header class="sidebar__head">
+        <div class="brand">
+          <span class="brand__avatar" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5.2 7.4 5.9 3.4l2.6 2.2h3l2.6-2.2.7 4"/>
+              <path d="M10 5.9a5.6 5.6 0 0 1 5.6 5.6c0 3.1-2.5 5.6-5.6 5.6a5.6 5.6 0 0 1-5.6-5.6A5.6 5.6 0 0 1 10 5.9Z"/>
+              <path d="M8.1 11.3h.01M11.9 11.3h.01"/>
+            </svg>
+          </span>
+          <span class="brand__text">
+            <span class="brand__name" id="brandName">小鲸鱼</span>
+            <span class="brand__sub"><i class="dot dot--online"></i>在线</span>
+          </span>
+        </div>
+        <button class="icon-btn icon-btn--sm" type="button" data-action="search" title="搜索会话">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="9" r="5.2"/><path d="M12.9 12.9 16 16"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- 视图切换：对话 / 工作 -->
+      <div class="segmented" id="viewSwitch" role="tablist" aria-label="视图切换" data-active="chat">
+        <button class="segmented__item is-active" type="button" role="tab" data-view="chat" aria-selected="true">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 11.5a2.5 2.5 0 0 1-2.5 2.5H9l-3.6 2.6V14H5.5A2.5 2.5 0 0 1 3 11.5v-6A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5z"/>
+          </svg>
+          对话
+        </button>
+        <button class="segmented__item" type="button" role="tab" data-view="work" aria-selected="false">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.6 6.6 8 10l-3.4 3.4"/><path d="M10.8 14h4.6"/>
+          </svg>
+          工作
+        </button>
+        <span class="segmented__thumb" aria-hidden="true"></span>
+      </div>
+
+      <div class="sidebar__scroll">
+        <div class="list-group">
+          <div class="list-group__title">私聊</div>
+          <button class="conv is-active" type="button" data-conv="owner">
+            <span class="conv__avatar conv__avatar--owner">主</span>
+            <span class="conv__body">
+              <span class="conv__top">
+                <span class="conv__name">主人</span>
+                <span class="conv__time">21:12</span>
+              </span>
+              <span class="conv__preview">那……吃饭了吗</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="list-group">
+          <div class="list-group__title">群聊</div>
+          <button class="conv" type="button" data-conv="seaside">
+            <span class="conv__avatar">海</span>
+            <span class="conv__body">
+              <span class="conv__top">
+                <span class="conv__name">海边的猫</span>
+                <span class="conv__time">14:22</span>
+              </span>
+              <span class="conv__preview"><span class="conv__badge">3</span>阿澈：小鲸鱼你说话呀</span>
+            </span>
+          </button>
+          <button class="conv" type="button" data-conv="night">
+            <span class="conv__avatar">夜</span>
+            <span class="conv__body">
+              <span class="conv__top">
+                <span class="conv__name">夜班便利店</span>
+                <span class="conv__time">昨天</span>
+              </span>
+              <span class="conv__preview">晚安，明天见</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <footer class="sidebar__foot">
+        <button class="nav-row" type="button" data-action="settings">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6.5h7M13.5 6.5H17M3 13.5h2.5M9 13.5h8"/>
+            <circle cx="11.8" cy="6.5" r="1.7"/><circle cx="7.2" cy="13.5" r="1.7"/>
+          </svg>
+          设置
+        </button>
+      </footer>
+    </aside>
+
+    <!-- ══ 中间 ══ -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar__lead">
+          <h1 class="topbar__title" id="topTitle">主人</h1>
+          <p class="topbar__sub" id="topSub">私聊 · QQ 官方机器人</p>
+        </div>
+        <div class="topbar__trail">
+          <button class="icon-btn icon-btn--sm view-toggle" type="button" data-action="toggle-view" title="切换对话 / 工作">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4.6 6.6 8 10l-3.4 3.4"/><path d="M10.8 14h4.6"/>
+            </svg>
+          </button>
+          <button class="icon-btn icon-btn--sm" type="button" data-action="more" title="更多">
+            <svg viewBox="0 0 20 20" fill="currentColor" stroke="none">
+              <circle cx="4.6" cy="10" r="1.15"/><circle cx="10" cy="10" r="1.15"/><circle cx="15.4" cy="10" r="1.15"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- 对话视图 -->
+      <section class="view is-active" id="viewChat" aria-label="对话">
+        <div class="thread" id="thread"></div>
+
+        <div class="composer">
+          <div class="composer__box">
+            <textarea class="composer__input" id="composerInput" rows="1"
+                      placeholder="和小鲸鱼说点什么…" maxlength="2000"></textarea>
+            <div class="composer__tools">
+              <button class="icon-btn icon-btn--sm" type="button" data-action="sticker" title="表情包">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="10" cy="10" r="7"/>
+                  <circle cx="7.6" cy="8.3" r=".85" fill="currentColor" stroke="none"/>
+                  <circle cx="12.4" cy="8.3" r=".85" fill="currentColor" stroke="none"/>
+                  <path d="M7.1 12.1a3.6 3.6 0 0 0 5.8 0"/>
+                </svg>
+              </button>
+              <button class="icon-btn icon-btn--sm" type="button" data-action="voice" title="语音">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="7.8" y="2.8" width="4.4" height="8.4" rx="2.2"/>
+                  <path d="M5.4 9.6a4.6 4.6 0 0 0 9.2 0M10 14.2V17"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button class="send-btn" type="button" id="sendBtn" title="发送" disabled>
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 15.4V4.8M5.6 9.2 10 4.8l4.4 4.4"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 工作视图 -->
+      <section class="view" id="viewWork" aria-label="工作日志" hidden>
+        <div class="logbar">
+          <div class="logbar__filters">
+            <button class="chip is-active" type="button">全部</button>
+            <button class="chip" type="button">通道</button>
+            <button class="chip" type="button">模型</button>
+            <button class="chip" type="button">记忆</button>
+          </div>
+          <div class="logbar__right">
+            <span class="logbar__hint" id="logHint">中文映射 · 错误码保留原文</span>
+            <div class="segmented segmented--mini" id="logMode" data-active="zh">
+              <button class="segmented__item is-active" type="button" data-logmode="zh">中文</button>
+              <button class="segmented__item" type="button" data-logmode="raw">代码级</button>
+              <span class="segmented__thumb" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 开发者模式确认：代码级日志需要它 -->
+        <div class="devnotice" id="devNotice" hidden>
+          <div class="devnotice__body">
+            <p class="devnotice__title">代码级日志需要开发者模式</p>
+            <p class="devnotice__text">
+              这份日志保留原始请求报文、SQL 语句与完整堆栈，可能含有对话原文与账号信息。
+              开启时会自动创建一个还原点，并开始记录所有构建脚本的执行。
+            </p>
+          </div>
+          <div class="devnotice__actions">
+            <button class="btn btn--sm" type="button" data-action="dev-cancel">取消</button>
+            <button class="btn btn--sm btn--primary" type="button" data-action="dev-enable">开启开发者模式</button>
+          </div>
+        </div>
+
+        <div class="logview" id="logView"></div>
+      </section>
+    </main>
+
+    <!-- ══ 右栏 ══ -->
+    <aside class="panel">
+      <header class="panel__head">
+        <span class="panel__title">她的状态</span>
+        <span class="panel__meta" id="panelUpdated">刚刚更新</span>
+      </header>
+
+      <div class="panel__scroll">
+
+        <section class="card">
+          <div class="card__head">
+            <span class="card__title">此刻</span>
+            <span class="pill" id="moodPill">缓和</span>
+          </div>
+          <p class="mood-line" id="moodLine">有点累，但见到主人心情好了些</p>
+          <div class="metric-list" id="metricList"></div>
+        </section>
+
+        <section class="card">
+          <div class="card__head">
+            <span class="card__title">她对主人</span>
+            <span class="card__meta">妹妹</span>
+          </div>
+          <div class="metric-list" id="relationList"></div>
+          <p class="card__note">数值会随对话慢慢变化，可在设置里查看与调整</p>
+        </section>
+
+        <section class="card">
+          <div class="card__head">
+            <span class="card__title">记得的事</span>
+            <button class="link-btn" type="button" data-action="memory">全部</button>
+          </div>
+          <ul class="memory-list" id="memoryList"></ul>
+        </section>
+
+        <section class="card card--pet">
+          <div class="card__head">
+            <span class="card__title">桌宠</span>
+            <span class="card__meta">未启动</span>
+          </div>
+          <div class="pet-stage">
+            <div class="pet-placeholder">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5.2 7.4 5.9 3.4l2.6 2.2h3l2.6-2.2.7 4"/>
+                <path d="M10 5.9a5.6 5.6 0 0 1 5.6 5.6c0 3.1-2.5 5.6-5.6 5.6a5.6 5.6 0 0 1-5.6-5.6A5.6 5.6 0 0 1 10 5.9Z"/>
+                <path d="M8.1 11.3h.01M11.9 11.3h.01"/><path d="M8.9 13.2a2 2 0 0 0 2.2 0"/>
+              </svg>
+            </div>
+            <p class="pet-hint">让她待在桌面，会跟着情绪动</p>
+            <button class="btn btn--sm" type="button" data-action="pet">叫出她</button>
+          </div>
+        </section>
+
+      </div>
+    </aside>
+
+    <!-- ══ 状态栏 ══ -->
+    <footer class="statusbar">
+      <span class="statusbar__item" title="QQ 官方机器人通道"><i class="dot dot--online"></i>QQ 官方</span>
+      <span class="statusbar__item" title="飞书通道未配置"><i class="dot dot--offline"></i>飞书</span>
+      <span class="statusbar__item" title="通道路由正常"><i class="dot dot--online"></i>路由</span>
+      <span class="statusbar__spacer"></span>
+      <span class="statusbar__item statusbar__muted">演示数据</span>
+    </footer>
+
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
