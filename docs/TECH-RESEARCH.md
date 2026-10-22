@@ -420,6 +420,91 @@ macOS 上确实有等价物，且都是「AppleScript + Accessibility API」而�
 
 **需要主人补一个仓库链接或准确名字。** 在拿到确切来源前，不为它做任何设计假设。
 
+### 5.8 插件加载机制实证 `[已实测，2026-10-23]`
+
+用独立 `DSH_HOME` 实测了「独立 profile + 自定义包能否被 DSH 加载」这条全链路。**这是 S0 最大的风险点，现在已解除。**
+
+#### 5.8.1 CLI 从哪来
+
+`dsh` CLI **不在 PATH 里**，桌面版把它藏在 App 内部：
+
+```
+/Applications/DeepSeek Harness.app/Contents/Resources/app/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js
+```
+
+`@deepseek-ai/dsh` 的 `package.json` 里 `bin: { "dsh": "lib/bin.js" }`。用**系统 node 22.22.2 就能跑**（App 要求 node 24，但 CLI 层面 22 兼容，实测无报错）。
+
+> `Resources/runtime/bin/node` 是个 shim 脚本，依赖 App 主进程注入的 `DSH_DESKTOP_NODE_EXECUTABLE`，**不能独立调用**。别指望用它。
+
+#### 5.8.2 `DSH_HOME` 隔离确认为真
+
+```
+DSH_HOME=/tmp/nt-dpet-probe/dsh-home node <bin.js> --version
+→ 0.2.1-rc.2，且该目录保持为空
+```
+
+`--version` 跑完独立 home 里一个文件都没生成，说明**没有被偷偷写回 `~/.dsh`**。隔离四层的第一层成立。
+
+#### 5.8.3 独立 profile 可以凭空创建
+
+```
+node <bin.js> --profile nt-dpet --from-default-profile web --dump-config
+```
+
+不需要先 `plugin add`。`--from-default-profile web` 会用内置 web 模板建出 profile。生成结构：
+
+```
+$DSH_HOME/profiles/nt-dpet/
+├── cordis.yml           ← 空 entry list，注释明确写「Edit cordis.patch.yml, not this file」
+├── cordis.patch.yml     ← 用户层覆盖，这才是我们该改的
+├── package.json         ← dsh.profile.bundles = ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app"]
+└── pnpm-workspace.yaml
+```
+
+**层级顺序**（引自 schema 的 `$comment`）：bundle layer → profile layer → home layer → CLI layer，依次叠加；**一层 patch 的 config 是整块替换，不是深合并**。
+
+#### 5.8.4 patch 语法：两写法一字之差，一个是「静默丢弃」
+
+实测三种写法，结果如下：
+
+| 写法 | 结果 |
+|---|---|
+| `- insert: [ {id, name} ]` | ✅ **正确**，entry 出现在合成树末端 |
+| `- id: ..., name: ...`（裸 entry，不带 `insert`） | ❌ **不报错、不警告、直接消失** |
+| `- insert: [ {group:true, name:"cordis:group", config:[]}, {group:"父id"} ]` | ✅ 支持，可把包挂进分组 |
+
+第二条是最危险的：写错了没有任何提示，插件就是不见了。
+
+`--dump-config` 的输出里会用 `# == <patch文件路径>` 注释标出每一层的来源，末尾那段就是自己被采纳的部分。**以后每写一个 `cordis.patch.yml`，都先 dump 一次看它有没有出现在树里。**
+
+`id` 用冒号分段的 `nt-dpet:core:emotion` 形式**合法**，实测无报错。
+
+#### 5.8.5 自定义包确实能被加载
+
+最小包（`package.json` + `index.mjs` 导出 `name` / `apply(ctx)`），软链到 profile 的 `node_modules/@nt-dpet/probe`，然后：
+
+```
+node <bin.js> --profile nt-dpet --patch ./a.yml --no-open --port 3180
+→ [NT-DPET-PROBE] 包已加载，ctx 存在: true
+→ dsh web: http://127.0.0.1:3180/?token=aY70Doy-...
+```
+
+`apply(ctx)` 真的被执行了，服务真的在指定端口起来了。**29 包粒度方案在加载层面可行。**
+
+#### 5.8.6 参数顺序有个坑
+
+```
+✅ dsh --profile nt-dpet --patch <file> --no-open --port 3180
+❌ dsh --profile nt-dpet --patch <file> web --no-open --port 3180
+```
+
+第二种会报 `error: too many arguments. Expected 0 arguments but got 1: web.`——**用了 `--profile` 就不要再写 app 名**，app 由 profile 的 bundles 决定。`--help` 里的例子 `dsh web --patch ./extra.yml` 是「把 web 当 profile 名」的另一种用法，两者别混。
+
+#### 5.8.7 顺带确认的安全事实
+
+启动日志打印的 URL 带**随机 token**（`?token=aY70Doy-...`），不是固定值。默认绑 `127.0.0.1`。这两点与 §9 风险登记里 NapCat 因 `0.0.0.0` + 固定 token 被扫描出事的历史正好相反，方向是对的。
+
+
 ---
 
 ## 6. 参考项目清单

@@ -329,11 +329,45 @@ packages/<name>/
 }
 ```
 
-### 4.2 三条硬约束
+`cordis.patch.yml` 的正确写法 `[已实测]`——**必须 `insert` 包裹**，`name` 用包名不写路径：
+
+```yaml
+- insert:
+    - id: nt-dpet:core:emotion
+      name: "@nt-dpet/emotion"
+```
+
+写成下面这样（裸 entry）**不报错也不生效**，插件会凭空消失：
+
+```yaml
+- id: nt-dpet:core:emotion      # ❌ 静默丢弃
+  name: "@nt-dpet/emotion"
+```
+
+### 4.2 四条硬约束
 
 1. **ESM only**——`@deepseek-ai/*` 是 ESM，CommonJS 会报 `ERR_REQUIRE_ESM`
 2. **必须声明 `inject`**——读未声明的服务会抛 `cannot get property "X" without inject`
 3. **`loader entry id` 全项目唯一**——29 个包必须遵守命名规范 `nt-dpet:<组>:<名>`，例如 `nt-dpet:core:emotion`。`code-runtime` 由基础 bundle 持有，不得占用
+4. **`cordis.patch.yml` 必须用 `insert` 包裹** `[已实测]`——写成裸 entry（`- id:` 直接开头）**不会报错、不会警告、直接消失**。这是最容易踩且最难发现的一个坑，写法与验证方法见 `TECH-RESEARCH.md` §5.8.4
+
+### 4.3 启动方式（实测命令）`[已实测]`
+
+```bash
+# CLI 不在 PATH，藏在 App 内部；系统 node 22 可直接跑
+BIN="/Applications/DeepSeek Harness.app/Contents/Resources/app/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js"
+
+DSH_HOME=<独立目录> node "$BIN" --profile nt-dpet --from-default-profile web   # 首次建 profile
+DSH_HOME=<独立目录> node "$BIN" --profile nt-dpet --dump-config               # 看合成树
+DSH_HOME=<独立目录> node "$BIN" --profile nt-dpet --no-open --port 3180       # 启动
+```
+
+三条记牢：
+
+- 用了 `--profile` 就**不要**再写 app 名（`... --profile nt-dpet web` 会报 `too many arguments`）
+- `--dump-config` 输出里 `# == <文件路径>` 标出每层来源，写完 patch 先 dump 一遍确认自己的 entry 在树里
+- 一层 patch 的 `config` 是**整块替换**，不是深合并——覆盖某条目时必须写全它需要的所有键（§13.3 已记，实测再次确认）
+
 
 ---
 
@@ -1670,7 +1704,7 @@ S1 必须在 S0 完成后立刻做——打包风险最早暴露，改动成本�
 | 8 | NapCat 当前版本对 OneBot 11/12 支持度 | 决定适配器版本 | 查仓库 release |
 | 9 | Electron 三端体积与启动耗时 | 决定是否拆包 | 三端打包实测 |
 | 10 | 硬链接快照在 Windows NTFS 的实际行为 | 决定还原点能否压到 50MB | 实测 |
-| 11 | 29 个包的 `loader entry id` 是否会被 DSH 正确加载 | 决定包粒度是否可行 | S0 装全部包实测 |
+| ~~11~~ | ~~29 个包的 `loader entry id` 是否会被 DSH 正确加载~~ | **已实测成立**（2026-10-23）：自定义包 `apply(ctx)` 被调用，服务在独立端口起来 | 见 `TECH-RESEARCH.md` §5.8 |
 | 12 | `desktop` profile 被 Electron 独占时，安装器如何合法写入 | 决定安装器实现路径 | 见 `TECH-RESEARCH.md` §5.2 |
 | 13 | `dsh-web-app` 无「默认视图」配置字段，决策 12 如何落地 | 决定默认视图实现层 | 见下 |
 | 14 | `wlipsync`（MIT 1.3.1）能否在 Electron 渲染进程直接吃 TTS 输出流 | 决定嘴型同步是实时还是预计算 | S4 接 TTS 后实测 |
