@@ -62,6 +62,16 @@ NT-Dpet 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 
 
 根目录的 [`index.html`](index.html) 是项目介绍页（NT-Dpet - 玄宠，从代码到身边），纯静态、零依赖、单一 HTML + 一份 CSS，样式在 `css/site.css`，图片在 `assets/`。
 
+页面里的「界面」一节用的是界面壳的真实截图，不是渲染图。首图与设置图按 `prefers-color-scheme` 自动切换深浅两版：
+
+| 文件 | 用途 |
+|---|---|
+| `assets/ui-chat-light.png` / `ui-chat-dark.png` | 首图，对话视图 |
+| `assets/ui-settings-panel.png` / `ui-settings-panel-dark.png` | 设置面板「她」页，已裁到面板本体 |
+| `assets/ui-logs-lines.png` | 运行日志，已裁到日志主列 |
+
+截图从 `packages/ui/web/` 起本地服务后用无头 Chrome 拍的，界面改了就重拍，不要用手改图片。
+
 放在仓库根而不是子目录，是为了让 EdgeOne 这类「从仓库根发布」的托管平台直接取到入口文件，不需要额外配置输出目录。
 
 ```bash

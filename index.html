@@ -32,6 +32,7 @@
     </a>
     <nav class="topnav" aria-label="页面导航">
       <a href="#what">是什么</a>
+      <a href="#look">界面</a>
       <a href="#abilities">能力</a>
       <a href="#isolation">隔离</a>
       <a href="#roadmap">路线图</a>
@@ -125,6 +126,67 @@
       <li>不是又一个插件市场，做的是「整装组合包」，不是零件货架。</li>
       <li>不承诺账号安全——个人号通道存在封号风险，文档里反复写明，不做美化。</li>
     </ul>
+  </section>
+
+  <!-- ══ 界面 ══ -->
+  <section class="sec" id="look">
+    <div class="sec__head">
+      <p class="sec__eyebrow">界面</p>
+      <h2 class="sec__title">装好之后，看到的是这个</h2>
+      <p class="sec__lede">
+        界面是我们自己写的，DSH 在后台当引擎跑。三栏：左边是会话，中间是对话，右边是她此刻的状态。
+        情绪、关系、记得的事都摆在明面上——想知道她现在什么心情，不用翻菜单。
+      </p>
+    </div>
+
+    <figure class="shot shot--wide">
+      <picture>
+        <source srcset="./assets/ui-chat-dark.png" media="(prefers-color-scheme: dark)">
+        <img
+          class="shot__img"
+          src="./assets/ui-chat-light.png"
+          alt="主界面：左栏为会话列表，中间为与小鲸鱼的对话气泡，右栏显示情绪、关系与记忆卡片"
+          width="1440" height="900" loading="lazy" decoding="async">
+      </picture>
+      <figcaption class="shot__cap">
+        <strong>对话</strong>
+        左栏切换聊天对象，右栏实时显示心情与精力、对主人的好感信任亲密熟悉，以及她记得的事。
+        界面本身跟随系统深浅色，不用手动切。
+      </figcaption>
+    </figure>
+
+    <div class="grid grid--2 shots">
+      <figure class="shot">
+        <picture>
+          <source srcset="./assets/ui-settings-panel-dark.png" media="(prefers-color-scheme: dark)">
+          <img
+            class="shot__img"
+            src="./assets/ui-settings-panel.png"
+            alt="设置面板：关系四选一、说话浓度三档、主动开口四档"
+            width="772" height="712" loading="lazy" decoding="async">
+        </picture>
+        <figcaption class="shot__cap">
+          <strong>设置 · 她</strong>
+          关系四选一决定性格底色，浓度决定语气黏度。换关系会换一套性格，记忆与好感保留。
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img
+          class="shot__img"
+          src="./assets/ui-logs-lines.png"
+          alt="运行日志：每条消息都标注通道、路由理由、模型请求与耗时"
+          width="778" height="718" loading="lazy" decoding="async">
+        <figcaption class="shot__cap">
+          <strong>运行日志</strong>
+          每条消息走了哪条路、为什么这么回，都留痕。开发者模式下还能切到代码级明细。
+        </figcaption>
+      </figure>
+    </div>
+
+    <p class="sec__foot">
+      截图取自界面壳，对话内容为演示数据，不是真实运行结果。深色默认跟随系统，也可以按日出日落自动切换。
+    </p>
   </section>
 
   <!-- ══ 能力 ══ -->

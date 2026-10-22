@@ -424,6 +424,50 @@ strong { font-weight: 600; }
   color: var(--label-3);
 }
 
+/* ══ 界面截图 ══ */
+
+.shots { margin-top: 16px; }
+
+.shot {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin: 0;
+}
+
+.shot--wide { margin-bottom: 16px; }
+
+/* <picture> 默认是行内元素，做 flex 子项时会让图片下方多出基线空隙 */
+.shot picture { display: block; }
+
+/*
+ * 截图本身已经是成品界面，圆角与阴影交给容器统一处理。
+ * 不额外加描边：截图内部有自己的边框层次，再套一层会看着像双重边框。
+ */
+.shot__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.shot--wide .shot__img { box-shadow: var(--shadow-lift); }
+
+.shot__cap {
+  padding: 0 2px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--label-3);
+}
+
+/* 标题用比正文略深一档，靠色阶而非加粗做区分，避免说明文字抢画面 */
+.shot__cap strong {
+  margin-right: 7px;
+  font-weight: 600;
+  color: var(--label-2);
+}
+
 /* ══ 网格与卡片 ══ */
 
 .grid { display: grid; gap: 14px; }
