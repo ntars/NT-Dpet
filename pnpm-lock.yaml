@@ -1,0 +1,227 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  desktop: {}
+
+  packages/adapter-dingtalk:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/adapter-discord:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/adapter-feishu:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/adapter-qq-napcat:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/adapter-qq-official:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/adapter-telegram:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/adapter-wecom:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/adb:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/avatar:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/browser:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/dialogue:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/emotion:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/expression-decide:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/gui-agent:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/log-zh:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/market:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/memory:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/minecraft:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/persona:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/pet:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/privacy:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/proactive:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/rhythm:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/router:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/snapshot:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/sticker:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/tts:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/ui:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+  packages/worldbook:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
+packages:
+
+  '@deepseek-ai/cordis@4.0.5':
+    resolution: {integrity: sha512-Sktq5axy0owk9PdnivBRNOJjHEVEibCt0+TDDZcv0+UH2KS1M910fX4kn5y45YFsrpZIi1mJf/1s5VzywMUnyg==}
+    hasBin: true
+    peerDependencies:
+      '@deepseek-ai/cordis-plugin-include': ~1.0.10
+      '@deepseek-ai/cordis-plugin-loader': ~1.0.6
+    peerDependenciesMeta:
+      '@deepseek-ai/cordis-plugin-include':
+        optional: true
+      '@deepseek-ai/cordis-plugin-loader':
+        optional: true
+
+  '@deepseek-ai/cosmokit@1.8.6':
+    resolution: {integrity: sha512-ZSD/fN52L498LBIOYwjIOlaLv5veY6ZEwI2yzvZUKQtctn0QAPqu8tKdJ+OF5+Tv6NBq1U+wJWH+QI6OGy5EvQ==}
+
+  '@standard-schema/spec@1.1.0':
+    resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+snapshots:
+
+  '@deepseek-ai/cordis@4.0.5':
+    dependencies:
+      '@deepseek-ai/cosmokit': 1.8.6
+      '@standard-schema/spec': 1.1.0
+
+  '@deepseek-ai/cosmokit@1.8.6': {}
+
+  '@standard-schema/spec@1.1.0': {}
+
+  typescript@5.9.3: {}

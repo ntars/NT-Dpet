@@ -491,7 +491,34 @@ node <bin.js> --profile nt-dpet --patch ./a.yml --no-open --port 3180
 
 `apply(ctx)` 真的被执行了，服务真的在指定端口起来了。**29 包粒度方案在加载层面可行。**
 
-#### 5.8.6 参数顺序有个坑
+#### 5.8.6 加载失败是「软失败」——这条必须写进产品设计
+
+反证实验：故意挂一个不存在的包 `@nt-dpet/does-not-exist-at-all`。
+
+```
+dsh: warning: 1 entry did not activate
+nt-dpet:bogus (@nt-dpet/does-not-exist-at-all): failed to import:
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find package ...
+dsh web: http://127.0.0.1:3182/?token=...        ← 服务照常起来了
+```
+
+**插件加载失败不阻断启动，只打一行 warning。** 这意味着：
+
+- 用户看到窗口正常打开、界面正常显示，以为一切正常
+- 实际上某个包根本没加载，功能静默缺失
+- 而 `--no-open` 模式下连这行 warning 都可能没人看
+
+对照实验的三组结果，证据链是完整的：
+
+| 挂载对象 | 日志表现 | 结论 |
+|---|---|---|
+| 自建 probe 包（带 console.log） | 打印 `包已加载，ctx 存在: true`，无 warning | 加载并执行 |
+| **真实构建产物** `@nt-dpet/emotion` | **无 warning** | 加载成功（loader 只对失败告警） |
+| 不存在的包 | `1 entry did not activate` + 完整堆栈 | 失败可见但不阻断 |
+
+**由此得出一条产品要求**：NT-Dpet 每次启动必须做 **entry 激活自检**——比对「配置树里的 entry 数」与「实际激活数」，不一致就在界面上报警，而不是让它静默降级。这条要落进 `@nt-dpet/privacy` 或独立的启动自检模块。
+
+#### 5.8.7 参数顺序有个坑
 
 ```
 ✅ dsh --profile nt-dpet --patch <file> --no-open --port 3180
@@ -500,9 +527,19 @@ node <bin.js> --profile nt-dpet --patch ./a.yml --no-open --port 3180
 
 第二种会报 `error: too many arguments. Expected 0 arguments but got 1: web.`——**用了 `--profile` 就不要再写 app 名**，app 由 profile 的 bundles 决定。`--help` 里的例子 `dsh web --patch ./extra.yml` 是「把 web 当 profile 名」的另一种用法，两者别混。
 
-#### 5.8.7 顺带确认的安全事实
+#### 5.8.8 顺带确认的安全事实
 
-启动日志打印的 URL 带**随机 token**（`?token=aY70Doy-...`），不是固定值。默认绑 `127.0.0.1`。这两点与 §9 风险登记里 NapCat 因 `0.0.0.0` + 固定 token 被扫描出事的历史正好相反，方向是对的。
+启动日志打印的 URL 带**随机 token**（`?token=...`），每次启动都不一样，不是固定值。默认绑 `127.0.0.1`。这两点与 §9 风险登记里 NapCat 因 `0.0.0.0` + 固定 token 被扫描出事的历史正好相反，方向是对的。
+
+`/api/*` 全部要求鉴权，直接拿 token 当 query 参数访问会 401——browser-trust fence 只认浏览器侧建立的信任，不接受裸 token 直连。这一层是好的。
+
+#### 5.8.9 构建链现状
+
+- `pnpm` 不在 PATH，需 `npx pnpm@9`（实测 9.15.9）。`corepack` 也在一，但会拉到 12.x，与 `packageManager: pnpm@9.15.0` 不一致，**统一用 npx pnpm@9**
+- 29 个包原先**都缺 `@deepseek-ai/cordis` 依赖声明**，`tsc` 全部报 `TS2307: Cannot find module '@deepseek-ai/cordis'`。已统一补 `peerDependencies` + `devDependencies` 为 `^4.0.5`（npm 上 latest 即 4.0.5，MIT）
+- 补齐后 `pnpm -r --filter './packages/**' build` **29 个包全部通过**
+- 产物导出形态实测：`Object.keys()` → `['apply', 'name']`，`name` 为 `nt-dpet-emotion`，`apply` 为 function——符合 Cordis 4 的具名导出约定
+
 
 
 ---
