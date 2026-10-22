@@ -1,7 +1,9 @@
-# NT-Dpet 技术摸底（v0.1）
+# NT-Dpet 技术摸底（v0.2）
 
 > 核实日期：2026-10-22　｜　状态：**动工前调研，未进入编码**
 > 本文档只记事实与判断，不含任何已实施代码。
+>
+> **v0.2 变更**：补录 §5「DSH 宿主底账」。v0.1 完全没有登记 DSH 本体——它是本项目最大的依赖，这个缺口直接影响了好几项设计的可信度。同时关闭待验证 A/B/C 三项，并把生态插件的能力重叠问题（§5.5）首次写进底账。
 
 ## 关于可信度标注
 
@@ -204,7 +206,139 @@
 
 ---
 
-## 5. 参考项目清单
+## 5. DSH 宿主底账 `[已核实]`
+
+**本节为 2026-10-22 补录。** 此前版本未登记 DSH 本体——而它是本项目最大的依赖，属于底账的结构性缺口。本节所有条目均来自本机已安装产物与官方仓库，可逐条复查。
+
+### 5.1 本体
+
+| 项 | 值 | 证据 |
+|---|---|---|
+| 仓库 | `github.com/deepseek-ai/deepseek-harness` | 官方仓库 |
+| 许可 | **MIT** | 仓库 LICENSE；`@deepseek-ai/dsh-llm/package.json` 的 `license` 字段 |
+| 底层框架 | **Cordis 4.x**（`@deepseek-ai/cordis ~4.0.5`） | 各包的 `peerDependencies` |
+| 架构主张 | 「一切皆插件」，agent loop 本身也是插件 | 仓库 README；`dsh-agent-loop` 为独立包 |
+| 运行 | `npx @deepseek-ai/dsh web`，默认 `127.0.0.1:3080` | 官方 README |
+| 阶段 | 开发者预览，**明确声明会有破坏兼容性变更** | 官方 README |
+| 本机实测版本 | `0.2.1-rc.2` | 已装包 `package.json` 的 `version` |
+| Node 要求 | `^20.19 \|\| >=22` | 官方快速开始 |
+
+**版本策略的直接后果**：DSH 处于开发者预览且自述会破坏兼容，所以「锁定具体版本」不是保守，而是必须。已与决策 11 一致。
+
+### 5.2 profile 机制 `[已核实]`
+
+实测 `~/.dsh/profiles/desktop/package.json` 的真实结构：
+
+```json
+{
+  "name": "dsh-profile-desktop",
+  "dependencies": { "dshmarket": "1.66.45", "dsh-pet": "0.3.7" },
+  "dsh": { "profile": { "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "..."] } }
+}
+```
+
+- profile 目录内即一个 pnpm 工程：`package.json` + `pnpm-lock.yaml` + `pnpm-workspace.yaml` + `node_modules/`
+- 生效手段是 `cordis.yml` 与 `cordis.patch.yml`（实测分别 223 B / 33 KB）
+- **`dsh.profile.bundles` 是一个有序数组**——加载顺序可读可改，这正是「整装组合包」的挂载点
+
+**这印证了架构文档 §2 的假设**：组合包 = 一组依赖 + 一段 bundles 顺序 + 一份 patch。假设成立。
+
+- 安装命令：`dsh plugin --profile <name> add <pkg>`
+- 查看生效配置：`dsh --profile <name> --dump-config`
+- **`desktop` profile 由 Electron 应用独占**，CLI 会直接拒绝：`error: profile "desktop" is managed exclusively by the Electron application` `[第三方]`（社区文档一致陈述，本机未复现拒绝行为）
+
+**对本项目的直接约束**：我们要接管的是 `desktop` profile，因此安装流程**不能依赖 CLI**，必须由 Electron 主进程自己改动 profile 的 `package.json` 与 patch，或改用独立的 profile 名。这是编码前必须定的事。
+
+### 5.3 LLM 服务可以脱离 agent loop 单独调用 `[已核实]`
+
+**这是架构 §2.2 成立的前提，原「待验证 #1」，现结论为成立。**
+
+依据 `@deepseek-ai/dsh-llm` 中文 README 原文：
+
+> 任何调用模型提供方的组合——agent loop（智能体循环）、会话标题生成器、压缩（compaction）摘要器——都会通过本服务流式发起请求。
+
+即 agent loop 只是「消费方之一」，不是必经路径。最小可用组合只有两个包：
+
+```yaml
+- name: '@deepseek-ai/dsh-llm'
+- name: '@deepseek-ai/dsh-llm-deepseek-api-key'
+  config:
+    apiKeyEnv: DEEPSEEK_API_KEY
+```
+
+调用形态（README 原样示例）：
+
+```ts
+for await (const chunk of ctx.llm.stream({
+  provider: 'deepseek-official',
+  model: 'deepseek-v4-flash',
+  messages: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+})) {
+  // chunks: block-start, text-delta, ..., usage, finish
+}
+```
+
+辅助事实：
+- `dsh-llm` 的依赖里**没有** `dsh-agent-loop`，反向依赖不成立
+- 每个流必以 `finish` 收尾：正常、`{ kind: 'error' }`、`{ kind: 'aborted' }`
+- 失败带稳定 code：`NO_ADAPTER` / `MISSING_CREDENTIAL` / `INVALID_CREDENTIAL` / `AUTH` / `RATE_LIMIT` / `CONTEXT_WINDOW_EXCEEDED` / `QUOTA`，**按 code 分支，不解析文案**
+- provider 名：`deepseek-official`；entry id 约定 `llm-deepseek`（API Key）与 `llm-deepseek-account`（账号登录）
+- 本服务**不自行重试**，重试归 `dsh-llm-retry`
+
+### 5.4 隐私：会话日志上传的实际行为 `[已核实]`
+
+原架构称「`session-log-deepseek` 默认上传、开关关不掉、重开还会补传」。核对源码与文档后，**结论成立，但需要修正措辞**：
+
+| 事实 | 出处 |
+|---|---|
+| `enabled` 默认 `true`，随附 profile 默认挂载 | 该包 README 配置表 |
+| 关闭后重开，**会继续补传关闭期间记录的事件** | 原文：「重新开启后继续上传尚未确认的后缀，包括关闭期间记录的事件」 |
+| 上传是「至少一次」，崩溃可能重放已接受范围 | 原文「接受与重试」节 |
+| `maxBytes` 默认 8 MiB，超限**分多次请求续传** | 同上 |
+| 开关位置：设置 → 通用 → 在使用官方模型 API 时上传 Session Log | 同上 |
+
+**措辞修正**：开关本身是有效的（`enabled: false` 会停止贡献），但**不追溯清空**——已记录的事件会在重开时补发。所以「关掉开关就干净了」是错的，必须在配置层硬关，且不依赖用户手动关闭。
+
+**新增的关键发现（此前未记录）**：
+
+> 缺少存活会话的直接请求会省略 `dsh_session_log`。
+
+含义：只要调用不带存活 `sessionId`，该字段**根本不会进请求体**。agent、压缩、会话标题调用都携带存活会话 id，所以它们会上传；而我们自建的 dialogue 通道若不建 DSH Session，天然不触发。
+
+**这使架构 §2.2 的「额外收益」从「暴露面更小」升级为「按代码路径不触发」，但附带一条硬约束**：dialogue 必须自己管消息存储，**不得为省事去建 DSH Session**；一旦建了会话，隐私优势立刻消失。
+
+### 5.5 生态现状：能力重叠风险 `[已核实]`
+
+本机 `desktop` profile 已安装的插件里，有四个与 NT-Dpet 计划自研的包**功能重叠**：
+
+| 已装插件 | 版本 | 已提供的能力 | 与哪个自研包重叠 |
+|---|---|---|---|
+| `dsh-pet` | 0.3.7 | 97 个手绘透明动画、待机呼吸、随机动作、屏幕漫游、点击 Q 弹、拖拽甩抛、右键点播、联想气泡、**碎碎念与对话（可配表情包）**、多开同屏、**透明置顶独立桌面窗**、pet pack 自定义物种、亲密度/投喂系统 | 桌宠、表情包、主动消息的呈现层 |
+| `dsh-soul-md` | 0.10.2 | 人格 `soul.md`、**分层记忆**（`memory_read/search/append` + topic 体系，persona 覆盖 global）、关键词检索、可选回忆、压缩后回忆恢复 | 人格、记忆检索、世界书部分 |
+| `dsh-context` | 0.74.0 | 上下文管理 | 世界书预算 |
+| `billion-context` | 0.1.203 | 长上下文扩展 | 记忆/上下文 |
+
+`dsh-pet` 尤其需要注意：它的 `~/.dsh/pet.json` 已含 `petId: "whale-girl"`、`affinity`（亲密度/抚摸/投喂/拒绝计数）、`treats`、`display`（可见性/尺寸/坐标/气泡缩放）——**鲸鱼娘 + 亲密度 + 桌面浮窗**，与 NT-Dpet 的默认人格「小鲸鱼」和桌宠定位高度重合。而且它提供 `npx dsh-pet-standalone`，可完全不启动 DSH 独立运行。
+
+**这不是「要不要抄」的问题，是「要不要重造」的问题。** 29 个包的设计完成于发现这些既有实现之前，因此存在重复投入的风险。是否需要调整包划分，属于主人决策，本文档只记录事实。
+
+### 5.6 其余可复用底座 `[已核实]`
+
+已装包共 **307 个**官方包 + 十余个第三方包。与项目相关且无需自研的：
+
+| 能力 | 官方包 |
+|---|---|
+| 文件访问 | `dsh-fs-local`（若存在）／内置工具链 |
+| 终端 | `dsh-bash-local`、`dsh-bash-sandbox` |
+| 定时 | `cordis-plugin-timer` |
+| 附件 | `dsh-attachment`、`dsh-attachment-local` |
+| 设置界面 | `dsh-client-ui-settings-*` 系列 |
+| 模型选择 | `dsh-client-ui-model-selection` |
+| 多模型适配 | `dsh-llm-deepseek`、`dsh-llm-pi-ai` |
+
+---
+
+## 6. 参考项目清单
 
 | 项目 | 语言 | 许可 | 定位 | 备注 |
 |---|---|---|---|---|
@@ -223,9 +357,19 @@ star 数、最新提交时间等动态数据未写入本文档——此类数据
 
 ---
 
-## 6. 待验证清单
+## 7. 待验证清单
 
-动工前必须实测或查证，不能带假设开工：
+动工前必须实测或查证，不能带假设开工。
+
+### 7.1 已关闭项（2026-10-22）
+
+| # | 原待验证项 | 结论 | 依据 |
+|---|---|---|---|
+| A | DSH 的 `llm` seam 能否脱离 agent loop 单独调用 | **成立**——agent loop 只是消费方之一，`ctx.llm.stream()` 可直接调 | §5.3 |
+| B | profile 与 `dsh.profile.bundles` 结构是否符合架构假设 | **符合**，本机 `~/.dsh/profiles/desktop` 实测 | §5.2 |
+| C | 会话日志上传是否默认开启、能否关净 | **默认开启**；`enabled: false` 有效但**不追溯**，重开会补发关闭期间的记录 | §5.4 |
+
+### 7.2 仍待验证
 
 | # | 待验证项 | 影响 |
 |---|---|---|
@@ -236,10 +380,15 @@ star 数、最新提交时间等动态数据未写入本文档——此类数据
 | 5 | Live2D Cubism Core 的下载与商用授权具体条款 | 决定桌宠实现路线 |
 | 6 | OpenClaw 的许可类型与微信通道稳定性 | 决定微信私聊是否纳入 |
 | 7 | phone-mcp 的 34 个工具在非中文输入法、非标准分辨率下的兼容性 | 决定手机操控的通用性 |
+| 8 | `desktop` profile 被 Electron 独占时，第三方安装器如何合法写入 | 决定安装器实现路径（§5.2） |
+| 9 | dialogue 不建 Session 时，`dsh-llm.stream()` 是否仍要求会话上下文 | 决定对话通道能否彻底脱离会话体系（§5.4） |
+| 10 | `dsh-web-app` 默认视图的配置字段名 | 决定决策 12（默认视图为对话）如何落地 |
+| 11 | 第三方插件的 `engines.dsh` 与本机 `0.2.1-rc.2` 的兼容判定规则 | 决定组合包的版本锁定粒度 |
+| 12 | 29 个包与既有生态插件的重划分方案 | 见 §5.5，**需主人裁决** |
 
 ---
 
-## 7. 未决问题（需主人决策）
+## 8. 未决问题（需主人决策）
 
 1. `kernel/` 代码同步策略：内置副本 + 变更记录人工合并，还是别的机制
 2. 虚拟形象路线：用户自取 Cubism Core / 自研渲染 / 一期不做
@@ -249,7 +398,7 @@ star 数、最新提交时间等动态数据未写入本文档——此类数据
 
 ---
 
-## 8. 风险登记
+## 9. 风险登记
 
 | 风险 | 等级 | 说明 | 缓解 |
 |---|---|---|---|
@@ -262,7 +411,7 @@ star 数、最新提交时间等动态数据未写入本文档——此类数据
 
 ---
 
-## 9. 本文档的边界
+## 10. 本文档的边界
 
 - 未包含任何目录结构、类设计、接口定义——这些属于「大脉络」阶段
 - 未包含工期估算——在功能边界确定前估算没有意义
