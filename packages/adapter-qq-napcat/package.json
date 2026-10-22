@@ -1,0 +1,18 @@
+{
+  "name": "@nt-dpet/adapter-qq-napcat",
+  "version": "0.0.1",
+  "description": "QQ 个人号通道（灰色，默认关闭）",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "cordis.patch.yml"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "AGPL-3.0-or-later"
+}

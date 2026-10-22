@@ -1,0 +1,18 @@
+{
+  "name": "@nt-dpet/privacy",
+  "version": "0.0.1",
+  "description": "关闭日志上传、合规告知、风控三层提醒",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "cordis.patch.yml"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "AGPL-3.0-or-later"
+}

@@ -1,0 +1,52 @@
+# 依赖
+node_modules/
+.pnpm-store/
+
+# 构建产物
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# 运行时下载的外部组件（体积大，不入库）
+runtime/
+!runtime/.gitkeep
+
+# 模型权重
+models/
+*.gguf
+*.safetensors
+*.pth
+*.index
+
+# 用户数据（隐私，绝不入库）
+data/
+snapshots/
+audit/
+*.db
+*.db-wal
+*.db-shm
+
+# Electron
+desktop/dist/
+desktop/release/
+
+# 系统垃圾（按精确叶名清理，不触碰数据本体）
+.DS_Store
+._*
+__MACOSX/
+
+# 日志
+*.log
+logs/
+
+# 环境变量与密钥
+.env
+.env.*
+!.env.example
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo

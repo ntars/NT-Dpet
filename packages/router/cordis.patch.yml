@@ -1,0 +1,5 @@
+# NT-Dpet 插件挂载入口
+# id 命名规范：nt-dpet:<组>:<名>，全项目唯一
+- insert:
+    - id: nt-dpet:channel:router
+      name: "@nt-dpet/router"

@@ -1,0 +1,26 @@
+{
+  "layer": "L2",
+  "name": "用户画像",
+  "budget": 180,
+  "notes": "关于「你」的稳定认知。群里多人时按熟悉度动态分配预算，见 docs/ARCHITECTURE.md §6.5。",
+  "entries": [
+    {
+      "id": "core_profile",
+      "priority": 100,
+      "always": true,
+      "content": null,
+      "todo": "待撰写：用户的稳定特征（称呼、作息、明显偏好）"
+    },
+    {
+      "id": "relation_tone",
+      "priority": 80,
+      "always": true,
+      "content": null,
+      "todo": "待撰写：随 relationship.type 分支的相处基调"
+    }
+  ],
+  "dynamicSlots": {
+    "note": "运行时由 memory 服务填充，不写进本文件",
+    "maxTokens": 120
+  }
+}

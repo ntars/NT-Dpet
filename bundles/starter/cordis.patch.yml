@@ -1,0 +1,44 @@
+# NT-Dpet 组合包配置注入层
+#
+# 作用：覆盖 DSH 基础包与 web-app 的某些行。
+# 各插件自己的挂载由各自的 cordis.patch.yml 负责，这里只做覆盖。
+#
+# 纪律（docs/ARCHITECTURE.md §13.3）：
+#   DSH 的 patch 是「整行替换」而非深合并。
+#   覆盖某行时必须写全该行需要的所有键，只写改动的键会丢掉其余。
+
+# ── 1. 隐私硬关（决策 54，最高优先级）──────────────────
+#
+# 事实依据：DSH 默认把 dsh_session_log（含消息全文、工具参数与结果、
+# 工作区路径）随每次模型请求上传，且 DSH_TELEMETRY_DISABLED=1 关不掉它。
+# 实测只有对 session-log-deepseek 设 enabled: false 才生效（0/3 携带）。
+#
+# 这两条不允许用户通过 UI 打开，privacy 包每次启动都会校验。
+- id: session-log-deepseek
+  config:
+    enabled: false
+
+- id: plugin-package-inventory-deepseek
+  config:
+    enabled: false
+
+# ── 2. 默认视图设为「对话」（决策 12）──────────────────
+#
+# DSH 中间区默认显示代码日志，伴侣场景必须默认显示对话。
+#
+# [待验证] 下面这行的 id 与字段名需在 S0 阶段核实 DSH 实际配置结构。
+# 当前写法依据：社区插件通过覆盖 dsh-web-app 行实现默认视图切换。
+- id: dsh-web-app
+  config:
+    defaultView: chat
+
+# ── 3. 关闭反馈按钮（隐私考虑）─────────────────────────
+#
+# 反馈按钮会把会话日志后缀导出到官方端点，伴侣场景不需要该功能。
+- id: command-feedback
+  config:
+    enabled: false
+
+- id: message-feedback
+  config:
+    enabled: false

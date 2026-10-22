@@ -1,0 +1,18 @@
+{
+  "name": "@nt-dpet/worldbook",
+  "version": "0.0.1",
+  "description": "六层世界书、token 预算、中文关键词触发",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "cordis.patch.yml"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "AGPL-3.0-or-later"
+}

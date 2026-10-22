@@ -1,0 +1,128 @@
+# NT-Dpet 官方组合包：开箱即用
+# 格式规范：docs/ARCHITECTURE.md §13.1（完整集，决策 78）
+# 纪律：字段只增不改名；扩展一律放 custom
+
+# ── 基础标识 ─────────────────────────────
+name: nt-dpet-starter
+displayName: 开箱即用
+version: 0.0.1
+description: 官方 QQ 机器人 + 语音 + 默认人格，装完即可对话
+changelog:
+  0.0.1: 骨架版本，尚无可用功能
+
+# ── 归属与展示 ───────────────────────────
+author:
+  name: Ntarstudio
+  url: https://github.com/ntars
+license: AGPL-3.0-or-later
+icon: ./assets/icon.png
+screenshots: []
+category: companion
+tags: [默认, 新手, 官方]
+
+# ── 组成 ─────────────────────────────────
+persona: xiaojingyu
+plugins:
+  # G1 内核
+  - package: "@nt-dpet/emotion"
+    version: "^0.0.1"
+  - package: "@nt-dpet/memory"
+    version: "^0.0.1"
+  - package: "@nt-dpet/worldbook"
+    version: "^0.0.1"
+  - package: "@nt-dpet/rhythm"
+    version: "^0.0.1"
+  - package: "@nt-dpet/proactive"
+    version: "^0.0.1"
+  # G2 对话
+  - package: "@nt-dpet/dialogue"
+    version: "^0.0.1"
+  - package: "@nt-dpet/persona"
+    version: "^0.0.1"
+  # G3 通道
+  - package: "@nt-dpet/router"
+    version: "^0.0.1"
+  - package: "@nt-dpet/adapter-qq-official"
+    version: "^0.0.1"
+  - package: "@nt-dpet/adapter-qq-napcat"
+    version: "^0.0.1"
+  - package: "@nt-dpet/adapter-feishu"
+    version: "^0.0.1"
+  - package: "@nt-dpet/adapter-dingtalk"
+    version: "^0.0.1"
+  - package: "@nt-dpet/adapter-wecom"
+    version: "^0.0.1"
+  - package: "@nt-dpet/adapter-telegram"
+    version: "^0.0.1"
+  - package: "@nt-dpet/adapter-discord"
+    version: "^0.0.1"
+  # G4 表达
+  - package: "@nt-dpet/tts"
+    version: "^0.0.1"
+  - package: "@nt-dpet/sticker"
+    version: "^0.0.1"
+  - package: "@nt-dpet/avatar"
+    version: "^0.0.1"
+  - package: "@nt-dpet/pet"
+    version: "^0.0.1"
+  - package: "@nt-dpet/expression-decide"
+    version: "^0.0.1"
+  # G5 行动
+  - package: "@nt-dpet/adb"
+    version: "^0.0.1"
+  - package: "@nt-dpet/browser"
+    version: "^0.0.1"
+  - package: "@nt-dpet/minecraft"
+    version: "^0.0.1"
+  - package: "@nt-dpet/gui-agent"
+    version: "^0.0.1"
+  # G6 系统
+  - package: "@nt-dpet/privacy"
+    version: "^0.0.1"
+  - package: "@nt-dpet/market"
+    version: "^0.0.1"
+  - package: "@nt-dpet/snapshot"
+    version: "^0.0.1"
+  - package: "@nt-dpet/log-zh"
+    version: "^0.0.1"
+  # G7 界面
+  - package: "@nt-dpet/ui"
+    version: "^0.0.1"
+
+# ── 默认配置（决策 57：更新只动这一层，不碰用户配置）──
+config:
+  memory:
+    decay: standard
+    contextBudget: auto
+  emotion:
+    halfLifeHours: 4
+    dispersion: 0.4
+  router:
+    wakeProbability: 0.1
+    replyPolicy: friends-only
+  tts:
+    enabled: true
+    provider: cloud
+
+# ── 权限声明（安装时展示给用户）──────────
+permissions:
+  network: true
+  filesystem: workspace
+  process: false
+  device: false
+  networkDomains:
+    - api.deepseek.com
+    - registry.npmmirror.com
+
+# ── 兼容与冲突 ───────────────────────────
+requires:
+  dsh: ">=0.2.1-rc.2 <0.3.0"
+conflicts: []
+
+# ── 完整性（构建时填充）─────────────────
+checksum:
+  algorithm: sha256
+  files: {}
+
+# ── 扩展位（预留，永不移除）──────────────
+custom: {}

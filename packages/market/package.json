@@ -1,0 +1,18 @@
+{
+  "name": "@nt-dpet/market",
+  "version": "0.0.1",
+  "description": "组合包管理、冲突检测、开发者模式",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "cordis.patch.yml"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "AGPL-3.0-or-later"
+}

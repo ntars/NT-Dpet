@@ -1,0 +1,18 @@
+{
+  "name": "@nt-dpet/adapter-qq-official",
+  "version": "0.0.1",
+  "description": "QQ 官方机器人通道（合规，无封号风险）",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "cordis.patch.yml"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "AGPL-3.0-or-later"
+}

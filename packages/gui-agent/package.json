@@ -1,0 +1,18 @@
+{
+  "name": "@nt-dpet/gui-agent",
+  "version": "0.0.1",
+  "description": "通用 GUI 决策环与三层安全网",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "cordis.patch.yml"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "AGPL-3.0-or-later"
+}
