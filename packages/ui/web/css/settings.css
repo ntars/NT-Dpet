@@ -1,0 +1,741 @@
+/* ─────────────────────────────────────────────
+   设置面板
+   依据：docs/ARCHITECTURE.md §14、docs/DECISIONS.md 决策 28-32、46、59、66
+   规则：字体单位只用 px / rem，禁用 rpx
+   所有颜色走 tokens.css，不在这里另立色值
+   ───────────────────────────────────────────── */
+
+/* ══ 遮罩与容器 ══ */
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  /*
+   * 列宽必须显式钉成 minmax(0, 1fr)。
+   * 只写 display:grid 时列宽是 auto，会取内容的 min-content 宽度，
+   * 于是面板被内部分段控件、关系卡片撑到比视口还宽，
+   * 右侧内容直接跑到画布外——在窄屏上尤其明显。
+   */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  place-items: center;
+  padding: var(--sp-6);
+}
+
+.sheet[hidden] {
+  display: none;
+}
+
+.sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: sheet-fade var(--dur-base) var(--ease-out);
+}
+
+/*
+ * 深色下遮罩要更暗。
+ * 面板本身也是深色，0.26 的遮罩压不住背景，窗口会跟面板糊成一片，
+ * 分不清哪个是浮层。浅色 0.26、深色 0.54，两边都能拉开层次。
+ */
+:root[data-theme="dark"] .sheet__backdrop {
+  background: rgba(0, 0, 0, 0.54);
+}
+
+.sheet__panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: 172px minmax(0, 1fr);
+  width: min(760px, 100%);
+  /* 高度按最长的一页（她 / 开发者）定，尽量一屏放下，少让用户滚 */
+  height: min(688px, 100%);
+  background: var(--bg-window);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  animation: sheet-rise var(--dur-base) var(--ease-out);
+}
+
+@keyframes sheet-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sheet-rise {
+  from { opacity: 0; transform: scale(0.985) translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ══ 左栏分类 ══ */
+
+.sheet__nav {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--separator);
+  background: var(--bg-sidebar);
+  min-height: 0;
+}
+
+.sheet__navhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-4);
+  flex: none;
+}
+
+.sheet__navtitle {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--label);
+}
+
+.sheet__navlist {
+  display: flex;
+  flex-direction: column;
+  /*
+   * gap 必须是 0。
+   * 设 1px 时，间隙处会露出下层背景，而侧栏背景是半透明的，
+   * 结果每两项之间都多出一条细横线，看上去像一堆分隔线，很吵。
+   * 项与项的间距靠 .nav-row 自身高度与 padding 控制即可。
+   */
+  gap: 0;
+  padding: var(--sp-1) var(--sp-2) var(--sp-3);
+  overflow-y: auto;
+}
+
+/* 复用 .nav-row 的排布，只调设置面板里的选中态 */
+.sheet__navlist .nav-row {
+  height: 30px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-sm);
+  font-size: var(--text-md);
+  color: var(--label-2);
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.sheet__navlist .nav-row.is-active {
+  background: var(--bg-active);
+  color: var(--label);
+  font-weight: 550;
+}
+
+/* ══ 右栏内容 ══ */
+
+.sheet__body {
+  overflow-y: auto;
+  padding: var(--sp-5) var(--sp-6) var(--sp-8);
+  min-height: 0;
+  scrollbar-width: thin;
+}
+
+.sheet__pane {
+  display: none;
+}
+
+.sheet__pane.is-active {
+  display: block;
+  animation: pane-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes pane-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.sheet__h {
+  font-size: var(--text-xl);
+  font-weight: 620;
+  letter-spacing: 0.005em;
+  color: var(--label);
+  margin: 0 0 var(--sp-1);
+}
+
+.sheet__h3 {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--label);
+  margin: var(--sp-6) 0 var(--sp-1);
+}
+
+.sheet__sub {
+  font-size: var(--text-sm);
+  line-height: var(--leading-base);
+  color: var(--label-2);
+  margin: 0 0 var(--sp-4);
+}
+
+/* 说明文字的度量：一行别超过 62 个汉字，超了难读 */
+.sheet__note {
+  font-size: var(--text-xs);
+  line-height: 1.65;
+  color: var(--label-3);
+  margin: var(--sp-3) 0 0;
+  max-width: 62ch;
+}
+
+.sheet__note code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  padding: 1px 4px;
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+  color: var(--label-2);
+}
+
+/* ══ 分组卡片 ══ */
+
+.group {
+  background: var(--bg-surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  margin-bottom: var(--sp-3);
+}
+
+.group__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--separator);
+  box-sizing: border-box;
+}
+
+.group__row:last-child {
+  border-bottom: none;
+}
+
+/* 危险项：只给左侧一道细竖条，不做整行染红 —— 整行红会让人以为已经出事 */
+.group__row--warn {
+  box-shadow: inset 2px 0 0 var(--dot-warn);
+}
+
+.group__row--link {
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--separator-soft);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.group__row--link:hover {
+  background: var(--bg-hover);
+}
+
+.group__row--link:active {
+  background: var(--bg-active);
+}
+
+.group__label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/*
+ * 说明文字长的行改用堆叠布局
+ *
+ * 默认布局里说明文字与右侧状态并排，说明一长就被挤成很窄的一条，
+ * 读起来要不断回行。堆叠后：名称与状态同一行，说明独占整行宽度。
+ * 用 grid 而不是 flex-wrap，是为了让「状态」严格对齐右上角，
+ * 不随文字多少上下浮动。
+ */
+.group__row--stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "name trailing"
+    "desc desc";
+  column-gap: var(--sp-4);
+  row-gap: 3px;
+  align-items: start;
+}
+
+.group__row--stack .group__label {
+  display: contents;
+}
+
+.group__row--stack .group__name {
+  grid-area: name;
+}
+
+.group__row--stack .group__desc {
+  grid-area: desc;
+  line-height: 1.55;
+}
+
+.group__row--stack > :not(.group__label) {
+  grid-area: trailing;
+  align-self: center;
+  /* 必须靠右：否则开关会跟着列宽停在中间，与上一行的开关错开一截 */
+  justify-self: end;
+}
+
+/*
+ * 整行堆叠：名称、说明、值各占一行，值左对齐并铺满可用宽度。
+ * 给路径这类「一定很长且不能折断」的值用。
+ * 放在右侧只会被压到一百多像素，末尾只剩两三个字符，非常难认。
+ */
+.group__row--full {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "name"
+    "desc"
+    "trailing";
+  row-gap: 4px;
+  align-items: start;
+}
+
+.group__row--full .group__label {
+  display: contents;
+}
+
+.group__row--full .group__name {
+  grid-area: name;
+}
+
+.group__row--full .group__desc {
+  grid-area: desc;
+}
+
+.group__row--full > :not(.group__label) {
+  grid-area: trailing;
+  /* 宽度跟着内容走，不硬拉满整行——铺满会像输入框，读起来以为可以点 */
+  justify-self: start;
+  text-align: left;
+  max-width: 100%;
+}
+
+.group__name {
+  font-size: var(--text-base);
+  color: var(--label);
+  line-height: var(--leading-tight);
+}
+
+.group__desc {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  /*
+   * 用 label-2 而不是 label-3。
+   * label-3 在深色背景上的对比度约 3.2:1，低于 WCAG AA 对正文的 4.5:1，
+   * 截图里几乎读不出来。这些是「开关打开后会怎样」的关键说明，
+   * 看不清等于没写。
+   */
+  color: var(--label-2);
+}
+
+/* ══ 值展示 ══ */
+
+.value-pill {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--label-2);
+  background: var(--bg-inset);
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+}
+
+/* 路径可能很长。独占一行后按可用宽度排，不设固定上限，
+   实在放不下才在分隔符处断行，不会出现末尾孤字。 */
+.value-pill--path {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  line-height: 1.55;
+}
+
+.status-text {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-xs);
+  color: var(--label-2);
+  white-space: nowrap;
+}
+
+/* 固定关闭项：用更弱的颜色，表示「不用管它」而不是「已失效」 */
+.status-text--locked {
+  color: var(--label-3);
+}
+
+/* ══ 表单控件 ══ */
+
+.field {
+  flex: none;
+  width: 140px;
+  height: 28px;
+  padding: 0 var(--sp-2);
+  font-family: inherit;
+  font-size: var(--text-md);
+  color: var(--label);
+  background: var(--bg-input);
+  border: 1px solid var(--separator);
+  border-radius: var(--r-sm);
+  box-sizing: border-box;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.select {
+  flex: none;
+  height: 28px;
+  padding: 0 26px 0 var(--sp-2);
+  font-family: inherit;
+  font-size: var(--text-md);
+  color: var(--label);
+  background-color: var(--bg-input);
+  border: 1px solid var(--separator);
+  border-radius: var(--r-sm);
+  box-sizing: border-box;
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 13px) 12px, calc(100% - 9px) 12px;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ══ 开关 ══ */
+
+.switch {
+  flex: none;
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+/* 视觉隐藏但保留键盘可达性：不能直接 display:none */
+.switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch__track {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  box-shadow: inset 0 0 0 1px var(--border);
+  transition: background var(--dur-base) var(--ease-out);
+}
+
+.switch__track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-full);
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.switch input:checked + .switch__track {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+.switch input:checked + .switch__track::after {
+  transform: translateX(16px);
+}
+
+.switch input:focus-visible + .switch__track {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ══ 关系四选一 ══ */
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: var(--sp-3);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: var(--bg-surface);
+  border: 1px solid var(--separator);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+}
+
+.choice:hover {
+  background: var(--bg-hover);
+}
+
+.choice.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.choice__t {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--label);
+}
+
+.choice__d {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--label-2);
+}
+
+/* 选中时把描述文字提亮一档，避免蓝色底上灰字发虚 */
+.choice.is-active .choice__d {
+  color: var(--label-2);
+}
+
+/* ══ 警告框 ══ */
+
+.warnbox {
+  /* 不用 color-mix：旧内核会静默失效，导致警告框看上去没有底色。
+     这里直接写半透明橙，深浅两套主题下观感一致。 */
+  background: rgba(255, 159, 10, 0.10);
+  border: 1px solid rgba(255, 159, 10, 0.34);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  margin: var(--sp-3) 0;
+}
+
+.warnbox__t {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--label);
+  margin: 0 0 var(--sp-2);
+}
+
+.warnbox__list {
+  margin: 0;
+  padding-left: 1.15em;
+  font-size: var(--text-xs);
+  line-height: 1.72;
+  color: var(--label-2);
+}
+
+.warnbox__foot {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--label-3);
+  margin: var(--sp-2) 0 0;
+}
+
+.warnbox__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+/* ══ 关于 ══ */
+
+.about {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--bg-surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--sp-3);
+}
+
+.about__mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.about__mark svg {
+  width: 26px;
+  height: 26px;
+}
+
+.about__text {
+  min-width: 0;
+}
+
+.about__name {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--label);
+  margin: 0;
+  line-height: var(--leading-tight);
+}
+
+.about__ver {
+  font-size: var(--text-xs);
+  color: var(--label-3);
+  margin: 2px 0 0;
+}
+
+.chev {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--label-3);
+}
+
+/* ══ 宽版分段控件 ══ */
+
+/*
+ * 主界面的 .segmented 写死了两列，只适用于「对话 / 工作」两项。
+ * 设置里最多四项，这里按 --seg-n 动态开列。
+ * 滑块的宽度与位移已在 components.css 里统一按变量计算，此处不再重复。
+ *
+ * 默认宽度取 max-content：写在 .group__row 里时，若用 width:100%
+ * 会把同一行的名称与说明压成竖排单字。按内容撑开则有自然的最小宽度。
+ * 需要独占整行的场景另加 .segmented--block。
+ */
+.segmented--wide {
+  display: grid;
+  grid-template-columns: repeat(var(--seg-n, 2), minmax(0, 1fr));
+  width: max-content;
+  max-width: 100%;
+  flex: 0 1 auto;
+  margin: 0;
+}
+
+.segmented--wide.segmented--block {
+  width: 100%;
+  margin: var(--sp-2) 0 var(--sp-2);
+}
+
+.segmented--wide .segmented__item {
+  min-width: 0;
+  padding: 0 var(--sp-1);
+  white-space: nowrap;
+}
+
+/* 紧凑版：用在行内，不撑满整行 */
+.segmented--compact {
+  width: 138px;
+  flex: none;
+  margin: 0;
+}
+
+/* ══ 窄屏 ══ */
+
+/* 820px 是全局断点，设置面板跟着收：左栏横过来，关系四选一收成两列 */
+@media (max-width: 820px) {
+  .sheet {
+    padding: 0;
+  }
+
+  .sheet__panel {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    /*
+     * 面板本身也是 .sheet 这个 grid 的子项，同样受 min-width:auto 影响。
+     * 内容里只要有一个不可压缩的元素（比如带 nowrap 的分段控件），
+     * 整个面板就会被撑到比视口还宽，右侧内容被裁在画布外。
+     */
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /*
+   * min-width: 0 是必须的。
+   * grid 子项默认 min-width:auto，会被内部内容（尤其是横向排列的导航）
+   * 撑得比容器还宽，结果整个面板溢出到画布外，右侧内容被裁掉。
+   */
+  .sheet__nav,
+  .sheet__body {
+    min-width: 0;
+  }
+
+  .sheet__nav {
+    border-right: none;
+    border-bottom: 1px solid var(--separator);
+  }
+
+  /*
+   * 窄屏下分类换成可换行，不用横向滚动条。
+   * 七个分类横滚的话，用户只能看到第一两个，
+   * 剩下的得靠猜——比多占两行更糟。
+   */
+  .sheet__navlist {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    overflow-x: visible;
+    padding-bottom: var(--sp-2);
+  }
+
+  .sheet__navlist .nav-row {
+    flex: none;
+    /* 必须复位：.nav-row 基础样式带 width:100%（侧栏竖排时需要），
+       横向排列后若不复位，每项仍占满整行，视觉上还是竖排 */
+    width: auto;
+    height: 28px;
+    padding: 0 var(--sp-3);
+  }
+
+  .sheet__body {
+    padding: var(--sp-4) var(--sp-4) var(--sp-8);
+  }
+
+  .group__row {
+    flex-wrap: wrap;
+  }
+
+  /* 窄屏下关系四选一保持两列，文字会折行但不至于挤成一列长条 */
+  .choice-grid {
+    gap: var(--sp-2);
+  }
+}

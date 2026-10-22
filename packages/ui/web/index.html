@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/layout.css">
   <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/settings.css">
 </head>
 <body>
   <!--
@@ -224,8 +225,8 @@
 
         <section class="card">
           <div class="card__head">
-            <span class="card__title">她对主人</span>
-            <span class="card__meta">妹妹</span>
+            <span class="card__title" id="relationTitle">她对主人</span>
+            <span class="card__meta" id="relationTag">伴侣</span>
           </div>
           <div class="metric-list" id="relationList"></div>
           <p class="card__note">数值会随对话慢慢变化，可在设置里查看与调整</p>
@@ -269,6 +270,400 @@
       <span class="statusbar__item statusbar__muted">演示数据</span>
     </footer>
 
+  </div>
+
+  <!--
+    ══ 设置面板 ══
+    覆盖整窗的对话框，左侧分类、右侧内容。
+    每条设置都对应 docs/DECISIONS.md 里的决策编号，注释里标出对应关系，
+    避免以后改界面时把决策改丢。
+    尚未接后端的项一律标「未接入」，不用假开关冒充可用。
+  -->
+  <div class="sheet" id="settingsSheet" hidden>
+    <div class="sheet__backdrop" data-action="settings-close"></div>
+
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="settingsHead">
+      <aside class="sheet__nav">
+        <header class="sheet__navhead">
+          <span class="sheet__navtitle" id="settingsHead">设置</span>
+          <button class="icon-btn icon-btn--sm" type="button" data-action="settings-close" title="关闭">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <path d="M5.6 5.6l8.8 8.8M14.4 5.6l-8.8 8.8"/>
+            </svg>
+          </button>
+        </header>
+        <nav class="sheet__navlist" aria-label="设置分类">
+          <button class="nav-row is-active" type="button" data-pane="model">模型</button>
+          <button class="nav-row" type="button" data-pane="her">她</button>
+          <button class="nav-row" type="button" data-pane="look">外观</button>
+          <button class="nav-row" type="button" data-pane="channel">通道</button>
+          <button class="nav-row" type="button" data-pane="privacy">隐私</button>
+          <button class="nav-row" type="button" data-pane="dev">开发者</button>
+          <button class="nav-row" type="button" data-pane="about">关于</button>
+        </nav>
+      </aside>
+
+      <div class="sheet__body" id="settingsBody">
+
+        <!-- ── 模型 ── -->
+        <section class="sheet__pane is-active" data-pane="model">
+          <h2 class="sheet__h">模型</h2>
+          <p class="sheet__sub">她用什么脑子说话。换模型只影响生成质量与速度，不影响记忆与人格。</p>
+
+          <div class="group">
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">提供方</span>
+                <span class="group__desc">当前只接入 DeepSeek 官方</span>
+              </div>
+              <span class="value-pill">deepseek-official</span>
+            </div>
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">模型</span>
+                <span class="group__desc">由适配器目录动态提供</span>
+              </div>
+              <select class="select" id="modelSelect">
+                <option value="deepseek-flash">deepseek-flash（V4.1-Flash）</option>
+                <option value="deepseek-pro">deepseek-pro</option>
+              </select>
+            </div>
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">推理强度</span>
+                <span class="group__desc">越高越慢。日常聊天用「低」足够</span>
+              </div>
+              <div class="segmented segmented--wide segmented--compact" id="reasoningSeg" data-active="low">
+                <button class="segmented__item is-active" type="button" data-reasoning="low">低</button>
+                <button class="segmented__item" type="button" data-reasoning="mid">中</button>
+                <button class="segmented__item" type="button" data-reasoning="high">高</button>
+                <span class="segmented__thumb" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">API Key</span>
+                <span class="group__desc">存放于本机凭据文件，不经过我们的服务器</span>
+              </div>
+              <span class="status-text" id="keyStatus"><i class="dot dot--online"></i>已配置</span>
+            </div>
+          </div>
+
+          <p class="sheet__note">
+            模型名以适配器实际返回的目录为准。上游处于开发者预览，模型名可能变动，
+            因此界面不写死列表，而是读取 <code>listModels()</code> 的结果。
+          </p>
+        </section>
+
+        <!-- ── 她 ── -->
+        <section class="sheet__pane" data-pane="her">
+          <h2 class="sheet__h">她</h2>
+          <p class="sheet__sub">身份、关系与说话方式。换关系会换一套性格，记忆和好感度保留。</p>
+
+          <div class="group">
+            <div class="group__row">
+              <div class="group__label"><span class="group__name">名字</span></div>
+              <input class="field" id="personaName" type="text" value="小鲸鱼" maxlength="12">
+            </div>
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">她怎么称呼你</span>
+                <span class="group__desc">会体现在每一条回复里</span>
+              </div>
+              <input class="field" id="personaCall" type="text" value="主人" maxlength="12">
+            </div>
+          </div>
+
+          <h3 class="sheet__h3">关系</h3>
+          <p class="sheet__sub">四选一。这一步决定的是性格底色，不是称呼。</p>
+          <div class="choice-grid" id="relationGrid" role="radiogroup" aria-label="关系">
+            <button class="choice" type="button" role="radio" aria-checked="false" data-relation="sister">
+              <span class="choice__t">妹妹</span>
+              <span class="choice__d">黏人、爱撒娇、会闹小脾气</span>
+            </button>
+            <button class="choice is-active" type="button" role="radio" aria-checked="true" data-relation="partner">
+              <span class="choice__t">伴侣</span>
+              <span class="choice__d">亲密、有占有欲、会想你</span>
+            </button>
+            <button class="choice" type="button" role="radio" aria-checked="false" data-relation="friend">
+              <span class="choice__t">朋友</span>
+              <span class="choice__d">松弛、会吐槽、有分寸</span>
+            </button>
+            <button class="choice" type="button" role="radio" aria-checked="false" data-relation="assistant">
+              <span class="choice__t">助手</span>
+              <span class="choice__d">可靠、简洁、少情绪</span>
+            </button>
+          </div>
+
+          <h3 class="sheet__h3">说话浓度</h3>
+          <div class="segmented segmented--wide segmented--block" id="densitySeg" data-active="normal">
+            <button class="segmented__item" type="button" data-density="light">清淡</button>
+            <button class="segmented__item is-active" type="button" data-density="normal">标准</button>
+            <button class="segmented__item" type="button" data-density="heavy">浓</button>
+            <span class="segmented__thumb" aria-hidden="true"></span>
+          </div>
+          <p class="sheet__note">浓度只调语气强度与口头禅密度，不改人设内容。</p>
+
+          <h3 class="sheet__h3">主动开口</h3>
+          <div class="segmented segmented--wide segmented--block" id="proactiveSeg" data-active="normal">
+            <button class="segmented__item" type="button" data-proactive="off">关闭</button>
+            <button class="segmented__item" type="button" data-proactive="slow">缓慢</button>
+            <button class="segmented__item is-active" type="button" data-proactive="normal">标准</button>
+            <button class="segmented__item" type="button" data-proactive="fast">快速</button>
+            <span class="segmented__thumb" aria-hidden="true"></span>
+          </div>
+          <p class="sheet__note">
+            她会自己判断该不该说话，不是固定间隔发消息。凌晨 1 点到 6 点默认静默。
+          </p>
+        </section>
+
+        <!-- ── 外观 ── -->
+        <section class="sheet__pane" data-pane="look">
+          <h2 class="sheet__h">外观</h2>
+          <p class="sheet__sub">深浅色跟随系统，也可以按日出日落自动切。</p>
+
+          <div class="group">
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">主题</span>
+                <span class="group__desc" id="themeDesc">跟随系统设置</span>
+              </div>
+              <div class="segmented segmented--wide" id="themeSeg" data-active="system">
+                <button class="segmented__item is-active" type="button" data-theme-mode="system">跟随系统</button>
+                <button class="segmented__item" type="button" data-theme-mode="light">浅色</button>
+                <button class="segmented__item" type="button" data-theme-mode="dark">深色</button>
+                <button class="segmented__item" type="button" data-theme-mode="solar">日出日落</button>
+                <span class="segmented__thumb" aria-hidden="true"></span>
+              </div>
+            </div>
+          </div>
+
+          <p class="sheet__note">
+            「日出日落」按本机经纬度估算当天的日出与日落时刻，日落后 20 分钟切入深色，
+            避免傍晚屏幕突然变黑。偏离常规的光照条件以系统设置为准。
+          </p>
+        </section>
+
+        <!-- ── 通道 ── -->
+        <section class="sheet__pane" data-pane="channel">
+          <h2 class="sheet__h">通道</h2>
+          <p class="sheet__sub">她在哪里跟你说话。官方通道合规稳定，个人号通道有封号风险。</p>
+
+          <div class="group">
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">QQ 官方机器人</span>
+                <span class="group__desc">合规，消息带 AI 生成标识</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked data-channel="qq-official">
+                <span class="switch__track" aria-hidden="true"></span>
+              </label>
+            </div>
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">飞书</span>
+                <span class="group__desc">未配置凭据</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" data-channel="feishu">
+                <span class="switch__track" aria-hidden="true"></span>
+              </label>
+            </div>
+            <div class="group__row group__row--warn group__row--stack">
+              <div class="group__label">
+                <span class="group__name">QQ 个人号（NapCat）</span>
+                <span class="group__desc">
+                  非官方协议。可能被腾讯判定违规导致账号或群永久封禁，默认关闭。
+                  开启即表示你理解并自行承担风险。
+                </span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" data-channel="qq-napcat">
+                <span class="switch__track" aria-hidden="true"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="group__row group__row--stack">
+              <div class="group__label">
+                <span class="group__name">群聊分条上限</span>
+                <span class="group__desc">
+                  官方群聊每条消息最多分 4 条发完（平台单次回复上限 5 次）。
+                  私聊与其他平台不限制。
+                </span>
+              </div>
+              <span class="value-pill">4 条</span>
+            </div>
+          </div>
+
+          <p class="sheet__note">
+            个人微信通道不做。腾讯在协议层与法律层双重禁止，稳定性和合规性都不可控。
+          </p>
+        </section>
+
+        <!-- ── 隐私 ── -->
+        <section class="sheet__pane" data-pane="privacy">
+          <h2 class="sheet__h">隐私</h2>
+          <p class="sheet__sub">默认不给任何人留后门。这两项在本产品里是固定的，不给开关。</p>
+
+          <div class="group">
+            <div class="group__row group__row--stack">
+              <div class="group__label">
+                <span class="group__name">会话日志上传</span>
+                <span class="group__desc">
+                  上游默认把对话内容随请求一起发给模型服务端做日志，且关闭后重开还会补传。
+                  本产品在配置层固定关闭，不提供开启入口。
+                </span>
+              </div>
+              <span class="status-text status-text--locked"><i class="dot dot--offline"></i>已固定关闭</span>
+            </div>
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">使用情况统计</span>
+                <span class="group__desc">上游的埋点与遥测，本产品不启用</span>
+              </div>
+              <span class="status-text status-text--locked"><i class="dot dot--offline"></i>已固定关闭</span>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="group__row group__row--full">
+              <div class="group__label">
+                <span class="group__name">对话存储位置</span>
+                <span class="group__desc">记忆与对话只存在本机，不上云</span>
+              </div>
+              <span class="value-pill value-pill--path">~/Library/Application Support/NT-Dpet</span>
+            </div>
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">代码级日志</span>
+                <span class="group__desc">
+                  含对话原文、请求报文与完整堆栈。需要开发者模式。
+                </span>
+              </div>
+              <span class="status-text" id="rawLogStatus">未开启</span>
+            </div>
+          </div>
+
+          <p class="sheet__note">
+            为什么这两项不做成开关：日志上传一旦开过，关闭期间记录的内容会在重新开启时补发，
+            「关掉就干净了」是错的。与其给一个让人误以为安全的开关，不如直接不给。
+          </p>
+        </section>
+
+        <!-- ── 开发者 ── -->
+        <section class="sheet__pane" data-pane="dev">
+          <h2 class="sheet__h">开发者</h2>
+          <p class="sheet__sub">这些开关会改变软件的行为方式，普通使用不需要碰。</p>
+
+          <div class="group">
+            <div class="group__row group__row--stack">
+              <div class="group__label">
+                <span class="group__name">开发者模式</span>
+                <span class="group__desc">
+                  开启后可见代码级日志、可加载第三方插件、可执行构建脚本。
+                  开启时自动创建还原点。
+                </span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="devModeSwitch">
+                <span class="switch__track" aria-hidden="true"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="warnbox" id="devWarn" hidden>
+            <p class="warnbox__t">开启开发者模式意味着三件事</p>
+            <ul class="warnbox__list">
+              <li>你能看到完整代码运行记录，包括对话原文与账号标识</li>
+              <li>第三方插件可以读写本机文件，我们无法审查每一个</li>
+              <li>插件附带的构建脚本会被实际执行</li>
+            </ul>
+            <p class="warnbox__foot">开启后会自动创建还原点，出问题可一键退回。</p>
+            <div class="warnbox__actions">
+              <button class="btn btn--sm" type="button" data-action="dev-abort">取消</button>
+              <button class="btn btn--sm btn--primary" type="button" data-action="dev-confirm">确认开启</button>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">还原点</span>
+                <span class="group__desc" id="snapshotDesc">最近一次：安装时自动创建</span>
+              </div>
+              <button class="btn btn--sm" type="button" data-action="snapshot">立即创建</button>
+            </div>
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">插件来源</span>
+                <span class="group__desc">只从自有市场安装，第三方来源需手动添加</span>
+              </div>
+              <span class="value-pill">仅自有市场</span>
+            </div>
+          </div>
+
+          <p class="sheet__note">
+            开发者模式的两条保护是同时生效的：必须先看到警告并确认，开启后立刻有还原点。
+            只做其中一条等于没做。
+          </p>
+        </section>
+
+        <!-- ── 关于 ── -->
+        <section class="sheet__pane" data-pane="about">
+          <h2 class="sheet__h">关于</h2>
+          <p class="sheet__sub">NT-Dpet 把一堆开源件装成一个人能双击运行的东西。</p>
+
+          <div class="about">
+            <div class="about__mark" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5.2 7.4 5.9 3.4l2.6 2.2h3l2.6-2.2.7 4"/>
+                <path d="M10 5.9a5.6 5.6 0 0 1 5.6 5.6c0 3.1-2.5 5.6-5.6 5.6a5.6 5.6 0 0 1-5.6-5.6A5.6 5.6 0 0 1 10 5.9Z"/>
+                <path d="M8.1 11.3h.01M11.9 11.3h.01"/><path d="M8.9 13.2a2 2 0 0 0 2.2 0"/>
+              </svg>
+            </div>
+            <div class="about__text">
+              <p class="about__name">NT-Dpet</p>
+              <p class="about__ver">版本 0.0.1 · 界面预览</p>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">内核</span>
+                <span class="group__desc">DeepSeek Harness（MIT）</span>
+              </div>
+              <span class="value-pill">0.2.1-rc.2</span>
+            </div>
+            <div class="group__row">
+              <div class="group__label">
+                <span class="group__name">本项目许可</span>
+                <span class="group__desc">修改后的版本必须同样开源</span>
+              </div>
+              <span class="value-pill">AGPL-3.0</span>
+            </div>
+            <button class="group__row group__row--link" type="button" data-action="credits">
+              <div class="group__label">
+                <span class="group__name">致谢与所用项目</span>
+                <span class="group__desc">这个软件站在谁的肩膀上</span>
+              </div>
+              <svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 5.5 12.5 10 8 14.5"/>
+              </svg>
+            </button>
+          </div>
+
+          <p class="sheet__note">
+            本软件不含任何自研大模型，人格与记忆算法来自主人的自有项目 NT-Sine，
+            语音来自 GPT-SoVITS 与 RVC，均为开源项目，作者与许可详见致谢文档。
+          </p>
+        </section>
+
+      </div>
+    </div>
   </div>
 
   <script type="module" src="./js/app.js"></script>

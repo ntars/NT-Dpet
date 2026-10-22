@@ -31,7 +31,9 @@ NT-Dpet 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 
 
 ## 架构一句话
 
-29 个插件包，分成 7 组，挂在 DSH 的插件树上。
+插件包按 7 组挂在 DSH 的插件树上。
+
+> **包结构待重划。** 原先的「29 个包全自研」定于发现生态已有实现之前。实测本机 DSH 已装 `dsh-pet`（桌宠，含 97 个动画与亲密度）、`dsh-soul-md`（人格与分层记忆）、`dsh-context` 等插件，与多个自研包功能重叠。决策 85 已改为「复用优先、只做差异，且必须保持能跟随上游原作者更新」，因此包划分要在 S0 前重做一次。见 `docs/TECH-RESEARCH.md` §5.5。
 
 | 组 | 包数 | 内容 |
 |---|---|---|
@@ -51,22 +53,44 @@ NT-Dpet 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 
 |---|---|
 | [`docs/TECH-RESEARCH.md`](docs/TECH-RESEARCH.md) | 技术底账：能力域选型、许可矩阵、硬件基线、待验证清单 |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 架构设计：进程拓扑、数据模型、接口契约、施工顺序 |
-| [`docs/DECISIONS.md`](docs/DECISIONS.md) | 决策记录：82 项已确认决策，全部可溯源 |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md) | 决策记录：86 项已确认决策，全部可溯源 |
 | [`docs/CREDITS.md`](docs/CREDITS.md) | 致谢与第三方依赖：用了谁、怎么用、许可边界在哪 |
 
 设计过程中的关键判断（含被否掉的方案和理由）都写在这三份文档里，没有藏在对话里。
 
 ## 界面
 
-界面壳已完成，可直接在浏览器里看：`packages/ui/web/`。三栏布局（会话 / 对话 / 她的状态），对话与工作双视图切换，深浅色跟随系统或按日出日落切换。
+界面壳已完成，可直接在浏览器里看：`packages/ui/web/`。三栏布局（会话 / 对话 / 她的状态），对话与工作双视图切换，深浅色跟随系统或按日出日落切换，设置面板覆盖模型、人格、外观、通道、隐私、开发者、关于七组。
 
 ```bash
 cd packages/ui/web && python3 -m http.server 8731
 # 打开 http://127.0.0.1:8731/
-# 工作模式：http://127.0.0.1:8731/#work
+# 工作模式（日志）：http://127.0.0.1:8731/#work
+# 直接打开某一页设置：http://127.0.0.1:8731/?pane=her
 ```
 
 当前是**纯静态壳**，数据全部来自 `js/data.js` 的演示数据，没有连接任何后端。
+
+界面里每一项都落在真实偏好上，不用假开关凑数——尚未接后端的项直接标「未接入」。改完界面跑一遍交互冒烟测试，确认点击真的能改到状态：
+
+```bash
+node packages/ui/web/test/smoke.mjs
+```
+
+静态服务与浏览器由脚本自己拉起并回收，不需要先开服务器。
+
+## 与官方 DSH 的关系
+
+装 NT-Dpet **不会动你电脑上已有的 DSH**。两边从目录到进程完全隔离：
+
+| | 官方 DSH | NT-Dpet |
+|---|---|---|
+| 数据目录 | `~/.dsh` | 自己的 `dsh-home` |
+| 技能与指令 | `~/.agents` | 自己的 `agents` |
+| profile | `desktop` | `nt-dpet` |
+| 端口 | 3080 | 3180 |
+
+唯一的跨界读取是首次启动时**只读**看一眼 `~/.dsh/.credentials.yaml`，问你要不要沿用已配好的密钥。同意才复制一份过去，绝不回写。详见 [`docs/ARCHITECTURE.md` §2.3](docs/ARCHITECTURE.md)。
 
 ## 技术栈
 

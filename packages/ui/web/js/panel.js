@@ -7,6 +7,15 @@
  */
 
 import { emotion, relationship, memories, persona } from './data.js';
+import { getPref } from './prefs.js';
+
+/** 关系标识到中文的映射，与设置面板的四选一保持一致（决策 32） */
+const RELATION_LABELS = {
+  sister: '妹妹',
+  partner: '伴侣',
+  friend: '朋友',
+  assistant: '助手',
+};
 
 /** 情绪：实例全局 */
 const EMOTION_METRICS = [
@@ -84,8 +93,30 @@ export function renderPanel() {
   // 记忆
   renderMemories(memories);
 
-  // 品牌名与关系标签
-  document.getElementById('brandName').textContent = persona.name;
+  // 名字与关系标签
+  refreshIdentity();
+}
+
+/**
+ * 同步名字与关系标签
+ *
+ * 设置面板改了名字或关系后调用。独立成函数是因为它跟情绪数值无关，
+ * 不必为了改一个称呼把整块面板重绘一遍。
+ */
+export function refreshIdentity() {
+  const name = getPref('personaName') || persona.name;
+  document.getElementById('brandName').textContent = name;
+
+  const tag = document.getElementById('relationTag');
+  if (tag) tag.textContent = RELATION_LABELS[getPref('relation')] ?? '伴侣';
+
+  // 输入框占位符里也带着名字，一起更新
+  const composer = document.getElementById('composerInput');
+  if (composer) composer.placeholder = `和${name}说点什么…`;
+
+  // 右栏标题「她对主人」里的称呼
+  const ownerLabel = document.getElementById('relationTitle');
+  if (ownerLabel) ownerLabel.textContent = `她对${getPref('personaCall') || '主人'}`;
 }
 
 /**
