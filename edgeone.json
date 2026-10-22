@@ -1,3 +1,5 @@
 {
-  "outputDirectory": "./site"
+  "installCommand": "echo skip-install",
+  "buildCommand": "echo skip-build",
+  "outputDirectory": "./"
 }

@@ -60,14 +60,18 @@ NT-Dpet 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 
 
 ## 项目主页
 
-`site/` 是项目介绍页（[NT-Dpet - 玄宠，从代码到身边](site/index.html)），纯静态、零依赖、单一 HTML + 一份 CSS。
+根目录的 [`index.html`](index.html) 是项目介绍页（NT-Dpet - 玄宠，从代码到身边），纯静态、零依赖、单一 HTML + 一份 CSS，样式在 `css/site.css`，图片在 `assets/`。
+
+放在仓库根而不是子目录，是为了让 EdgeOne 这类「从仓库根发布」的托管平台直接取到入口文件，不需要额外配置输出目录。
 
 ```bash
-cd site && python3 -m http.server 8920
+python3 -m http.server 8920
 # 打开 http://127.0.0.1:8920/
 ```
 
-深浅色跟随系统，不提供手动切换。颜色令牌与软件界面同源，改配色只改 `site/css/site.css` 顶部的两组变量。
+深浅色跟随系统，不提供手动切换。颜色令牌与软件界面同源，改配色只改 `css/site.css` 顶部的两组变量。
+
+根目录的 `edgeone.json` 把安装与构建命令置空、输出目录指向仓库根：这个仓库是 pnpm monorepo，不拦住的话构建机会去装整套 workspace 依赖，而介绍页根本不需要它们。
 
 ## 界面
 
