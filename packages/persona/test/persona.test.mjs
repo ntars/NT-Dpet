@@ -87,3 +87,45 @@ describe('锚点拼装', () => {
     assert.notEqual(a, b)
   })
 })
+
+describe('内核 + 关系微调合并（决策 91）', () => {
+  const core = {
+    layer: 'L1', name: 'core', budget: 240, relationship: 'sister',
+    entries: [
+      { id: 'identity', priority: 100, always: true, content: '我是{{name}}。' },
+      { id: 'honesty', priority: 94, always: true, content: '不知道就说不知道。' },
+    ],
+  }
+  const delta = {
+    layer: 'L1', name: 'delta', budget: 120, relationship: 'parent',
+    entries: [
+      { id: 'address', priority: 100, always: true, content: '你是我的{{callUser}}。' },
+      { id: 'bond', priority: 85, always: true, content: '我黏你一点。' },
+    ],
+  }
+
+  it('内核在前，关系微调随后，浓度最后', () => {
+    const { service } = createPersonaService({ name: '小鲸鱼', relation: 'parent' })
+    const got = service.compose(core, delta)
+    const ids = got.entries.map((e) => e.id)
+    assert.deepEqual(ids, ['identity', 'address', 'honesty', 'bond', 'cat_level'])
+    assert.ok(got.text.includes('我是小鲸鱼。'))
+    assert.ok(got.text.includes('你是我的爸爸。'))
+  })
+
+  it('同 id 条目后者覆盖前者', () => {
+    const override = {
+      layer: 'L1', name: 'o', budget: 10, relationship: 'sister',
+      entries: [{ id: 'identity', priority: 100, always: true, content: '换个说法。' }],
+    }
+    const { service } = createPersonaService({ name: '小鲸鱼', relation: 'sister' })
+    const got = service.compose(core, override)
+    assert.ok(got.text.includes('换个说法。'))
+    assert.ok(!got.text.includes('我是小鲸鱼。'))
+  })
+
+  it('composeAnchor 等价于 compose 单个变体', () => {
+    const { service } = createPersonaService({ name: '小鲸鱼', relation: 'sister' })
+    assert.equal(service.composeAnchor(delta).text, service.compose(delta).text)
+  })
+})

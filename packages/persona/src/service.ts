@@ -36,7 +36,9 @@ export interface PersonaService {
   setCatLevel(level: CatLevel): void
   /** 当前生效的称呼（含关系默认值兜底） */
   currentAddress(): string
-  /** 把一个 L1 变体拼成可注入的锚点；content 为空的条目会被跳过并计入 missing */
+  /** 把多个变体合并成可注入的锚点（决策 91：内核 + 关系微调） */
+  compose(...variants: L1Variant[]): ComposedAnchor & { missing: string[] }
+  /** 单个变体的快捷方式，等价于 compose(variant) */
   composeAnchor(variant: L1Variant): ComposedAnchor & { missing: string[] }
 }
 
@@ -75,24 +77,38 @@ export function createPersonaService(initial?: Partial<PersonaConfig>): PersonaS
       if (explicit) return explicit
       return DEFAULT_ADDRESS[config.relation] || config.name
     },
-    composeAnchor(variant) {
+    compose(...variants) {
       const vars = buildVars(config)
       const missing: string[] = []
-      const entries: ComposedEntry[] = []
+      const byId = new Map<string, ComposedEntry>()
 
-      for (const entry of [...variant.entries].sort((a, b) => b.priority - a.priority)) {
-        if (!entry.content) {
-          missing.push(entry.id)
-          continue
+      // 后传入的变体覆盖同 id 的条目（变体优先级高于内核）
+      for (const variant of variants) {
+        for (const entry of variant.entries) {
+          if (!entry.content) {
+            missing.push(entry.id)
+            continue
+          }
+          byId.set(entry.id, { id: entry.id, text: substitute(entry.content, vars) })
         }
-        entries.push({ id: entry.id, text: substitute(entry.content, vars) })
       }
+
+      // 按条目自身优先级排序：内核的身份/性格排在关系微调之前
+      const priorityOf = new Map<string, number>()
+      for (const variant of variants) for (const e of variant.entries) priorityOf.set(e.id, e.priority)
+      const entries = [...byId.values()].sort(
+        (a, b) => (priorityOf.get(b.id) ?? 0) - (priorityOf.get(a.id) ?? 0),
+      )
 
       // 猫娘浓度单独一段：它是语气调参，不写进任何一份变体，避免五份重复维护
       entries.push({ id: 'cat_level', text: CAT_LEVEL_HINT[config.catLevel] })
 
       const text = entries.map((e) => e.text).join('\n')
       return { text, entries, length: text.length, missing }
+    },
+
+    composeAnchor(variant) {
+      return service.compose(variant)
     },
   }
 
