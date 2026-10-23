@@ -199,7 +199,7 @@ DSH 对插件加载失败仅输出告警，不中断启动。该行为在插件�
 
 ## 五、架构与插件体系
 
-插件以 7 组挂载于 DSH 插件树，共 **32 个插件包**。
+插件以 7 组挂载于 DSH 插件树，共 **33 个插件包**。
 
 | 分组 | 数量 | 内容 | 状态 |
 |---|---|---|---|
@@ -208,7 +208,7 @@ DSH 对插件加载失败仅输出告警，不中断启动。该行为在插件�
 | 通道 | 10 | QQ（官方 / 个人号）、微信公众号、个人微信、飞书、钉钉、企业微信、Telegram、Discord、唤醒路由 | 骨架 |
 | 表达 | 6 | TTS、表情包、立绘、桌宠、移动端桌宠、表达决策 | 骨架 / 占位 |
 | 行动 | 4 | adb、浏览器、Minecraft、GUI 决策环 | 骨架 |
-| 系统 | 4 | 隐私、市场、还原点、中文日志 | 骨架 |
+| 系统 | 5 | 隐私、启动自检、市场、还原点、中文日志 | 启动自检已实现，其余骨架 |
 | 界面 | 1 | Web UI | 界面壳已实现，插件入口为空 |
 
 > 包划分待重划。原「29 包全自研」的结论形成于生态调研之前。当前 DSH 环境已安装 `dsh-pet`、`dsh-soul-md`、`dsh-context` 等插件，与多个自研包功能重叠。决策 85 已调整为「复用优先、只做差异，且可跟随上游更新」，因此包划分需在 S0 内重做一次，依据见 `docs/TECH-RESEARCH.md` §5.5。
@@ -233,7 +233,7 @@ NT-Dpet/
 │   ├── ADOPTION-REGISTER.md 采用登记册
 │   ├── UPSTREAM-CANDIDATES.md 上游候选清单
 │   └── HANDOFF.md          上下文交接说明
-├── packages/               32 个插件包
+├── packages/               33 个插件包
 ├── personas/               人格配置
 ├── bundles/                组合包配置
 └── desktop/                Electron 主进程
@@ -422,7 +422,7 @@ DeepSeek、Live2D、微信、QQ、企业微信、飞书、钉钉、Telegram、Di
 # 安装依赖（跳过 postinstall，避免下载 Electron 二进制）
 npx pnpm@9 install --ignore-scripts
 
-# 构建全部 32 个包
+# 构建全部 33 个包
 npx pnpm@9 -r --filter './packages/**' build
 
 # 类型检查

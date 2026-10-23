@@ -75,10 +75,19 @@
 
 ### M0.3 启动自检
 
-- [ ] **M0.3.1** 新增 `packages/startup-check/src/index.ts`。
+- [x] **M0.3.1** 新增 `packages/startup-check/src/index.ts`。（commit 待回填）
   - 做法：`inject: ['profileContext']`（若无此服务则改为读取配置树快照）；比对配置树条目数与激活数；读取 `session-log-deepseek`、`plugin-package-inventory-deepseek` 两项开关；检查 emotion / memory / dialogue / persona 是否在激活列表。
   - 输出：`{ ok, checks: [{ id, ok, detail }] }`，通过 `ctx.provide('nt-dpet:startup-check', ...)` 暴露。
   - 验收：单测覆盖四种场景（全通过、条目缺失、隐私开启、关键包缺失）。
+  - 实现补记：要点六条。
+    1. `profileContext` **确实存在**，不是假设。2026-10-24 在 0.2.1-rc.2 的 `dsh/lib/profile-boot-*.js` 里核到 `hostCtx.provide("profileContext", profileContext)`，字段为 `name / dir / patchPath / installAnchor / startedBundles / cwd / home / overlays / telemetryDisabledEnv`。故按原计划走必选 inject，不启用「读取配置树快照」的退路。
+    2. 但**条目数与激活数不能从 `profileContext` 得到**：`startedBundles` 是「组合层包名」数组，不是配置树条目。真正的条目要问 `ctx.loader.entries()`。因此本包同时读 `loader`（可选，不是 inject），读不到就如实降级为「配置树不可读」，绝不假装通过。
+    3. 分三层：`types.ts` 只放普通对象类型；`checks.ts` 是纯函数，不碰 cordis；`snapshot.ts` 是唯一接触宿主内部结构的文件，且只声明自己用到的字段，不 import 宿主的 `Entry` 类型。宿主改结构时坏的只有一个文件。
+    4. 统计口径三个坑：分组节点（`options.group` 或运行期 `subgroup`）必须排除，否则条目数永远对不上；`disabled` 的条目不该算「激活失败」，它们是「不该激活」；`entry.id` 与 `entry.disabled` 都是 getter，父树缺失时会抛，读取一律包 try/catch 并回退到 `options.id`。
+    5. 隐私项判定顺序：**先看整条禁用，再看 `enabled`**。禁用后插件不运行，`enabled` 写什么都传不出去，所以 `disabled + 未设 enabled` 只算提醒；但 `disabled + enabled: true` 仍判失败——那是被掩盖着的问题，谁取消禁用就恢复上传。早先版本顺序写反，单测当场抓出来了。
+    6. 输出比任务书多一个 `severity` 字段（`fatal | warn`）：M0.3.2 要求隐私异常时界面走「已拒绝启动」样式，其余只出横幅。没有这个字段，前端只能靠 id 名字硬编码判断，那是把判定逻辑漏进渲染层。同时导出 `failingChecks(result, severity)` 供按档筛选。
+  - 验证：全量构建 33 包通过；startup-check 单测 25/25；界面冒烟 36/36；真实 cordis 实例四组边界实测——无 `profileContext` 时插件完全不激活、隐私开启时 `ok=false` 且 `fatal` 项正是 `privacy-switches`、关键包缺失时只列缺的那几个、无 `loader` 时插件不崩且如实报「配置树不可读」。
+  - 附带改动：`bundles/starter/bundle.yaml` 的 G6 组补上本包（不进组合包就永远装不上，M0.3.2 的接口也就取不到服务）；README 与 NOTICE 里「32 个插件包」按实际校正为 33。未引入新依赖，`cordis` 三处声明原已登记，无需改动。
 - [ ] **M0.3.2** 自检结果呈现。
   - 做法：`/api/ntdpet/status` 返回自检结果；界面顶部横幅仅在有异常时出现，列出 `id` 与原因；隐私项异常时文案为「已拒绝启动」样式。
   - 验收：人为挂一个不存在的插件，启动后界面出现横幅且列出该 `id`。

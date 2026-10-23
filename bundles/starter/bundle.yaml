@@ -79,6 +79,8 @@ plugins:
   # G6 系统
   - package: "@nt-dpet/privacy"
     version: "^0.0.1"
+  - package: "@nt-dpet/startup-check"
+    version: "^0.0.1"
   - package: "@nt-dpet/market"
     version: "^0.0.1"
   - package: "@nt-dpet/snapshot"

@@ -74,7 +74,7 @@ Copyright (C) 2026 Ntarstudio
 
 | 组件 | 版本 | 许可证 | 用途 | 声明位置 |
 |---|---|---|---|---|
-| `@deepseek-ai/cordis` | `^4.0.5` | **MIT** | 插件树、依赖注入、可逆副作用模型——本项目全部 32 个插件包的运行基础 | `peerDependencies` + `devDependencies`（各包） |
+| `@deepseek-ai/cordis` | `^4.0.5` | **MIT** | 插件树、依赖注入、可逆副作用模型——本项目全部 33 个插件包的运行基础 | `peerDependencies` + `devDependencies`（各包） |
 | `typescript` | `^5.7.0` | **Apache-2.0** | 编译期类型检查与产物生成，不进入运行时 | 根 `devDependencies` |
 | `electron` | `^45.0.0` | **MIT** | 桌面外壳（安装器 + 桌宠窗口）。**当前仅声明为开发依赖**，安装包阶段将随包分发 | `desktop` `devDependencies` |
 

@@ -186,6 +186,12 @@ importers:
         specifier: ^4.0.5
         version: 4.0.5
 
+  packages/startup-check:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
   packages/sticker:
     devDependencies:
       '@deepseek-ai/cordis':
