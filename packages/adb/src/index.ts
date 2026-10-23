@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Ntarstudio（星玖工作室）
+
 /**
  * @nt-dpet/adb — 设备连接、截图、点击、中文输入
  *

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Ntarstudio（星玖工作室）
+
 /**
  * @nt-dpet/router — 唤醒判断、多会话排队、通道能力查询
  *

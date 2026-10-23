@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Ntarstudio（星玖工作室）
+
 /**
  * 情绪状态容器：内存中维护当前值，惰性回归，带存储端口。
  *

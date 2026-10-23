@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Ntarstudio（星玖工作室）
+
 /**
  * 弥散：心情会迁怒到别人头上（决策 20）。
  *

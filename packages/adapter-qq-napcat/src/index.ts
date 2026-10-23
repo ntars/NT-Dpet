@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Ntarstudio（星玖工作室）
+
 /**
  * @nt-dpet/adapter-qq-napcat — QQ 个人号通道（灰色，默认关闭）
  *

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Ntarstudio（星玖工作室）
+
 /**
  * @nt-dpet/gui-agent — 通用 GUI 决策环与三层安全网
  *

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Ntarstudio（星玖工作室）
+
 /**
  * 对话协议的值类型。durable：可以被存进 memory_raw，跨进程重建。
  *

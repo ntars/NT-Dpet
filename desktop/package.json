@@ -9,5 +9,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "electron dist/main.js"
   },
-  "license": "AGPL-3.0-or-later"
+  "license": "AGPL-3.0-or-later",
+  "devDependencies": {
+    "electron": "^45.0.0"
+  }
 }

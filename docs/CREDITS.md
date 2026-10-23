@@ -3,6 +3,8 @@
 > 核实日期：2026-10-22　｜　所有许可信息均来自各项目仓库的 `LICENSE` 文件或官方许可页
 > 本文档只记录**实际使用**或**实际借鉴**的项目。看到名字不代表它是我们的代码。
 
+> **法律声明见根目录 [NOTICE](../NOTICE)。** 本文件是设计层面的致谢与分析；`NOTICE` 是具备法律效力的组件清单，两者内容应对应，若不一致以 `NOTICE` 为准。
+
 NT-Dpet 本身没有发明多少东西。人格结构、消息协议、语音合成、游戏接入、桌宠渲染，几乎每一层都站在别人的肩膀上。这份文档把所有借来的东西列清楚，包括**法律边界在哪、为什么会卡在那里**。
 
 如果你发现某个项目被漏掉了，或者某条许可信息写错了，请开一个 issue——这类错误会直接变成法律风险，我们宁可被指出。
@@ -35,7 +37,7 @@ NT-Dpet 本身没有发明多少东西。人格结构、消息协议、语音合
 | **Electron** | MIT | 安装器与桌宠共用的外壳 | [electron/electron](https://github.com/electron/electron) |
 | **pnpm** | MIT | 工作区与包管理。硬链接机制是还原点能做得轻的关键 | [pnpm/pnpm](https://github.com/pnpm/pnpm) |
 | **better-sqlite3** | MIT | 本地 SQLite 绑定 | [WiseLibs/better-sqlite3](https://github.com/WiseLibs/better-sqlite3) |
-| **sqlite-vec** | **Apache-2.0** | 向量检索扩展，用于记忆召回 | [asg017/sqlite-vec](https://github.com/asg017/sqlite-vec) |
+| **sqlite-vec** | **MIT OR Apache-2.0**（双许可，本项目按 MIT 使用） | 向量检索扩展，用于记忆召回 | [asg017/sqlite-vec](https://github.com/asg017/sqlite-vec) |
 | **PixiJS** | MIT | WebGL 渲染底座 | [pixijs/pixijs](https://github.com/pixijs/pixijs) |
 | **pixi-live2d-display** | MIT | Live2D 模型播放器 | [guansss/pixi-live2d-display](https://github.com/guansss/pixi-live2d-display) |
 

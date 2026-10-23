@@ -518,6 +518,7 @@ S0 完成前不会发布任何可安装产物。
 
 | 文档 | 内容 |
 |---|---|
+| **[NOTICE](NOTICE)** | **第三方组件清单与版权声明（法律文件）**：已引入 / 宿主提供 / 计划引入 / 禁止分发 / 仅参考，五种关系逐项列明 |
 | [`docs/TECH-RESEARCH.md`](docs/TECH-RESEARCH.md) | 技术底账：能力域选型、许可矩阵、硬件基线、DSH 宿主实测、待验证清单 |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 架构设计：进程拓扑、数据模型、接口契约、情感与主动性机制、施工顺序 |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 决策记录：86 项已确认决策，逐项可溯源 |
@@ -533,8 +534,66 @@ S0 完成前不会发布任何可安装产物。
 
 ---
 
-## 十一、许可
+## 十一、版权与许可
 
-[GNU Affero General Public License v3.0](LICENSE)
+### 11.1 本项目
 
-可自由使用、修改、分发；若作为网络服务提供给他人，须公开完整源码。
+```
+NT-Dpet · 玄宠
+Copyright (C) 2026 Ntarstudio（星玖工作室）
+```
+
+以 [GNU Affero General Public License v3.0](LICENSE) 发布（`AGPL-3.0-or-later`）。可自由使用、修改、分发，但有两个不可绕过的条件：
+
+1. 分发本软件（含修改版）时，必须向接收者提供完整对应源码
+2. 将修改版作为网络服务提供给他人使用时，必须向该服务的用户提供源码
+
+源代码文件头部统一标注 `SPDX-License-Identifier: AGPL-3.0-or-later` 与版权行。
+
+### 11.2 第三方组件
+
+完整清单、许可义务与红线见 **[NOTICE](NOTICE)**，设计层面的逐项分析见 **[docs/CREDITS.md](docs/CREDITS.md)**。此处给出概览。
+
+**已引入的依赖**（写入 `package.json`）：
+
+| 组件 | 许可证 | 用途 |
+|---|---|---|
+| `@deepseek-ai/cordis` | MIT | 插件树与依赖注入，30 个插件包的运行基础 |
+| `typescript` | Apache-2.0 | 编译期使用，不进入运行时 |
+| `electron` | MIT | 桌面外壳（当前为开发依赖） |
+
+**由宿主提供、本项目不分发**：
+
+| 组件 | 许可证 | 说明 |
+|---|---|---|
+| DeepSeek-Harness | MIT | 插件宿主，本项目是其发行版 |
+| `@deepseek-ai/dsh-llm` | BSD-3-Clause | 模型调用服务，仅按其接口形状调用 |
+| Node.js / pnpm | MIT | 运行时与包管理 |
+
+**计划引入、尚未加入依赖**：
+
+| 组件 | 许可证 | 用途 |
+|---|---|---|
+| PixiJS、pixi-live2d-display、wlipsync | MIT | 立绘渲染与嘴型同步 |
+| better-sqlite3 | MIT | 本地 SQLite |
+| sqlite-vec | MIT OR Apache-2.0 | 向量检索（按 MIT 分支使用） |
+| Mineflayer | MIT | Minecraft 接入 |
+| GPT-SoVITS、RVC | MIT | 本地语音（独立进程，不打包） |
+
+**不得随包分发**（许可冲突，只能由用户自行安装）：
+
+| 组件 | 原因 |
+|---|---|
+| Live2D Cubism Core | 专有软件，不可再分发；由用户确认协议后从官方渠道下载 |
+| NapCat | 有限再分发许可，与 AGPL-3.0 不兼容 |
+| ADBKeyboard | GPL-2.0 与 AGPL-3.0 不兼容 |
+
+**仅参考设计、未复制代码**：AIRI（MIT）、dsh-bili-whale（MIT）、ai-companion-kit（MIT）、AstrBot（AGPL-3.0）、MaiBot（GPL-3.0）、SillyTavern（AGPL-3.0）。
+
+### 11.3 仓库中不含第三方源码
+
+`node_modules/`、`dist/`、`runtime/` 均不提交入库。本仓库只包含本项目自有的源代码、文档与自有素材。
+
+### 11.4 商标
+
+DeepSeek、Live2D、微信、QQ、企业微信、飞书、钉钉、Telegram、Discord、Minecraft 等名称归各自权利人所有。文档中提及仅用于说明兼容对象，不表示关联或背书。
