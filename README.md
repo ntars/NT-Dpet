@@ -588,6 +588,8 @@ S0 完成前不发布任何可安装产物。
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 决策记录：92 项，逐项可溯源 |
 | [`docs/CREDITS.md`](docs/CREDITS.md) | 致谢与许可边界 |
 | [`docs/HANDOFF.md`](docs/HANDOFF.md) | 上下文交接说明 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 开发清单：至可交付上线的 45 个任务与 28 个子步 |
+| [`docs/AUTOMATION.md`](docs/AUTOMATION.md) | 定时任务的职责、边界与暂停方式 |
 | [`CHANGELOG.md`](CHANGELOG.md) | 版本记录 |
 
 ---
