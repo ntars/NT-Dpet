@@ -52,7 +52,7 @@
     3. `limit` 默认 8、上限 50，超限压到 50 并回传实际生效值；非正整数回 400。
     4. 「服务没起来」（503）与「确实没有记忆」（200 + 空数组）分开，前端对应「记忆暂不可用」与「暂无记忆」两种文案。
   - 前端：新增 `web/js/memory.js`；`panel.js` 导出 `renderMemories()` / `renderMemoryEmpty()`；`data.js` 删除演示记忆（已无引用）。
-- [x] **M0.2.4** 对话发送接 `POST /api/ntdpet/chat`。
+- [x] **M0.2.4** 对话发送接 `POST /api/ntdpet/chat`。（commit ea47350）
   - 做法：发送后逐块渲染；渲染期间禁用发送按钮；`stopReason=aborted` 显示「已中断」，`error` 显示「发送失败，可重试」。
   - 验收：浏览器完成一次真实对话；关闭窗口时请求中止且不报错。
   - 实现补记：与 M0.2.2 / M0.2.3 同一个坑——后端只有 `PENDING_PATHS` 占位，故同时补齐 `/chat` 分支。要点六条：
