@@ -254,7 +254,7 @@ NT-Dpet/
 │   ├── TECH-RESEARCH.md    技术底账：选型、许可矩阵、DSH 宿主实测
 │   ├── DECISIONS.md        决策记录（86 项，逐项可溯源）
 │   └── CREDITS.md          致谢与许可边界
-├── packages/               30 个插件包
+├── packages/               32 个插件包
 │   ├── emotion/            情感状态机（已实现）
 │   ├── dialogue/           对话通道（已实现）
 │   ├── ui/web/             界面壳（静态）
@@ -571,7 +571,7 @@ Copyright (C) 2026 Ntarstudio（星玖工作室）
 
 | 组件 | 许可证 | 用途 |
 |---|---|---|
-| `@deepseek-ai/cordis` | MIT | 插件树与依赖注入，30 个插件包的运行基础 |
+| `@deepseek-ai/cordis` | MIT | 插件树与依赖注入，32 个插件包的运行基础 |
 | `typescript` | Apache-2.0 | 编译期使用，不进入运行时 |
 | `electron` | MIT | 桌面外壳（当前为开发依赖） |
 
