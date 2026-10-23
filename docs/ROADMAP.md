@@ -43,7 +43,7 @@
   - 做法：启动时拉取一次，之后每 30 秒刷新；失败时使用 `js/data.js` 并在顶部加「演示数据」标识（复用现有 `.pill`）。
   - 验收：停掉后端后刷新页面，界面不白屏，标识出现。
   - 实现补记：接口 `/mood` 原先只是 `PENDING_PATHS` 里的占位（恒 503），只做前端会永远停在演示数据上，故本轮同时补齐后端读数：`packages/ui/src/index.ts` 用 `ctx.get('nt-dpet:emotion')` 取服务（不写成必选 inject，避免 emotion 缺席时整个插件不激活），`src/api/handler.ts` 新增 `/mood` 分支，读不到即 503。前端见 `packages/ui/web/js/mood.js`。
-- [x] **M0.2.3** 右栏记忆接 `/api/ntdpet/memory/recent?limit=8`。（commit 待回填）
+- [x] **M0.2.3** 右栏记忆接 `/api/ntdpet/memory/recent?limit=8`。（commit 8e4fd7f）
   - 做法：空列表显示「暂无记忆」，不使用演示数据冒充。
   - 验收：有数据时展示条目与时间；无数据时文案正确。
   - 实现补记：与 M0.2.2 同一个坑——后端原本只有 `PENDING_PATHS` 占位，故同时补齐 `/memory/recent` 分支。要点四条：
