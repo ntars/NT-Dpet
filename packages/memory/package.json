@@ -5,7 +5,10 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist", "cordis.patch.yml"],
+  "files": [
+    "dist",
+    "cordis.patch.yml"
+  ],
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.5"
   },
@@ -13,7 +16,8 @@
     "@deepseek-ai/cordis": "^4.0.5"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test test/memory.test.mjs"
   },
   "dsh": {
     "bundle": {

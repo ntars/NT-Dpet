@@ -1,0 +1,68 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Ntarstudio（星玖工作室）
+
+/**
+ * 记忆存储端口 + 内存实现。
+ *
+ * 为什么要端口：SQLite 的绑定（better-sqlite3 / node:sqlite）还没最终定，
+ * 现在把读写抽成接口，将来换实现只改一个文件，上层不动。
+ *
+ * 内存实现是**可用的**，不是占位：进程内读写正确、语义完整，
+ * 只是重启即丢。S0 阶段够用；接 SQLite 后再谈持久化。
+ */
+
+import type { MemoryFact, MemoryRaw } from './types.js'
+
+export interface MemoryStore {
+  appendRaw(entry: MemoryRaw): Promise<void>
+  appendFact(fact: MemoryFact): Promise<void>
+  /** 取某会话最近的原文，按时间倒序 */
+  listRaw(sessionKey: string, limit: number): Promise<MemoryRaw[]>
+  /** 取某会话全部事实（含已失效的，由上层裁决） */
+  listFacts(sessionKey: string): Promise<MemoryFact[]>
+  /** 标记这些原文已提炼 */
+  markExtracted(ids: string[]): Promise<void>
+  /** 软删除事实 */
+  softDeleteFact(id: string, at: number): Promise<void>
+  /** 取尚未提炼的原文，按时间正序 */
+  listUnextracted(limit: number): Promise<MemoryRaw[]>
+}
+
+export function createMemoryStore(): MemoryStore {
+  const raws = new Map<string, MemoryRaw>()
+  const facts = new Map<string, MemoryFact>()
+
+  return {
+    async appendRaw(entry) {
+      raws.set(entry.id, { ...entry })
+    },
+    async appendFact(fact) {
+      facts.set(fact.id, { ...fact })
+    },
+    async listRaw(sessionKey, limit) {
+      return [...raws.values()]
+        .filter((r) => r.sessionKey === sessionKey)
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, limit)
+    },
+    async listFacts(sessionKey) {
+      return [...facts.values()].filter((f) => f.sessionKey === sessionKey)
+    },
+    async markExtracted(ids) {
+      for (const id of ids) {
+        const cur = raws.get(id)
+        if (cur) raws.set(id, { ...cur, extracted: true })
+      }
+    },
+    async softDeleteFact(id, at) {
+      const cur = facts.get(id)
+      if (cur) facts.set(id, { ...cur, deletedAt: at })
+    },
+    async listUnextracted(limit) {
+      return [...raws.values()]
+        .filter((r) => !r.extracted)
+        .sort((a, b) => a.createdAt - b.createdAt)
+        .slice(0, limit)
+    },
+  }
+}
