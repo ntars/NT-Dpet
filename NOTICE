@@ -7,7 +7,7 @@
 - 核实日期：2026-10-23
 - 维护者：Ntarstudio · `github.com/ntars/NT-Dpet`
 
-> 本文件是**法律声明**，不是致谢名单。它只记录有许可义务的组件，并区分「已引入」「宿主提供」「计划引入」「禁止分发」「仅参考」五种关系。更详细的设计层面致谢见 [docs/CREDITS.md](docs/CREDITS.md)。
+> 本文件是**法律声明**，不是致谢名单。它只记录有许可义务的组件，并区分「已引入」「宿主提供」「计划引入」「禁止分发」「仅参考」五种关系。更详细的设计层面致谢见 [docs/CREDITS.md](docs/CREDITS.md)；**候选项目全量清单见 [docs/UPSTREAM-CANDIDATES.md](docs/UPSTREAM-CANDIDATES.md)**（未采纳者不产生许可义务）。
 >
 > **本仓库不包含任何第三方源代码副本。** `node_modules/`、构建产物 `dist/`、运行时下载目录 `runtime/` 均已由 `.gitignore` 排除，未提交入库。
 

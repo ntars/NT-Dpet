@@ -529,6 +529,7 @@ S0 完成前不会发布任何可安装产物。
 |---|---|
 | **[docs/HANDOFF.md](docs/HANDOFF.md)** | 上下文交接提示词（v0.1），新会话开场贴这段即可无损接续 |
 | **[NOTICE](NOTICE)** | **第三方组件清单与版权声明（法律文件）**：已引入 / 宿主提供 / 计划引入 / 禁止分发 / 仅参考，五种关系逐项列明 |
+| **[docs/UPSTREAM-CANDIDATES.md](docs/UPSTREAM-CANDIDATES.md)** | **上游候选全量清单**：GitHub 扫描 200+ 仓库，按能力域列出星级/许可/最近提交/采纳级别 |
 | [`docs/TECH-RESEARCH.md`](docs/TECH-RESEARCH.md) | 技术底账：能力域选型、许可矩阵、硬件基线、DSH 宿主实测、待验证清单 |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 架构设计：进程拓扑、数据模型、接口契约、情感与主动性机制、施工顺序 |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 决策记录：86 项已确认决策，逐项可溯源 |
