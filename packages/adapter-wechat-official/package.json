@@ -1,0 +1,27 @@
+{
+  "name": "@nt-dpet/adapter-wechat-official",
+  "version": "0.0.1",
+  "description": "微信公众号通道（服务号 / 订阅号 / 客服消息）——合规，无封号风险",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "cordis.patch.yml"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.5"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.5"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "AGPL-3.0-or-later"
+}

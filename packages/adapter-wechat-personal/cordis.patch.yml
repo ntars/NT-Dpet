@@ -1,0 +1,8 @@
+# NT-Dpet 插件挂载入口
+# id 命名规范：nt-dpet:<组>:<名>，全项目唯一
+#
+# 状态：灰色通道，默认禁用。启用前必须有全屏风险确认。
+- insert:
+    - id: nt-dpet:channel:wechat-personal
+      name: "@nt-dpet/adapter-wechat-personal"
+      disabled: true

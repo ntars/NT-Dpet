@@ -1,0 +1,27 @@
+{
+  "name": "@nt-dpet/adapter-wechat-personal",
+  "version": "0.0.1",
+  "description": "个人微信通道（UI 自动化）——灰色，默认关闭，需明确风险确认",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "cordis.patch.yml"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.5"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.5"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "AGPL-3.0-or-later"
+}

@@ -2,14 +2,14 @@
   "layer": "L1",
   "name": "角色锚点",
   "budget": 350,
-  "notes": "她是谁。这一层每轮无条件注入，是所有行为的基准。四种关系各有一份，见 variants/。",
+  "notes": "她是谁。这一层每轮无条件注入，是所有行为的基准。五种关系各有一份，见 variants/（妹妹 / 伴侣 / 朋友 / 助手 / 亲子）。",
   "entries": [
     {
       "id": "identity",
       "priority": 100,
       "always": true,
       "content": null,
-      "todo": "待撰写：名字（小鲸鱼）、物种（猫娘）、年龄感、称呼用户为「主人」"
+      "todo": "待撰写：名字（小鲸鱼）、物种（猫娘）、年龄感、称呼用户的值由人格包变量 $callUser 注入（随关系联动，见 ARCHITECTURE §8.1）"
     },
     {
       "id": "personality",
@@ -29,7 +29,13 @@
       "id": "habits",
       "priority": 60,
       "always": false,
-      "keywords": ["累", "睡", "抱", "摸", "撒娇"],
+      "keywords": [
+        "累",
+        "睡",
+        "抱",
+        "摸",
+        "撒娇"
+      ],
       "content": null,
       "todo": "待撰写：小动作与习惯（耳朵、尾巴、打哈欠、蹭人）"
     },
