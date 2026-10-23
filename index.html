@@ -7,14 +7,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <title>NT-Dpet - 玄宠，从代码到身边</title>
-<meta name="description" content="NT-Dpet 玄宠，是 DeepSeek Harness 的发行版：把人格、记忆、情绪、声音、身体装配成一个装好就能用的 AI 拟人伴侣。当前为设计定稿、骨架搭建中，尚未具备可用功能。">
+<meta name="description" content="NT-Dpet 玄宠是 DeepSeek-Harness 的发行版：把人格、记忆、情绪、声音、身体装配成一个装好就能用的桌面伴侣。当前 v0.1.0，情感、对话、记忆、节奏、人格五个模块已实现，尚未提供安装包。">
 <meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="NT-Dpet - 玄宠，从代码到身边">
-<meta property="og:description" content="把人格、记忆、情绪、声音、身体装配成一个装好就能用的 AI 拟人伴侣。">
+<meta property="og:description" content="人格、记忆、情绪、声音、身体——装好就能用的桌面伴侣。">
 <meta property="og:image" content="./assets/icon-2000.png">
 
 <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
@@ -34,10 +34,11 @@
     </a>
     <nav class="topnav" aria-label="页面导航">
       <a href="#what">是什么</a>
-      <a href="#look">界面</a>
-      <a href="#abilities">能力</a>
+      <a href="#highlights">亮点</a>
+      <a href="#her">她</a>
+      <a href="#design">设计</a>
+      <a href="#status">进度</a>
       <a href="#isolation">隔离</a>
-      <a href="#roadmap">路线图</a>
       <a class="topnav__gh" href="https://github.com/ntars/NT-Dpet" target="_blank" rel="noopener">
         GitHub
         <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M3 9 9 3M4.2 3H9v4.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -48,7 +49,6 @@
 
 <main id="main">
 
-  <!-- ══ 首屏 ══ -->
   <section class="hero">
     <div class="hero__mark">
       <img src="./assets/icon.svg" alt="NT-Dpet 玄宠 图标" width="96" height="96">
@@ -64,28 +64,27 @@
     </p>
 
     <p class="hero__status">
-      <span class="pill pill--live"><i class="dot dot--warn"></i>设计定稿 · 骨架搭建中</span>
-      <span class="pill">尚未具备可用功能</span>
+      <span class="pill pill--live"><i class="dot"></i>v0.1.0 · 五个模块已实现</span>
+      <span class="pill">尚未提供安装包</span>
     </p>
 
     <div class="hero__actions">
       <a class="btn btn--primary" href="https://github.com/ntars/NT-Dpet" target="_blank" rel="noopener">查看源码</a>
-      <a class="btn btn--ghost" href="#abilities">它能做什么</a>
+      <a class="btn btn--ghost" href="#highlights">看它不一样在哪</a>
     </div>
 
     <p class="hero__note">
-      本页是项目介绍页。软件本身仍在施工，现在下载不到可运行版本。
+      情感、对话、记忆、节奏、人格五个模块已有可运行代码与单元测试；界面壳可预览，但还没接上后端。
     </p>
   </section>
 
-  <!-- ══ 它是什么 ══ -->
   <section class="sec" id="what">
     <div class="sec__head">
-      <p class="sec__eyebrow">它是什么</p>
+      <p class="sec__eyebrow">定位</p>
       <h2 class="sec__title">不是又一个框架，是一个发行版</h2>
       <p class="sec__lede">
-        NT-Dpet 建立在 <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener">DeepSeek Harness</a>
-        之上。类比：DSH 相当于内核，玄宠相当于一个预配置好的发行版——不重写内核，只提供装配好的完整体验。
+        NT-Dpet 是 DeepSeek-Harness 的发行版。DSH 相当于内核——插件树、模型调用、会话与工具链；
+        NT-Dpet 相当于一套预配置好的发行套件。不重写内核，只负责装配、隔离与兜底。
       </p>
     </div>
 
@@ -93,233 +92,339 @@
       <article class="card">
         <span class="card__idx">01</span>
         <h3 class="card__title">装配</h3>
-        <p class="card__body">
-          把分散的能力——人格、记忆、情感、通道、声音、行动——装成一个能跑的整体，
-          而不是丢给你一堆需要自己拼的零件。
-        </p>
+        <p class="card__body">把人格、记忆、情感、通道、声音、行动装成一个能跑的整体。</p>
       </article>
       <article class="card">
         <span class="card__idx">02</span>
         <h3 class="card__title">看住</h3>
-        <p class="card__body">
-          任何一个环节挂了，其余照常工作。挂掉的那块单独重启，不牵连整个系统。
-        </p>
+        <p class="card__body">任何一个环节失效，其余部分照常工作。插件加载是软失败，所以每次启动都做激活数自检。</p>
       </article>
       <article class="card">
         <span class="card__idx">03</span>
         <h3 class="card__title">兜底</h3>
+        <p class="card__body">增强能力失败时退回基础能力，不把报错抛给你。语音失败就发文字，而不是弹一个错误框。</p>
+      </article>
+    </div>
+
+    <div class="sec__foot">
+      <p>
+        <strong>它不是：</strong>自研大模型（只做接入）、协议逆向（只用现成协议端）、零件货架（做整装组合包）、
+        无风险产品（个人号通道的封禁风险如实标注，不做美化）。
+      </p>
+    </div>
+  </section>
+
+  <section class="sec" id="highlights">
+    <div class="sec__head">
+      <p class="sec__eyebrow">亮点</p>
+      <h2 class="sec__title">六个不那么显然的选择</h2>
+      <p class="sec__lede">每条都写明做法与当前状态——设计已定不等于已经能跑，这一点本页不模糊处理。</p>
+    </div>
+
+    <div class="grid grid--3">
+      <article class="card">
+        <span class="card__idx">01</span>
+        <h3 class="card__title">情绪会自己回落</h3>
         <p class="card__body">
-          增强能力失败时静默退回基础能力。你看到的是它在，而不是一串报错。
+          五维情绪沿指数曲线回到基线，四档半衰期（1 小时 / 4 小时 / 12 小时 / 不回落）。
+          读取时现算，不靠定时器推进，进程崩溃重启也不用补偿计算。已实现。
+        </p>
+      </article>
+      <article class="card">
+        <span class="card__idx">02</span>
+        <h3 class="card__title">她有不说话的权利</h3>
+        <p class="card__body">
+          主动性过三道闸门（时机 → 话由 → 分寸），即使全过仍有 30% 概率今天不主动。
+          被冷落 3 天开始收回心事，7 天归零，但日记照写。设计已定。
+        </p>
+      </article>
+      <article class="card">
+        <span class="card__idx">03</span>
+        <h3 class="card__title">称呼跟着关系变</h3>
+        <p class="card__body">
+          妹妹叫「哥哥」、伴侣叫「宝宝」、助手叫「主人」或「老板」、亲子叫「爸爸 / 妈妈」。
+          改过就固定下来，清空则恢复跟随关系。已实现。
+        </p>
+      </article>
+      <article class="card">
+        <span class="card__idx">04</span>
+        <h3 class="card__title">聊天不背 agent 的包袱</h3>
+        <p class="card__body">
+          日常对话走轻通道：不建会话、不发工具调用、不走执行链路。
+          只把正文推给界面，模型的思考过程一律过滤。已实现。
+        </p>
+      </article>
+      <article class="card">
+        <span class="card__idx">05</span>
+        <h3 class="card__title">隐私不是开关</h3>
+        <p class="card__body">
+          会话日志上传与使用统计固定关闭，界面只显示「已固定关闭」，不给入口。
+          每次启动校验，校验不过直接拒绝启动。设计已定。
+        </p>
+      </article>
+      <article class="card">
+        <span class="card__idx">06</span>
+        <h3 class="card__title">界面按 Apple HIG 做</h3>
+        <p class="card__body">
+          三栏布局、对话与工作双视图、七组渐进式设置、四种主题模式。
+          字体只用 px / rem；每个开关都真改状态，不做假开关。界面壳已实现。
         </p>
       </article>
     </div>
   </section>
 
-  <!-- ══ 它不是什么 ══ -->
-  <section class="sec sec--tight">
+  <section class="sec" id="her">
     <div class="sec__head">
-      <p class="sec__eyebrow">它不是什么</p>
-      <h2 class="sec__title">先把话说清楚</h2>
-    </div>
-
-    <ul class="neglist">
-      <li>不是自研大模型，只做接入。</li>
-      <li>不是协议逆向，只用现成协议端。</li>
-      <li>不是又一个插件市场，做的是「整装组合包」，不是零件货架。</li>
-      <li>不承诺账号安全——个人号通道存在封号风险，文档里反复写明，不做美化。</li>
-    </ul>
-  </section>
-
-  <!-- ══ 界面 ══ -->
-  <section class="sec" id="look">
-    <div class="sec__head">
-      <p class="sec__eyebrow">界面</p>
-      <h2 class="sec__title">装好之后，看到的是这个</h2>
+      <p class="sec__eyebrow">她</p>
+      <h2 class="sec__title">同一只猫娘，五种相处方式</h2>
       <p class="sec__lede">
-        界面是我们自己写的，DSH 在后台当引擎跑。三栏：左边是会话，中间是对话，右边是她此刻的状态。
-        情绪、关系、记得的事都摆在明面上——想知道她现在什么心情，不用翻菜单。
-      </p>
-    </div>
-
-    <figure class="shot shot--wide">
-      <picture>
-        <source srcset="./assets/ui-chat-dark.png" media="(prefers-color-scheme: dark)">
-        <img
-          class="shot__img"
-          src="./assets/ui-chat-light.png"
-          alt="主界面：左栏为会话列表，中间为与小鲸鱼的对话气泡，右栏显示情绪、关系与记忆卡片"
-          width="1440" height="900" loading="lazy" decoding="async">
-      </picture>
-      <figcaption class="shot__cap">
-        <strong>对话</strong>
-        左栏切换聊天对象，右栏实时显示心情与精力、对主人的好感信任亲密熟悉，以及她记得的事。
-        界面本身跟随系统深浅色，不用手动切。
-      </figcaption>
-    </figure>
-
-    <div class="grid grid--2 shots">
-      <figure class="shot">
-        <picture>
-          <source srcset="./assets/ui-settings-panel-dark.png" media="(prefers-color-scheme: dark)">
-          <img
-            class="shot__img"
-            src="./assets/ui-settings-panel.png"
-            alt="设置面板：关系四选一、说话浓度三档、主动开口四档"
-            width="772" height="712" loading="lazy" decoding="async">
-        </picture>
-        <figcaption class="shot__cap">
-          <strong>设置 · 她</strong>
-          关系四选一决定性格底色，浓度决定语气黏度。换关系会换一套性格，记忆与好感保留。
-        </figcaption>
-      </figure>
-
-      <figure class="shot">
-        <img
-          class="shot__img"
-          src="./assets/ui-logs-lines.png"
-          alt="运行日志：每条消息都标注通道、路由理由、模型请求与耗时"
-          width="778" height="718" loading="lazy" decoding="async">
-        <figcaption class="shot__cap">
-          <strong>运行日志</strong>
-          每条消息走了哪条路、为什么这么回，都留痕。开发者模式下还能切到代码级明细。
-        </figcaption>
-      </figure>
-    </div>
-
-    <p class="sec__foot">
-      截图取自界面壳，对话内容为演示数据，不是真实运行结果。深色默认跟随系统，也可以按日出日落自动切换。
-    </p>
-  </section>
-
-  <!-- ══ 能力 ══ -->
-  <section class="sec" id="abilities">
-    <div class="sec__head">
-      <p class="sec__eyebrow">能力分区</p>
-      <h2 class="sec__title">七组，各管一段</h2>
-      <p class="sec__lede">
-        按功能域分组挂在 DSH 的插件树上。日常聊天不走 DSH 的 agent loop——它太重；
-        只有需要动手（操作手机、开浏览器、玩游戏）时才唤起工具链。
-      </p>
-    </div>
-
-    <div class="grid grid--2">
-      <article class="card card--group">
-        <h3 class="card__title">内核<span class="card__count">5</span></h3>
-        <p class="card__body">情感、记忆、世界书、节奏、主动消息。决定她像不像一个人，而不是一台应答机。</p>
-      </article>
-      <article class="card card--group">
-        <h3 class="card__title">对话<span class="card__count">2</span></h3>
-        <p class="card__body">轻量对话通道、人格包。日常说话走这条路，不惊动工具链。</p>
-      </article>
-      <article class="card card--group">
-        <h3 class="card__title">通道<span class="card__count">8</span></h3>
-        <p class="card__body">QQ（官方 / 个人号）、飞书、钉钉、企微、Telegram、Discord，以及唤醒路由。</p>
-      </article>
-      <article class="card card--group">
-        <h3 class="card__title">表达<span class="card__count">5</span></h3>
-        <p class="card__body">语音合成、表情包、立绘、桌宠、表达决策。让她有声音，也有身体。</p>
-      </article>
-      <article class="card card--group">
-        <h3 class="card__title">行动<span class="card__count">4</span></h3>
-        <p class="card__body">手机、浏览器、Minecraft、GUI 决策环。需要真正动手时才启动。</p>
-      </article>
-      <article class="card card--group">
-        <h3 class="card__title">系统<span class="card__count">4</span></h3>
-        <p class="card__body">隐私、市场、还原点、中文日志。看不见，但决定敢不敢长期用。</p>
-      </article>
-    </div>
-
-    <p class="sec__foot">
-      另有一个界面包。包结构正在按「复用优先、只做差异」的原则重划，上表为规划状态，不是已完成清单。
-    </p>
-  </section>
-
-  <!-- ══ 隔离 ══ -->
-  <section class="sec" id="isolation">
-    <div class="sec__head">
-      <p class="sec__eyebrow">隔离</p>
-      <h2 class="sec__title">装它，不会动你已有的 DSH</h2>
-      <p class="sec__lede">
-        从目录到进程完全分开。两边可以同时存在、同时运行，互不占位。
+        人格是主，关系只是微调。身份、性格、诚实、边界四条五份共用；换关系不改人，只改怎么相处。
       </p>
     </div>
 
     <div class="table-wrap">
       <table class="table">
-        <caption class="sr-only">官方 DSH 与 NT-Dpet 的隔离范围对照</caption>
         <thead>
-          <tr><th scope="col">隔离层</th><th scope="col">官方 DSH</th><th scope="col">NT-Dpet</th></tr>
+          <tr><th>关系</th><th>她的身份</th><th>默认称呼你</th><th>相处节奏</th></tr>
         </thead>
         <tbody>
-          <tr><th scope="row">数据目录</th><td><code>~/.dsh</code></td><td>自带的 <code>dsh-home</code></td></tr>
-          <tr><th scope="row">技能与指令</th><td><code>~/.agents</code></td><td>自带的 <code>agents</code></td></tr>
-          <tr><th scope="row">配置方案</th><td><code>desktop</code></td><td><code>nt-dpet</code></td></tr>
-          <tr><th scope="row">端口</th><td>3080</td><td>3180</td></tr>
+          <tr><td>妹妹</td><td>妹妹</td><td>哥哥</td><td>黏人，主动找你；你不理她会不高兴，过一会儿自己凑回来</td></tr>
+          <tr><td>伴侣</td><td>恋人</td><td>宝宝 / 乖乖 / 老公</td><td>在意回应，吃醋直说，不阴阳怪气</td></tr>
+          <tr><td>朋友</td><td>平等朋友</td><td>你的名字或外号</td><td>不黏不查行踪，聊得来就聊</td></tr>
+          <tr><td>助手</td><td>助手</td><td>主人 / 老板</td><td>以把事办成为先，不撒娇不打听私事</td></tr>
+          <tr><td>亲子</td><td>女儿</td><td>爸爸 / 妈妈</td><td>爱讲今天的小事，被说时先认不顶嘴</td></tr>
         </tbody>
       </table>
     </div>
 
-    <p class="sec__foot">
-      唯一的跨界读取，是首次启动时<strong>只读</strong>看一眼你已配好的密钥，问要不要沿用。同意才复制一份过去，绝不回写。
-    </p>
+    <div class="grid grid--3">
+      <article class="card">
+        <span class="card__idx">情绪</span>
+        <h3 class="card__title">会难过，也会自己好起来</h3>
+        <p class="card__body">
+          mood、energy 归实例，affection、trust、intimacy、familiarity 按人。
+          初始是「略有好感」——不冷淡，也不自来熟。
+        </p>
+      </article>
+      <article class="card">
+        <span class="card__idx">记忆</span>
+        <h3 class="card__title">记得，但不会全倒出来</h3>
+        <p class="card__body">
+          原文层每轮同步落库，事实层每轮结束后 5 秒异步提炼。
+          检索走三层裁决（语义 / 时间 / 重要度），越久越轻。
+        </p>
+      </article>
+      <article class="card">
+        <span class="card__idx">分寸</span>
+        <h3 class="card__title">热情有边界</h3>
+        <p class="card__body">
+          深夜更慢、句子更短。语音只在情绪明显波动时发——语音条该有分量，不该是日常。
+        </p>
+      </article>
+    </div>
   </section>
 
-  <!-- ══ 路线图 ══ -->
-  <section class="sec" id="roadmap">
+  <section class="sec" id="look">
     <div class="sec__head">
-      <p class="sec__eyebrow">路线图</p>
-      <h2 class="sec__title">现在在第零步之前</h2>
-      <p class="sec__lede">S0 之前不会有任何可运行的东西。这句话写在文档里，也写在这里。</p>
+      <p class="sec__eyebrow">界面</p>
+      <h2 class="sec__title">装好之后，看到的是这个</h2>
+      <p class="sec__lede">三栏布局：左边会话，中间对话，右边她的状态。对话为默认视图，需要干活时切到工作视图看日志。</p>
     </div>
 
-    <ol class="road">
-      <li class="road__item is-next">
-        <span class="road__step">S0</span>
-        <span class="road__name">骨架 + 桌面能聊</span>
-        <span class="road__desc">文本、记忆、情感三件套跑通</span>
-      </li>
-      <li class="road__item">
-        <span class="road__step">S1</span>
-        <span class="road__name">三端打包</span>
-        <span class="road__desc">Windows → macOS → Linux</span>
-      </li>
-      <li class="road__item">
-        <span class="road__step">S2</span>
-        <span class="road__name">官方 QQ 机器人</span>
-        <span class="road__desc">合规通道，BOT 身份自带标识</span>
-      </li>
-      <li class="road__item">
-        <span class="road__step">S3</span>
-        <span class="road__name">组合包市场</span>
-        <span class="road__desc">整装包与一键还原点</span>
-      </li>
-      <li class="road__item">
-        <span class="road__step">S4</span>
-        <span class="road__name">语音与表情包</span>
-        <span class="road__desc">让她有声音</span>
-      </li>
-      <li class="road__item">
-        <span class="road__step">S5</span>
-        <span class="road__name">桌宠</span>
-        <span class="road__desc">从消息里走到桌面上</span>
-      </li>
-      <li class="road__item">
-        <span class="road__step">S6</span>
-        <span class="road__name">手机操作</span>
-        <span class="road__desc">需要动手时才动手</span>
-      </li>
-      <li class="road__item">
-        <span class="road__step">S7</span>
-        <span class="road__name">其余通道</span>
-        <span class="road__desc">飞书、钉钉、企微等</span>
-      </li>
-    </ol>
+    <div class="shots">
+      <figure class="shot shot--wide">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./assets/ui-chat-dark.png">
+          <img class="shot__img" src="./assets/ui-chat-light.png" alt="NT-Dpet 对话视图：左栏会话列表，中间对话，右栏她的情绪与关系">
+        </picture>
+        <figcaption class="shot__cap">对话视图 · 截图取自界面壳，对话内容为演示数据</figcaption>
+      </figure>
+
+      <figure class="shot">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="./assets/ui-settings-panel-dark.png">
+          <img class="shot__img" src="./assets/ui-settings-panel.png" alt="设置面板「她」页：名字、称呼、关系、猫娘浓度">
+        </picture>
+        <figcaption class="shot__cap">设置 ·「她」页</figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img class="shot__img" src="./assets/ui-logs-lines.png" alt="工作视图的运行日志，中文概览">
+        <figcaption class="shot__cap">工作视图 · 中文日志</figcaption>
+      </figure>
+    </div>
   </section>
 
-  <!-- ══ 风险 ══ -->
+  <section class="sec" id="design">
+    <div class="sec__head">
+      <p class="sec__eyebrow">设计</p>
+      <h2 class="sec__title">几个容易被忽略的决定</h2>
+      <p class="sec__lede">这些不是功能列表，而是「为什么这样做」。每条都写在仓库文档里，可逐条追溯。</p>
+    </div>
+
+    <div class="grid grid--2">
+      <article class="card">
+        <h3 class="card__title">情绪回落用指数，不用线性</h3>
+        <p class="card__body">
+          v(t) = 基线 + (v₀ − 基线) × e^(−λt)，λ = ln2 / 半衰期。
+          人的情绪「刚开始淡得快、越久越淡」，线性衰减会在某一刻突然归零，很假。
+        </p>
+      </article>
+      <article class="card">
+        <h3 class="card__title">越不熟，越容易被殃及</h3>
+        <p class="card__body">
+          心情不好会迁怒：偏移 = (mood − 基线) × 0.4 × (1 − 熟悉度 × 0.5)。
+          反直觉但正确——不熟的人，她没理由为他区分「这不是你的错」。
+        </p>
+      </article>
+      <article class="card">
+        <h3 class="card__title">语音要「有分量」</h3>
+        <p class="card__body">
+          四道闸门：情绪强度 &gt; 0.4、句子 6–30 字、人设权重 &gt; 0.3、通道未超频次。
+          连续三条不得同一种形式。失败静默退文本，不弹错误。
+        </p>
+      </article>
+      <article class="card">
+        <h3 class="card__title">分条宁可少切，不要切碎</h3>
+        <p class="card__body">
+          「嗯……算了吧，你先忙。」切成四条像口吃，切成两条才像人。
+          所以强分隔必切，省略号和破折号只在句子过长时才参与。
+        </p>
+      </article>
+      <article class="card">
+        <h3 class="card__title">隐私不给开关</h3>
+        <p class="card__body">
+          日志上传一旦开过，关闭期间的内容会在重开时补发，「关掉就干净了」是错的。
+          与其给一个让人误以为安全的开关，不如不给。
+        </p>
+      </article>
+      <article class="card">
+        <h3 class="card__title">进程只按 pidfile 杀</h3>
+        <p class="card__body">
+          按名字匹配杀进程会连带杀掉官方 DSH。我们起独立进程组，退出时只杀自己记录的那个 PID。
+        </p>
+      </article>
+      <article class="card">
+        <h3 class="card__title">组合包装前先建还原点</h3>
+        <p class="card__body">
+          完整集字段（作者、图标、截图、权限、校验和），装前做冲突检测，自动建还原点，默认保留 3 个。
+        </p>
+      </article>
+      <article class="card">
+        <h3 class="card__title">没有假开关</h3>
+        <p class="card__body">
+          没接后端的项直接标「未接入」，而不是做一个点了没反应的开关。
+          假开关比缺功能更糟——用户会以为已经生效。
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec" id="status">
+    <div class="sec__head">
+      <p class="sec__eyebrow">进度</p>
+      <h2 class="sec__title">现在能跑什么，还不能跑什么</h2>
+      <p class="sec__lede">32 个插件包，7 个能力组。已实现的五个模块有单元测试，其余仍是骨架。</p>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>模块</th><th>状态</th><th>验证</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>情感状态机</td><td>已实现</td><td>21 个单元测试</td></tr>
+          <tr><td>对话通道</td><td>已实现</td><td>12 个单元测试 + 真实网关端到端</td></tr>
+          <tr><td>记忆双层</td><td>已实现</td><td>23 个单元测试（含 SQLite 持久化与权限校验）</td></tr>
+          <tr><td>分条与节奏</td><td>已实现</td><td>15 个单元测试</td></tr>
+          <tr><td>人格与称呼</td><td>已实现</td><td>13 个单元测试；五份锚点已撰写</td></tr>
+          <tr><td>界面壳</td><td>已实现（静态）</td><td>14 项交互冒烟测试，未接后端</td></tr>
+          <tr><td>通道 / 表达 / 行动 / 系统</td><td>骨架</td><td>仅通过编译</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sec__foot">
+      <p>
+        <strong>还没有的：</strong>安装包、记忆提炼提示词、界面与后端联通、移动端桌宠（仅占位）。
+        仓库里没有任何可双击安装的产物。
+      </p>
+    </div>
+  </section>
+
+  <section class="sec" id="isolation">
+    <div class="sec__head">
+      <p class="sec__eyebrow">隔离</p>
+      <h2 class="sec__title">装它，不会动你已有的 DSH</h2>
+      <p class="sec__lede">
+        不只是换一个目录。凡是可能与官方撞车的标识——产品名、应用标识、进程名、变量前缀、
+        端口、锁文件——都用自己的。
+      </p>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>维度</th><th>官方 DSH</th><th>NT-Dpet</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>产品名 / 应用标识</td><td>DeepSeek Harness</td><td>NT-DPet · com.ntars.ntdpet</td></tr>
+          <tr><td>数据目录</td><td>~/.dsh</td><td>自有 dsh-home/</td></tr>
+          <tr><td>技能与指令</td><td>~/.agents</td><td>自有 agents/</td></tr>
+          <tr><td>profile</td><td>desktop</td><td>nt-dpet</td></tr>
+          <tr><td>进程</td><td>官方 App</td><td>nt-dpet-host，独立进程组 + pidfile</td></tr>
+          <tr><td>端口</td><td>3080</td><td>9060（可调，冲突递增）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sec__foot">
+      <p>
+        唯一的跨界读取：首次启动时<strong>只读</strong>看一眼已配置的密钥，问你要不要沿用。
+        同意才复制一份过去，绝不回写。
+      </p>
+    </div>
+  </section>
+
+  <section class="sec" id="roadmap">
+    <div class="sec__head">
+      <p class="sec__eyebrow">路线</p>
+      <h2 class="sec__title">从能聊，到能陪</h2>
+      <p class="sec__lede">先桌面能聊，再打通通道，然后填功能。风险前置，不做没有验证过的承诺。</p>
+    </div>
+
+    <div class="road">
+      <div class="road__item">
+        <span class="road__step">S0</span>
+        <span class="road__name">骨架 + 最小可聊</span>
+        <span class="road__desc">情感、对话、记忆、节奏、人格已实现；界面接线与启动自检进行中</span>
+      </div>
+      <div class="road__item">
+        <span class="road__step">S1</span>
+        <span class="road__name">三端打包</span>
+        <span class="road__desc">Windows → macOS → Linux，双击安装，装完能聊</span>
+      </div>
+      <div class="road__item">
+        <span class="road__step">S2</span>
+        <span class="road__name">官方通道</span>
+        <span class="road__desc">QQ 官方机器人、微信公众号；个人号通道仅引导自行安装并明示风险</span>
+      </div>
+      <div class="road__item">
+        <span class="road__step">S4</span>
+        <span class="road__name">声音与表情</span>
+        <span class="road__desc">本地语音走独立进程，不打包；四道闸门决定何时出声</span>
+      </div>
+      <div class="road__item">
+        <span class="road__step">S5</span>
+        <span class="road__name">桌宠</span>
+        <span class="road__desc">Live2D 立绘 + 情绪驱动；移动端做「她留下的痕迹」而非桌面立绘</span>
+      </div>
+    </div>
+  </section>
+
   <section class="sec" id="risk">
     <div class="sec__head">
-      <p class="sec__eyebrow">风险声明</p>
+      <p class="sec__eyebrow">风险</p>
       <h2 class="sec__title">该说的难听话</h2>
     </div>
 
@@ -327,22 +432,22 @@
       <article class="card card--warn">
         <h3 class="card__title">账号风险</h3>
         <p class="card__body">
-          接入个人 QQ 号可能导致<strong>永久封号</strong>，并可能波及所在群聊与关联账号。
-          软件无法保证账号安全，风险由使用者自行承担。官方机器人通道无此风险。
+          接入个人 QQ 号或个人微信可能导致<strong>永久封号</strong>，并可能波及所在群与关联账号。
+          软件无法保证账号安全。官方机器人通道无此风险，是没有顾虑时的推荐选择。
         </p>
       </article>
       <article class="card card--warn">
         <h3 class="card__title">AI 内容标识</h3>
         <p class="card__body">
           本软件不代替使用者添加 AI 生成内容标识。在公开平台使用其输出时，
-          标识义务在《人工智能生成合成内容标识办法》下由使用者承担。
+          依《人工智能生成合成内容标识办法》负有标识义务。
         </p>
       </article>
-      <article class="card card--warn">
+      <article class="card">
         <h3 class="card__title">隐私</h3>
         <p class="card__body">
-          对话与记忆默认全部存放本机。上游默认会把会话日志随模型请求上传，
-          本软件在安装时强制关闭并在每次启动时校验。
+          对话与记忆默认全部存放本机，<strong>且不加密</strong>——安全边界由目录权限承担（0700 / 0600）。
+          上游默认上传会话日志的行为已被强制关闭并在每次启动校验。
         </p>
       </article>
     </div>
@@ -359,15 +464,17 @@
 
     <nav class="foot__links" aria-label="页脚导航">
       <a href="https://github.com/ntars/NT-Dpet" target="_blank" rel="noopener">源码仓库</a>
+      <a href="https://github.com/ntars/NT-Dpet/blob/main/README.md" target="_blank" rel="noopener">产品文档</a>
+      <a href="https://github.com/ntars/NT-Dpet/blob/main/NOTICE" target="_blank" rel="noopener">第三方声明</a>
       <a href="https://github.com/ntars/NT-Dpet/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener">架构设计</a>
-      <a href="https://github.com/ntars/NT-Dpet/blob/main/docs/DECISIONS.md" target="_blank" rel="noopener">决策记录</a>
-      <a href="https://github.com/ntars/NT-Dpet/blob/main/docs/CREDITS.md" target="_blank" rel="noopener">致谢</a>
     </nav>
 
     <div class="foot__meta">
       <span>AGPL-3.0</span>
       <span class="foot__dot" aria-hidden="true">·</span>
       <span>星玖工作室</span>
+      <span class="foot__dot" aria-hidden="true">·</span>
+      <span>v0.1.0</span>
       <span class="foot__dot" aria-hidden="true">·</span>
       <span>2026</span>
     </div>
