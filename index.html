@@ -70,7 +70,7 @@
 
     <div class="hero__actions">
       <a class="btn btn--primary" href="https://github.com/ntars/NT-Dpet" target="_blank" rel="noopener">查看源码</a>
-      <a class="btn btn--ghost" href="#highlights">看它不一样在哪</a>
+      <a class="btn btn--ghost" href="#highlights">查看设计要点</a>
     </div>
 
     <p class="hero__note">
@@ -81,10 +81,10 @@
   <section class="sec" id="what">
     <div class="sec__head">
       <p class="sec__eyebrow">定位</p>
-      <h2 class="sec__title">不是又一个框架，是一个发行版</h2>
+      <h2 class="sec__title">定位：发行版，而非新框架</h2>
       <p class="sec__lede">
         NT-Dpet 是 DeepSeek-Harness 的发行版。DSH 相当于内核——插件树、模型调用、会话与工具链；
-        NT-Dpet 相当于一套预配置好的发行套件。不重写内核，只负责装配、隔离与兜底。
+        NT-Dpet 相当于一套预配置好的发行套件：不重写内核，仅负责装配、隔离与失败降级。
       </p>
     </div>
 
@@ -96,20 +96,20 @@
       </article>
       <article class="card">
         <span class="card__idx">02</span>
-        <h3 class="card__title">看住</h3>
-        <p class="card__body">任何一个环节失效，其余部分照常工作。插件加载是软失败，所以每次启动都做激活数自检。</p>
+        <h3 class="card__title">监控</h3>
+        <p class="card__body">单一环节失效时，其余部分保持运行。因插件加载失败不会中断启动，每次启动执行激活数自检。</p>
       </article>
       <article class="card">
         <span class="card__idx">03</span>
-        <h3 class="card__title">兜底</h3>
-        <p class="card__body">增强能力失败时退回基础能力，不把报错抛给你。语音失败就发文字，而不是弹一个错误框。</p>
+        <h3 class="card__title">降级</h3>
+        <p class="card__body">增强能力失败时回退至基础能力，不向用户显示错误。语音合成失败时改为发送文本。</p>
       </article>
     </div>
 
     <div class="sec__foot">
       <p>
-        <strong>它不是：</strong>自研大模型（只做接入）、协议逆向（只用现成协议端）、零件货架（做整装组合包）、
-        无风险产品（个人号通道的封禁风险如实标注，不做美化）。
+        <strong>非目标范围：</strong>不自研基础模型（仅做接入）；不进行协议逆向（仅使用现成协议端）；不提供零件式插件市场（提供整装组合包）；
+        不宣称零风险（个人号通道的封禁风险如实标注）。
       </p>
     </div>
   </section>
@@ -117,57 +117,57 @@
   <section class="sec" id="highlights">
     <div class="sec__head">
       <p class="sec__eyebrow">亮点</p>
-      <h2 class="sec__title">六个不那么显然的选择</h2>
-      <p class="sec__lede">每条都写明做法与当前状态——设计已定不等于已经能跑，这一点本页不模糊处理。</p>
+      <h2 class="sec__title">六项关键设计选择</h2>
+      <p class="sec__lede">每项均标注做法与实现状态；设计完成与功能可用在本页分开表述。</p>
     </div>
 
     <div class="grid grid--3">
       <article class="card">
         <span class="card__idx">01</span>
-        <h3 class="card__title">情绪会自己回落</h3>
+        <h3 class="card__title">情绪随时间回归基线</h3>
         <p class="card__body">
-          五维情绪沿指数曲线回到基线，四档半衰期（1 小时 / 4 小时 / 12 小时 / 不回落）。
-          读取时现算，不靠定时器推进，进程崩溃重启也不用补偿计算。已实现。
+          五维情绪按指数曲线回归基线，提供四档半衰期（1 小时 / 4 小时 / 12 小时 / 不回归）。
+          数值在读取时按经过时长计算，不依赖定时器推进，进程重启无需补偿运算。状态：已实现。
         </p>
       </article>
       <article class="card">
         <span class="card__idx">02</span>
-        <h3 class="card__title">她有不说话的权利</h3>
+        <h3 class="card__title">主动性具备克制机制</h3>
         <p class="card__body">
-          主动性过三道闸门（时机 → 话由 → 分寸），即使全过仍有 30% 概率今天不主动。
-          被冷落 3 天开始收回心事，7 天归零，但日记照写。设计已定。
+          主动消息需依次通过三道判定（时机、话由、分寸）；三道全部通过后仍有 30% 概率当日不主动发起。
+          连续 3 天未获回应即降低频次，第 7 天归零；日记仍照常写入。状态：设计已定。
         </p>
       </article>
       <article class="card">
         <span class="card__idx">03</span>
-        <h3 class="card__title">称呼跟着关系变</h3>
+        <h3 class="card__title">称呼随关系定位联动</h3>
         <p class="card__body">
           妹妹叫「哥哥」、伴侣叫「宝宝」、助手叫「主人」或「老板」、亲子叫「爸爸 / 妈妈」。
-          改过就固定下来，清空则恢复跟随关系。已实现。
+          手动修改后不再随关系变化；清空则恢复联动。状态：已实现。
         </p>
       </article>
       <article class="card">
         <span class="card__idx">04</span>
-        <h3 class="card__title">聊天不背 agent 的包袱</h3>
+        <h3 class="card__title">日常对话不经过执行链路</h3>
         <p class="card__body">
-          日常对话走轻通道：不建会话、不发工具调用、不走执行链路。
-          只把正文推给界面，模型的思考过程一律过滤。已实现。
+          日常对话使用独立轻量通道：不创建会话、不发起工具调用、不进入执行链路。
+          仅向界面推送正文，模型推理内容一律过滤。状态：已实现。
         </p>
       </article>
       <article class="card">
         <span class="card__idx">05</span>
-        <h3 class="card__title">隐私不是开关</h3>
+        <h3 class="card__title">隐私项不提供开关</h3>
         <p class="card__body">
-          会话日志上传与使用统计固定关闭，界面只显示「已固定关闭」，不给入口。
-          每次启动校验，校验不过直接拒绝启动。设计已定。
+          会话日志上传与使用统计固定关闭，界面仅显示「已固定关闭」，不提供入口。
+          每次启动执行校验，校验未通过则拒绝启动。状态：设计已定。
         </p>
       </article>
       <article class="card">
         <span class="card__idx">06</span>
-        <h3 class="card__title">界面按 Apple HIG 做</h3>
+        <h3 class="card__title">界面遵循 Apple HIG</h3>
         <p class="card__body">
           三栏布局、对话与工作双视图、七组渐进式设置、四种主题模式。
-          字体只用 px / rem；每个开关都真改状态，不做假开关。界面壳已实现。
+          字体单位仅使用 px / rem；所有控件均绑定真实状态。状态：界面壳已实现。
         </p>
       </article>
     </div>
@@ -176,9 +176,9 @@
   <section class="sec" id="her">
     <div class="sec__head">
       <p class="sec__eyebrow">她</p>
-      <h2 class="sec__title">同一只猫娘，五种相处方式</h2>
+      <h2 class="sec__title">单一角色，五种关系定位</h2>
       <p class="sec__lede">
-        人格是主，关系只是微调。身份、性格、诚实、边界四条五份共用；换关系不改人，只改怎么相处。
+        人格为基准，关系定位仅作微调。身份、性格、诚实、边界四项由五份配置共用；切换关系不改变角色本身，仅调整相处方式。
       </p>
     </div>
 
@@ -188,11 +188,11 @@
           <tr><th>关系</th><th>她的身份</th><th>默认称呼你</th><th>相处节奏</th></tr>
         </thead>
         <tbody>
-          <tr><td>妹妹</td><td>妹妹</td><td>哥哥</td><td>黏人，主动找你；你不理她会不高兴，过一会儿自己凑回来</td></tr>
-          <tr><td>伴侣</td><td>恋人</td><td>宝宝 / 乖乖 / 老公</td><td>在意回应，吃醋直说，不阴阳怪气</td></tr>
-          <tr><td>朋友</td><td>平等朋友</td><td>你的名字或外号</td><td>不黏不查行踪，聊得来就聊</td></tr>
-          <tr><td>助手</td><td>助手</td><td>主人 / 老板</td><td>以把事办成为先，不撒娇不打听私事</td></tr>
-          <tr><td>亲子</td><td>女儿</td><td>爸爸 / 妈妈</td><td>爱讲今天的小事，被说时先认不顶嘴</td></tr>
+          <tr><td>妹妹</td><td>妹妹</td><td>哥哥</td><td>主动联系；未获回应时会表达不满，随后自行恢复</td></tr>
+          <tr><td>伴侣</td><td>恋人</td><td>宝宝 / 乖乖 / 老公</td><td>在意回应；表达不满时直接说明，不使用暗示</td></tr>
+          <tr><td>朋友</td><td>平等朋友</td><td>你的名字或外号</td><td>不主动索取关注，不询问行踪</td></tr>
+          <tr><td>助手</td><td>助手</td><td>主人 / 老板</td><td>以完成事务为先，不撒娇，不询问私人事务</td></tr>
+          <tr><td>亲子</td><td>女儿</td><td>爸爸 / 妈妈</td><td>主动分享日常；受到批评时先行承认</td></tr>
         </tbody>
       </table>
     </div>
@@ -200,25 +200,25 @@
     <div class="grid grid--3">
       <article class="card">
         <span class="card__idx">情绪</span>
-        <h3 class="card__title">会难过，也会自己好起来</h3>
+        <h3 class="card__title">情绪状态与回归机制</h3>
         <p class="card__body">
-          mood、energy 归实例，affection、trust、intimacy、familiarity 按人。
-          初始是「略有好感」——不冷淡，也不自来熟。
+          mood、energy 属于实例级；affection、trust、intimacy、familiarity 按参与者分别记录。
+          初始状态为「略有好感」：既不冷淡，也不过度亲近。
         </p>
       </article>
       <article class="card">
         <span class="card__idx">记忆</span>
-        <h3 class="card__title">记得，但不会全倒出来</h3>
+        <h3 class="card__title">记忆分层与按需检索</h3>
         <p class="card__body">
-          原文层每轮同步落库，事实层每轮结束后 5 秒异步提炼。
-          检索走三层裁决（语义 / 时间 / 重要度），越久越轻。
+          原文层每轮同步写入，事实层在每轮结束后 5 秒异步提炼。
+          检索按语义、时间、重要度三项加权裁决，时间越久权重越低。
         </p>
       </article>
       <article class="card">
         <span class="card__idx">分寸</span>
-        <h3 class="card__title">热情有边界</h3>
+        <h3 class="card__title">交互节奏与边界</h3>
         <p class="card__body">
-          深夜更慢、句子更短。语音只在情绪明显波动时发——语音条该有分量，不该是日常。
+          夜间回复更慢、句子更短。语音仅在情绪明显偏离基线时使用，以保证语音消息的信息密度。
         </p>
       </article>
     </div>
@@ -227,8 +227,8 @@
   <section class="sec" id="look">
     <div class="sec__head">
       <p class="sec__eyebrow">界面</p>
-      <h2 class="sec__title">装好之后，看到的是这个</h2>
-      <p class="sec__lede">三栏布局：左边会话，中间对话，右边她的状态。对话为默认视图，需要干活时切到工作视图看日志。</p>
+      <h2 class="sec__title">界面预览</h2>
+      <p class="sec__lede">三栏布局：左侧会话列表，中间对话区，右侧状态面板。默认显示对话视图；需要查看运行日志时切换至工作视图。</p>
     </div>
 
     <div class="shots">
@@ -258,63 +258,63 @@
   <section class="sec" id="design">
     <div class="sec__head">
       <p class="sec__eyebrow">设计</p>
-      <h2 class="sec__title">几个容易被忽略的决定</h2>
-      <p class="sec__lede">这些不是功能列表，而是「为什么这样做」。每条都写在仓库文档里，可逐条追溯。</p>
+      <h2 class="sec__title">若干容易被忽略的设计决定</h2>
+      <p class="sec__lede">以下为设计理由，而非功能清单。每项均记录于仓库文档，可逐条追溯。</p>
     </div>
 
     <div class="grid grid--2">
       <article class="card">
-        <h3 class="card__title">情绪回落用指数，不用线性</h3>
+        <h3 class="card__title">情绪回归采用指数曲线</h3>
         <p class="card__body">
           v(t) = 基线 + (v₀ − 基线) × e^(−λt)，λ = ln2 / 半衰期。
-          人的情绪「刚开始淡得快、越久越淡」，线性衰减会在某一刻突然归零，很假。
+          真实情绪表现为初期变化快、后期趋缓；线性衰减会在某一时点骤然归零，与观察不符。
         </p>
       </article>
       <article class="card">
-        <h3 class="card__title">越不熟，越容易被殃及</h3>
+        <h3 class="card__title">情绪弥散：熟悉度越低，受影响越大</h3>
         <p class="card__body">
-          心情不好会迁怒：偏移 = (mood − 基线) × 0.4 × (1 − 熟悉度 × 0.5)。
-          反直觉但正确——不熟的人，她没理由为他区分「这不是你的错」。
+          偏移量 = (mood − 基线) × 0.4 × (1 − 熟悉度 × 0.5)。
+          该结果与直觉相反但符合设定：关系越疏远，越不会为其区分情绪来源。
         </p>
       </article>
       <article class="card">
-        <h3 class="card__title">语音要「有分量」</h3>
+        <h3 class="card__title">语音输出设有四道闸门</h3>
         <p class="card__body">
           四道闸门：情绪强度 &gt; 0.4、句子 6–30 字、人设权重 &gt; 0.3、通道未超频次。
-          连续三条不得同一种形式。失败静默退文本，不弹错误。
+          连续三条不得使用同一形式。失败时静默回退为文本，不显示错误。
         </p>
       </article>
       <article class="card">
-        <h3 class="card__title">分条宁可少切，不要切碎</h3>
+        <h3 class="card__title">分条策略：优先保持语句完整</h3>
         <p class="card__body">
-          「嗯……算了吧，你先忙。」切成四条像口吃，切成两条才像人。
-          所以强分隔必切，省略号和破折号只在句子过长时才参与。
+          示例句「嗯……算了吧，你先忙。」切成四条会破坏语句连贯性，切成两条更贴近自然表达。
+          因此强分隔符必切；省略号与破折号仅在句子超长时参与切分。
         </p>
       </article>
       <article class="card">
-        <h3 class="card__title">隐私不给开关</h3>
+        <h3 class="card__title">隐私项不提供开关</h3>
         <p class="card__body">
-          日志上传一旦开过，关闭期间的内容会在重开时补发，「关掉就干净了」是错的。
-          与其给一个让人误以为安全的开关，不如不给。
+          日志上传一经开启，关闭期间产生的内容会在重新开启时补发，因此「关闭即可清除」不成立。
+          与其提供可能造成误解的开关，不如不提供。
         </p>
       </article>
       <article class="card">
-        <h3 class="card__title">进程只按 pidfile 杀</h3>
+        <h3 class="card__title">进程终止仅依据 pidfile</h3>
         <p class="card__body">
-          按名字匹配杀进程会连带杀掉官方 DSH。我们起独立进程组，退出时只杀自己记录的那个 PID。
+          按进程名匹配终止会连带终止官方 DSH。本项目使用独立进程组，退出时仅终止自身记录的 PID。
         </p>
       </article>
       <article class="card">
-        <h3 class="card__title">组合包装前先建还原点</h3>
+        <h3 class="card__title">组合包安装前自动创建还原点</h3>
         <p class="card__body">
-          完整集字段（作者、图标、截图、权限、校验和），装前做冲突检测，自动建还原点，默认保留 3 个。
+          组合包采用完整字段集（作者、图标、截图、权限声明、校验和）；安装前执行冲突检测并自动创建还原点，默认保留 3 个。
         </p>
       </article>
       <article class="card">
-        <h3 class="card__title">没有假开关</h3>
+        <h3 class="card__title">不设置无效控件</h3>
         <p class="card__body">
-          没接后端的项直接标「未接入」，而不是做一个点了没反应的开关。
-          假开关比缺功能更糟——用户会以为已经生效。
+          尚未接入后端的项目标注「未接入」，不提供无响应控件。
+          无效控件比缺少功能更严重，因其会使使用者误判功能已生效。
         </p>
       </article>
     </div>
@@ -323,8 +323,8 @@
   <section class="sec" id="status">
     <div class="sec__head">
       <p class="sec__eyebrow">进度</p>
-      <h2 class="sec__title">现在能跑什么，还不能跑什么</h2>
-      <p class="sec__lede">32 个插件包，7 个能力组。已实现的五个模块有单元测试，其余仍是骨架。</p>
+      <h2 class="sec__title">当前实现范围</h2>
+      <p class="sec__lede">共 32 个插件包、7 个能力组。其中五个模块已实现并具备单元测试，其余仍为骨架。</p>
     </div>
 
     <div class="table-wrap">
@@ -346,8 +346,8 @@
 
     <div class="sec__foot">
       <p>
-        <strong>还没有的：</strong>安装包、记忆提炼提示词、界面与后端联通、移动端桌宠（仅占位）。
-        仓库里没有任何可双击安装的产物。
+        <strong>尚未提供：</strong>安装包、记忆提炼提示词、界面与后端联通、移动端桌宠（仅保留占位）。
+        仓库当前不包含任何可安装产物。
       </p>
     </div>
   </section>
@@ -355,10 +355,10 @@
   <section class="sec" id="isolation">
     <div class="sec__head">
       <p class="sec__eyebrow">隔离</p>
-      <h2 class="sec__title">装它，不会动你已有的 DSH</h2>
+      <h2 class="sec__title">安装不影响已有的 DSH 环境</h2>
       <p class="sec__lede">
-        不只是换一个目录。凡是可能与官方撞车的标识——产品名、应用标识、进程名、变量前缀、
-        端口、锁文件——都用自己的。
+        隔离不限于目录。凡可能与官方版本冲突的标识——产品名、应用标识、进程名、变量前缀、
+        端口、锁文件——均使用自有命名。
       </p>
     </div>
 
@@ -380,8 +380,8 @@
 
     <div class="sec__foot">
       <p>
-        唯一的跨界读取：首次启动时<strong>只读</strong>看一眼已配置的密钥，问你要不要沿用。
-        同意才复制一份过去，绝不回写。
+        唯一的跨目录读取：首次启动时以<strong>只读</strong>方式检查已配置的密钥，并询问是否沿用。
+        经确认后才复制至自有目录，不回写原文件。
       </p>
     </div>
   </section>
@@ -389,8 +389,8 @@
   <section class="sec" id="roadmap">
     <div class="sec__head">
       <p class="sec__eyebrow">路线</p>
-      <h2 class="sec__title">从能聊，到能陪</h2>
-      <p class="sec__lede">先桌面能聊，再打通通道，然后填功能。风险前置，不做没有验证过的承诺。</p>
+      <h2 class="sec__title">实施阶段</h2>
+      <p class="sec__lede">先实现桌面端对话，再打通外部通道，最后补齐其余能力。未经验证的功能不写入承诺。</p>
     </div>
 
     <div class="road">
@@ -425,29 +425,29 @@
   <section class="sec" id="risk">
     <div class="sec__head">
       <p class="sec__eyebrow">风险</p>
-      <h2 class="sec__title">该说的难听话</h2>
+      <h2 class="sec__title">风险与限制说明</h2>
     </div>
 
     <div class="grid grid--3">
       <article class="card card--warn">
         <h3 class="card__title">账号风险</h3>
         <p class="card__body">
-          接入个人 QQ 号或个人微信可能导致<strong>永久封号</strong>，并可能波及所在群与关联账号。
-          软件无法保证账号安全。官方机器人通道无此风险，是没有顾虑时的推荐选择。
+          接入个人 QQ 号或个人微信可能导致<strong>账号永久封禁</strong>，并可能波及所在群聊与关联账号。
+          本软件无法保证账号安全。官方机器人通道不存在该风险，为推荐接入方式。
         </p>
       </article>
       <article class="card card--warn">
         <h3 class="card__title">AI 内容标识</h3>
         <p class="card__body">
-          本软件不代替使用者添加 AI 生成内容标识。在公开平台使用其输出时，
-          依《人工智能生成合成内容标识办法》负有标识义务。
+          本软件不代使用者添加 AI 生成内容标识。在公开平台使用其输出时，
+          使用者依《人工智能生成合成内容标识办法》承担标识义务。
         </p>
       </article>
       <article class="card">
         <h3 class="card__title">隐私</h3>
         <p class="card__body">
-          对话与记忆默认全部存放本机，<strong>且不加密</strong>——安全边界由目录权限承担（0700 / 0600）。
-          上游默认上传会话日志的行为已被强制关闭并在每次启动校验。
+          对话与记忆默认全部存储于本机，<strong>且不加密</strong>；安全边界由目录权限承担（目录 0700、数据库文件 0600）。
+          上游默认的会话日志上传行为已被强制关闭，并在每次启动时校验。
         </p>
       </article>
     </div>
