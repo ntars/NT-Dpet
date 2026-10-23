@@ -540,6 +540,69 @@ dsh web: http://127.0.0.1:3182/?token=...        ← 服务照常起来了
 - 补齐后 `pnpm -r --filter './packages/**' build` **29 个包全部通过**
 - 产物导出形态实测：`Object.keys()` → `['apply', 'name']`，`name` 为 `nt-dpet-emotion`，`apply` 为 function——符合 Cordis 4 的具名导出约定
 
+### 5.10 dialogue 通道实证：不建 Session 也能调模型 `[已实测，2026-10-23]`
+
+**待验证 #9 关闭。** 隐私约束的最大悬念解除：dialogue 包可以完全不建 DSH Session 地拿到模型回复。
+
+#### 5.10.1 实测链路
+
+探针插件（`export const inject = ['llm']`）直接 `ctx.llm.stream()`，LLM 路由配置全部走 patch：
+
+```yaml
+- id: llm-pi-ai
+  name: '@deepseek-ai/dsh-llm-pi-ai'
+  config:
+    providers:
+      magpie:
+        displayName: 星玖优选（magpie 本地网关）
+        api: openai-completions
+        baseURL: http://127.0.0.1:3425/v1
+        apiKeyEnv: MAGPIE_API_KEY
+        models:
+          - id: group/ntars
+            name: 星玖优选
+            contextWindow: 1048576
+            maxTokens: 384000
+            reasoningEfforts:
+              high: high
+```
+
+凭据走环境变量 `MAGPIE_API_KEY=magpie`——**patch 里永远不写密钥明文**，`apiKeyEnv` 按请求解析。实测结果：
+
+```
+[chunk 0] block-start  blockType=reasoning
+[chunk 1] reasoning-delta  "The"
+[chunk 2] block-start  blockType=text
+[chunk 3] text-delta   "好的"
+[chunk 5] block-end reasoning
+[chunk 6] block-end text
+[chunk 7] usage  inputTokens=342 outputTokens=14
+[chunk 8] finish reason={kind:"stop"} replayState={provider:"magpie",...}
+```
+
+**要点确认**：
+
+- 未建任何 Session，请求照常流动——「dialogue 不得建 Session」的隐私约束不需要付出功能代价
+- 流以 `{type:'finish', reason:{kind:'stop'}}` 终结， ошиб토没有 error / aborted，与 README 「每流恒一个终态分片」一致
+- reasoning 内容走独立的 reasoning-delta 分片，正文走 text-delta——对话通道过滤掉 reasoning block 即可拿到干净正文
+
+#### 5.10.2 又一条实测教训：inject 必须显式
+
+探针第一版直接 `ctx.llm`，加载失败：
+
+```
+Error: cannot get property "llm" without inject
+```
+
+且插件**整个不激活**（`1 entry did not activate`），不是只失败那一个属性读取。这印证 §4.2 第 2 条，且升级了它的严重性：**不是「读不到」，是「插件不存在」**。
+
+另一个坑：patch 覆盖已有 entry（如给 `llm-pi-ai` 传 config）时**必须写 `id`**，报错为 `patch: id is required for non-insert patches`。`insert` 分支可以不写 id（loader 会生成），非 insert 的覆盖分支必须指明要覆盖谁。
+
+#### 5.10.3 `ctx.llm.listProviders()` 返回空数组
+
+`listProviders()` 报 `[]`，但 `stream({provider:'magpie'})` 照常工作。含义：**listProviders 报的是「GUI 可选目录」，手工声明路由不在其中**；README 说「GUI 需要目录成员资格才能选择」，探针走代码直调不受限。**对 NT-Dpet 的含义**：如果将来想在设置界面里让用户直接选模型，可能需要走 `models` 目录声明而不是手工 providers；两条路都通，先按手工 config 走。
+
+
 
 
 ---
@@ -592,7 +655,7 @@ star 数、最新提交时间等动态数据未写入本文档——此类数据
 | 6 | ~~OpenClaw 的许可类型与微信通道稳定性~~ → 已由 §5.7.1 取代：原版 wxauto 仅 Windows 且作者禁止生产使用；macOS 等价物为 AppleScript + Accessibility，风险已定性 | **已定性，待主人裁决是否要** |
 | 7 | phone-mcp 的 34 个工具在非中文输入法、非标准分辨率下的兼容性 | 决定手机操控的通用性 |
 | 8 | `desktop` profile 被 Electron 独占时，第三方安装器如何合法写入 | 决定安装器实现路径（§5.2） |
-| 9 | dialogue 不建 Session 时，`dsh-llm.stream()` 是否仍要求会话上下文 | 决定对话通道能否彻底脱离会话体系（§5.4） |
+| 9 | dialogue 不建 Session 时，`dsh-llm.stream()` 是否仍可用 | **已实测成立**（2026-10-23）：探针插件未建任何 Session，直接 `ctx.llm.stream()` 经 `dsh-llm-pi-ai` 走 magpie 网关，拿到完整流（block-start → text-delta → block-end → usage → finish(stop)） | §5.10 |
 | 10 | `dsh-web-app` 默认视图的配置字段名 | 决定决策 12（默认视图为对话）如何落地 |
 | 11 | 第三方插件的 `engines.dsh` 与本机 `0.2.1-rc.2` 的兼容判定规则 | 决定组合包的版本锁定粒度 |
 | 12 | 29 个包与既有生态插件的重划分方案 | 见 §5.5，**需主人裁决** |

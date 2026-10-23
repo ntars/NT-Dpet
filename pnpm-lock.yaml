@@ -134,6 +134,12 @@ importers:
         specifier: ^4.0.5
         version: 4.0.5
 
+  packages/pet-mobile:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: ^4.0.5
+        version: 4.0.5
+
   packages/privacy:
     devDependencies:
       '@deepseek-ai/cordis':

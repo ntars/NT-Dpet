@@ -1,0 +1,9 @@
+# NT-Dpet 插件挂载入口
+# id 命名规范：nt-dpet:<组>:<名>，全项目唯一
+#
+# 状态：占位。默认 disabled，移动端实现落地前不要启用——
+# 启用一个空包只会让启动自检多出一条「已激活但无行为」的假信号。
+- insert:
+    - id: nt-dpet:express:pet-mobile
+      name: "@nt-dpet/pet-mobile"
+      disabled: true
