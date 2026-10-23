@@ -29,7 +29,7 @@
 
 ## 二、采用总表
 
-级别含义：**依赖**=写入 package.json｜**运行时**=独立进程、不打包｜**参考**=只学设计不复制代码｜**不用**=评估后排除
+级别含义：**依赖**=已写入 package.json｜**计划依赖**=已定级、尚未写入 package.json（括号内为引入阶段）｜**运行时**=独立进程、不打包｜**参考**=只学设计不复制代码｜**不用**=评估后排除
 
 ### 2.1 宿主与插件基座
 
@@ -37,6 +37,7 @@
 |---|---|---|---|
 | `deepseek-ai/deepseek-harness` | MIT | 运行时（宿主） | NOTICE §四 |
 | `@deepseek-ai/cordis` | MIT | **依赖**（peer+dev） | NOTICE §三 |
+| `microsoft/TypeScript` | Apache-2.0 | **依赖**（根 `devDependencies`，仅编译期，不进入运行时） | NOTICE §三 + §3.1（一旦以任何形式分发其本体，须补附上游 NOTICE） |
 | `ruvnet/ruflo` | MIT | 参考（插件分层） | CREDITS |
 | `humanlayer/12-factor-agents` | 未声明 | 参考（只读原则，不复制） | CREDITS |
 
@@ -44,8 +45,8 @@
 
 | 项目 | 许可 | 怎么用 | 声明动作 |
 |---|---|---|---|
-| `guansss/pixi-live2d-display` | MIT | **依赖**（S5） | NOTICE §五 已登记 |
-| `pixi.js` | MIT | **依赖**（S5） | NOTICE §五 |
+| `guansss/pixi-live2d-display` | MIT | **计划依赖**（S5） | NOTICE §五 已登记 |
+| `pixi.js` | MIT | **计划依赖**（S5） | NOTICE §五 |
 | `Live2D/CubismWebSamples` | 专有（SDK 协议） | 参考 API 用法 | NOTICE §六（禁止分发） |
 | `Live2D/CubismWebFramework` | 专有 | 不用（不可再分发） | NOTICE §六 |
 | `Untitled-Story/untitled-pixi-live2d-engine` | MIT | 备选依赖（PixiJS v8 兼容） | 采用时登记 |
@@ -81,8 +82,8 @@
 
 | 项目 | 许可 | 怎么用 | 声明动作 |
 |---|---|---|---|
-| `zhinjs/qq-official-bot` | MIT | **依赖**（S2 官方 QQ） | NOTICE §五 |
-| `grammyjs/grammY` | MIT | **依赖**（S7 Telegram） | NOTICE §五 |
+| `zhinjs/qq-official-bot` | MIT | **计划依赖**（S2 官方 QQ） | NOTICE §五 |
+| `grammyjs/grammY` | MIT | **计划依赖**（S7 Telegram） | NOTICE §五 |
 | `NapNeko/NapCatQQ` | 未声明（有限再分发） | 运行时（用户自装，我们不分发） | NOTICE §六 + 界面提示 |
 | `LagrangeDev/Lagrange.Core` | 未声明 | 同上（备选协议端） | NOTICE §六 |
 | `LLOneBot/LuckyLilliaBot` | GPL-2.0-only | **不用**（与 AGPL 不兼容） | NOTICE §六 |
@@ -103,7 +104,7 @@
 
 | 项目 | 许可 | 怎么用 | 声明动作 |
 |---|---|---|---|
-| `asg017/sqlite-vec` | Apache-2.0 / MIT | **依赖候选**（向量检索） | NOTICE §五 已登记 |
+| `asg017/sqlite-vec` | **MIT OR Apache-2.0**（双许可，本项目按 MIT 分支使用） | **依赖候选**（向量检索） | NOTICE §五 已登记 |
 | `WiseLibs/better-sqlite3` | MIT | 备选（若 node:sqlite 的实验 API 变动过大） | 采用时登记 |
 | `nodejs/node`（`node:sqlite`） | MIT | **已采用**（记忆持久化，Node 22.22 无需 flag） | NOTICE §四（Node 运行时） |
 | `mem0ai/mem0` | Apache-2.0 | 参考（抽取/去重/更新语义） | CREDITS |
@@ -142,7 +143,7 @@
 | 项目 | 许可 | 怎么用 | 声明动作 |
 |---|---|---|---|
 | `electron/electron` | MIT | **依赖**（已登记） | NOTICE §三 |
-| `electron-userland/electron-builder` | MIT | **依赖**（S1 打包） | NOTICE §五 |
+| `electron-userland/electron-builder` | MIT | **计划依赖**（S1 打包） | NOTICE §五 |
 | `electron/forge` | MIT | 备选（官方打包） | 采用时登记 |
 | `alex8088/electron-vite` | MIT | **依赖候选**（构建体验；注意先前误写为 `electron-vite/electron-vite`，该仓库 404） | 采用时登记 |
 | `vercel/hazel` | MIT | 观察（自托管更新） | — |
@@ -163,8 +164,8 @@
 
 | 项目 | 许可 | 怎么用 | 声明动作 |
 |---|---|---|---|
-| `PrismarineJS/mineflayer` | MIT | **依赖**（S6 Minecraft） | NOTICE §五 |
-| `PrismarineJS/mineflayer-pathfinder` | MIT | **依赖** | NOTICE §五 |
+| `PrismarineJS/mineflayer` | MIT | **计划依赖**（S6 Minecraft） | NOTICE §五 |
+| `PrismarineJS/mineflayer-pathfinder` | MIT | **计划依赖** | NOTICE §五 |
 | `mindcraft-bots/mindcraft` | MIT | 参考（任务拆解） | CREDITS |
 | `yang1ming/android-harness` | MIT | **重点参考**（ADB-first 安卓自动化） | CREDITS |
 | `openstf/adbkit` | 未声明 | 参考（ADB 客户端实现） | CREDITS |

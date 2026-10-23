@@ -352,7 +352,7 @@ DeepSeek、Live2D、微信、QQ、企业微信、飞书、钉钉、Telegram、Di
 | `@nt-dpet/persona` 人格与称呼 | 已实现 | 13 个单元测试；五份人格锚点已撰写 |
 | `packages/ui/web` 界面壳 | 已实现（静态） | 14 项交互冒烟测试 |
 | `@nt-dpet/pet-mobile` 移动端桌宠 | 占位（默认禁用） | 无实现 |
-| 其余 26 个插件包 | 骨架 | 仅通过编译 |
+| 其余 25 个插件包 | 骨架 | 仅通过编译；含 `@nt-dpet/ui` 的插件入口（其静态界面见上一行，`src/index.ts` 仍为骨架） |
 | 安装器、三端打包 | 未开始 | 无 |
 
 端到端实测记录（真实插件，非测试桩）：
@@ -588,7 +588,7 @@ S0 完成前不发布任何可安装产物。
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 决策记录：92 项，逐项可溯源 |
 | [`docs/CREDITS.md`](docs/CREDITS.md) | 致谢与许可边界 |
 | [`docs/HANDOFF.md`](docs/HANDOFF.md) | 上下文交接说明 |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 开发清单：至可交付上线的 45 个任务与 28 个子步 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | 开发清单：M0–M8 共 71 个可勾选项（M0 已细化到 22 个子步） |
 | [`docs/AUTOMATION.md`](docs/AUTOMATION.md) | 定时任务的职责、边界与暂停方式 |
 | [`CHANGELOG.md`](CHANGELOG.md) | 版本记录 |
 
