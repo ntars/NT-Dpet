@@ -53,3 +53,6 @@ logs/
 
 # EdgeOne 部署工具在本地留下的缓存（项目 id 与资源副本，不入库）
 .edgeone/
+
+# 项目内部记忆与工作区数据，不入库
+.workbuddy/

@@ -607,6 +607,87 @@ Error: cannot get property "llm" without inject
 
 ---
 
+### 5.11 接口层可行性：插件可注册 HTTP 路由 `[已实测，2026-10-23]`
+
+M0.1.1 的问题：上游是否允许自定义插件注册 HTTP 路由，决定界面接线走「插件内暴露接口」还是「另起本地服务」。
+
+#### 5.11.1 结论
+
+**可行，采用方案 A。** 上游 `@deepseek-ai/dsh-host-webserver` 提供 Cordis 服务 `webServer`，插件注入后即可注册具名路由。
+
+| API | 签名 | 用途 |
+|---|---|---|
+| `ctx.webServer.register(route)` | `{ kind: 'exact' \| 'prefix', path, handler(req, res) }` → disposer | 注册 HTTP 路由 |
+| `ctx.webServer.registerUpgrade(route)` | `handler(req, socket, head)` | WebSocket 升级 |
+| `ctx.webServer.registerFallback(handler)` | 单一所有者，重复注册抛错 | SPA 回退位 |
+| `ctx.webServer.tapIndex(transform)` | `(html) => html` | 向 index.html 注入片段 |
+| `ctx.webServer.getOrigin()` | `http://127.0.0.1:<port>` | 取本机访问根地址 |
+
+匹配顺序固定：先精确路由，再最长前缀，最后回退 handler。
+
+#### 5.11.2 证据
+
+包内未随附类型声明（`lib/` 只有 `index.js`），因此结论来自运行时探针，不是读文档推断：
+
+```
+[http-probe] webServer 存在: true
+[http-probe] 方法: register,registerUpgrade,registerFallback,getOrigin
+[http-probe] origin: http://127.0.0.1:3189
+[http-probe] 已注册 /api/ntdpet/health
+```
+
+```
+$ curl http://127.0.0.1:3189/api/ntdpet/health
+HTTP 200
+{"ok":true,"service":"nt-dpet","path":"/api/ntdpet/health","at":1792758246059}
+```
+
+#### 5.11.3 安全发现：自定义路由不经过宿主鉴权
+
+这是本次探测最需要记住的一条：
+
+| 请求 | 结果 |
+|---|---|
+| 自己注册的 `/api/ntdpet/health`，**不带任何凭据** | **200**（直接进 handler） |
+| 未注册的 `/api/other` | **401**（宿主鉴权围栏拦下） |
+| 前缀路由 `/api/ntdpet`，不带凭据 | **到达 handler**（探针内抛错，返回 400） |
+
+即：宿主的鉴权挂在它自己的 `/api` fetch handler 上，**只保护它认领的路径**。我们注册的 exact / prefix 路由绕过了它。
+
+宿主的鉴权机制是**签名 Cookie**（`dsh-client-connection`）：URL 上的 `?token=` 换取 Cookie，服务端用激活期密钥验签，失败返回 `401 dsh web authentication required`。
+
+`connection` 服务对插件只暴露 `authenticatedUrl`，`isAuthenticated` / `writeUnauthorized` 均非公开（运行时实测 `typeof` 均为 `undefined`）。因此**无法直接复用宿主的鉴权判定**。
+
+#### 5.11.4 由此确定的自鉴权设计
+
+接口层必须自己做鉴权，不能依赖上游：
+
+1. 启动时生成 32 字节随机 token，落 `…/NT-Dpet/user/api-token`（`0600`）；同机同用户进程仍可读，故它挡的是浏览器跨站与误连，不是本机恶意进程
+2. 用 `tapIndex()` 把 token 注入 index.html（`window.__NTDPET_TOKEN__`），页面同源加载才能拿到；跨源页面读不到
+3. 路由统一校验：`X-NTDPet-Token` 头或 `?token=` 必须匹配，否则 `401` + `no-store`
+4. 不设 `Access-Control-Allow-Origin`；校验 `Origin` 头，非本机同源一律拒绝
+5. 响应统一 `cache-control: no-store`、`x-content-type-options: nosniff`
+6. 只注册 `prefix` 一条 `/api/ntdpet`，不散落多个 exact 路由，便于集中校验
+
+#### 5.11.5 为什么不选方案 B（独立本地服务）
+
+| 维度 | 方案 A（插件内注册） | 方案 B（另起 9061 服务） |
+|---|---|---|
+| 端口 | 复用宿主端口，无需额外监听 | 多一个端口，多一处失败点 |
+| 鉴权 | 自建 token（必须做） | 同样要自建 token |
+| 生命周期 | 随插件加载/卸载，天然干净 | 需 desktop 另行拉管，崩溃要重拉 |
+| Electron 场景 | 同一进程内直调，链路最短 | 需跨进程 HTTP，多一层 |
+
+方案 B 的唯一优势是「浏览器里独立调试」，但方案 A 在 `dsh web` 模式下已经是浏览器可访问的，这个优势并不成立。因此选定方案 A，方案 B 仅作为「宿主不提供 webServer 时」的退路记录在此。
+
+#### 5.11.6 一条工具层面的教训
+
+排查时把 `/Applications/DeepSeek<空格>Harness.app` 写成连字符，导致多次「包不存在」。用码点核对后确认：**磁盘上的名字含 U+0020 空格**，而命令输出与日志显示时会把它渲染成 `-`，肉眼极易误判。
+
+同一现象此前在 README 路径上误导过两次。今后遇到路径类「文件不存在」而 `ls` 明明列得出来时，先打印码点，不要靠眼看。
+
+---
+
 ## 6. 参考项目清单
 
 | 项目 | 语言 | 许可 | 定位 | 备注 |
@@ -642,6 +723,7 @@ star 数、最新提交时间等动态数据未写入本文档——此类数据
 | A | DSH 的 `llm` seam 能否脱离 agent loop 单独调用 | **成立**——agent loop 只是消费方之一，`ctx.llm.stream()` 可直接调 | §5.3 |
 | B | profile 与 `dsh.profile.bundles` 结构是否符合架构假设 | **符合**，本机 `~/.dsh/profiles/desktop` 实测 | §5.2 |
 | C | 会话日志上传是否默认开启、能否关净 | **默认开启**；`enabled: false` 有效但**不追溯**，重开会补发关闭期间的记录 | §5.4 |
+| D | 插件能否注册自己的 HTTP 路由（决定界面接线方案） | **可以**——`ctx.webServer.register({kind,path,handler})`，实测 200。附带发现：自定义路由**不经过宿主鉴权**，必须自建 token | §5.11 |
 
 ### 7.2 仍待验证
 
