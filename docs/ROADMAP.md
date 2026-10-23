@@ -22,7 +22,7 @@
 
 ### M0.1 接口层可行性
 
-- [x] **M0.1.1** 确认上游是否支持插件注册 HTTP 路由。（commit 待回填）
+- [x] **M0.1.1** 确认上游是否支持插件注册 HTTP 路由。（commit 99d6440）
   - 前置：无。
   - 做法：读 App 内 `@deepseek-ai/dsh-web-app`、`@deepseek-ai/dsh-api-gateway` 等包的入口与类型；检索 `router`、`route`、`http`、`webserver` 等服务名；用最小探针插件尝试 `ctx.get('http')` 或等价服务。
   - 判据：能拿到可注册路由的服务 → 方案 A；拿不到 → 方案 B。
