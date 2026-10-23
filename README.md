@@ -356,7 +356,7 @@ const result = await dialogue.chat(
 | 模块 | 状态 | 验证方式 |
 |---|---|---|
 | `@nt-dpet/emotion` 情感状态机 | **已实现** | 21 个单元测试通过；真实构建产物在 DSH 中挂载成功 |
-| `@nt-dpet/dialogue` 轻量对话通道 | **已实现** | 端到端实测返回文本（见下）；**尚无单元测试** |
+| `@nt-dpet/dialogue` 轻量对话通道 | **已实现** | 端到端实测返回文本（见下）＋ 12 个单元测试（分片映射、中断与失败区分、reasoning 过滤） |
 | `packages/ui/web` 界面壳 | **已实现（纯静态）** | 14 项交互冒烟测试；数据为演示数据，未接后端 |
 | 项目介绍页 `index.html` | **已实现** | 已部署 |
 | `@nt-dpet/pet-mobile` 移动端桌宠 | 占位（默认禁用） | 无实现 |
@@ -383,7 +383,7 @@ const result = await dialogue.chat(
 3. **情感不持久**：默认存储实现为内存，进程退出即丢失；存储端口已预留，待 `storage` 落地后替换
 4. **界面对接未知**：界面壳使用静态数据，未与插件服务连通
 5. **包划分未定稿**：见 §二 引用块
-6. **测试覆盖不均**：仅 `emotion` 有单元测试
+6. **测试覆盖不均**：`emotion`（21 例）与 `dialogue`（12 例）有单元测试，其余包尚无
 7. **人格文本为空**：四套关系内核尚未撰写
 8. **移动端未实现**：仅保留位置
 
@@ -443,6 +443,9 @@ npx pnpm@9 -r exec tsc --noEmit
 ```bash
 # 情感状态机：21 个用例（指数回归、弥散、阈值跨档、快照隔离）
 npx pnpm@9 --filter '@nt-dpet/emotion' run test
+
+# 对话通道：12 个用例（分片映射、reasoning 过滤、中断与失败区分、请求组装）
+npx pnpm@9 --filter '@nt-dpet/dialogue' run test
 
 # 界面交互冒烟：14 项真实点击（偏好写入、DOM 联动、面板开关、开发者模式两条保护）
 node packages/ui/web/test/smoke.mjs
