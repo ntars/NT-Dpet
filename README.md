@@ -353,7 +353,7 @@ DeepSeek、Live2D、微信、QQ、企业微信、飞书、钉钉、Telegram、Di
 | `@nt-dpet/memory` 记忆双层 | 已实现 | 23 个单元测试，含 SQLite 持久化与 0600/0700 权限校验 |
 | `@nt-dpet/rhythm` 分条与节奏 | 已实现 | 15 个单元测试 |
 | `@nt-dpet/persona` 人格与称呼 | 已实现 | 13 个单元测试；五份人格锚点已撰写 |
-| `@nt-dpet/ui` 接口层与界面壳 | 已实现（接口 `/health`、`/mood`、`/memory/recent`、`/chat`；情绪面板、右栏记忆与对话发送均接真实数据） | 51 个单元测试 + 14 项交互冒烟 |
+| `@nt-dpet/ui` 接口层与界面壳 | 已实现（接口 `/health`、`/mood`、`/memory/recent`、`/chat`；情绪面板、右栏记忆与对话发送均接真实数据） | 51 个单元测试 + 36 项交互冒烟 |
 | `@nt-dpet/pet-mobile` 移动端桌宠 | 占位（默认禁用） | 无实现 |
 | 其余 25 个插件包 | 骨架 | 仅通过编译 |
 | 安装器、三端打包 | 未开始（`desktop/src/main.ts` 为骨架） | 无可运行产物；`@nt-dpet/desktop` 仅声明 electron 开发依赖 |
@@ -447,7 +447,7 @@ npx pnpm@9 --filter '@nt-dpet/rhythm' run test
 # 人格：13 个用例
 npx pnpm@9 --filter '@nt-dpet/persona' run test
 
-# 界面交互冒烟：14 项
+# 界面交互冒烟：36 项（含接口桩、降级路径、发送态、错误态）
 node packages/ui/web/test/smoke.mjs
 ```
 
