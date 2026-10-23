@@ -288,6 +288,7 @@ NT-Dpet/
 |---|---|---|---|
 | DeepSeek-Harness | `0.2.1-rc.2` | MIT | 插件宿主，本项目为其发行版 |
 | `@deepseek-ai/dsh-llm` | 随宿主 | BSD-3-Clause | 模型调用服务，仅按其接口结构调用 |
+| `@deepseek-ai/dsh-host-webserver` | 随宿主 | MIT | 宿主 HTTP 服务（Cordis 服务 `webServer`）；接口层按方案 A 复用它注册路由，不另起端口，实测见 `docs/TECH-RESEARCH.md` §5.11 |
 | Node.js | ≥ 22（实测 22.22.2） | MIT 及若干组件各自许可 | 运行时；记忆持久化使用内置 `node:sqlite` |
 | pnpm | 9.x（实测 9.15.9） | MIT | 工作区与依赖管理，仅开发期使用 |
 
@@ -304,6 +305,8 @@ NT-Dpet/
 | OpenCC、markdown-it、shiki | Apache-2.0 / MIT | 繁简转换、消息渲染、代码高亮 |
 | onnxruntime、transformers.js | MIT / Apache-2.0 | 本地推理（VAD、embedding） |
 | GPT-SoVITS、RVC、silero-vad | MIT | 本地语音（独立进程，不打包） |
+
+> 本表把「已定级的计划依赖」与「尚未定级的依赖候选」合并列出，二者都未写入任何 `package.json`。逐项定级（计划依赖 / 依赖候选 / 采用时登记）以 [`docs/ADOPTION-REGISTER.md`](docs/ADOPTION-REGISTER.md) 为准；`NOTICE` §五 只登记其中已定级为计划引入的部分。
 
 ### 6.4 不得随包分发的组件
 
@@ -353,7 +356,7 @@ DeepSeek、Live2D、微信、QQ、企业微信、飞书、钉钉、Telegram、Di
 | `packages/ui/web` 界面壳 | 已实现（静态） | 14 项交互冒烟测试 |
 | `@nt-dpet/pet-mobile` 移动端桌宠 | 占位（默认禁用） | 无实现 |
 | 其余 25 个插件包 | 骨架 | 仅通过编译；含 `@nt-dpet/ui` 的插件入口（其静态界面见上一行，`src/index.ts` 仍为骨架） |
-| 安装器、三端打包 | 未开始 | 无 |
+| 安装器、三端打包 | 未开始（`desktop/src/main.ts` 为骨架） | 无可运行产物；`@nt-dpet/desktop` 仅声明 electron 开发依赖 |
 
 端到端实测记录（真实插件，非测试桩）：
 
@@ -370,7 +373,7 @@ DeepSeek、Live2D、微信、QQ、企业微信、飞书、钉钉、Telegram、Di
 1. 不提供安装包，当前仅可源码构建
 2. 记忆为 SQLite 持久化，但事实提炼提示词尚未编写
 3. 情感状态默认使用内存存储，进程退出即丢失；存储端口已预留
-4. 界面壳使用静态数据，未与插件服务联通
+4. 界面壳使用静态数据，未与插件服务联通：接口层（`/api/ntdpet` 路由与自鉴权）尚未落地，`@nt-dpet/ui` 的插件入口仍为空，该接口层列于 `docs/ROADMAP.md` M0.1.2
 5. 包划分未定稿
 6. 测试覆盖不均：五个模块有单元测试，其余包尚无
 7. 人格文本尚未经真实对话校验

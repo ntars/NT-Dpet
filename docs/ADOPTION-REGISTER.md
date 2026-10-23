@@ -36,6 +36,7 @@
 | 项目 | 许可 | 怎么用 | 声明动作 |
 |---|---|---|---|
 | `deepseek-ai/deepseek-harness` | MIT | 运行时（宿主） | NOTICE §四 |
+| `@deepseek-ai/dsh-llm` | BSD-3-Clause（npm 公开版本 `0.0.1-rc.1` 标注） | 运行时（宿主服务，不写入任何 `package.json`；仅按实测分片形状做结构化声明） | NOTICE §四 |
 | `@deepseek-ai/cordis` | MIT | **依赖**（peer+dev） | NOTICE §三 |
 | `@deepseek-ai/dsh-host-webserver` | MIT | 运行时（宿主服务，不写入任何 `package.json`） | NOTICE §四；M0.1.2 起用它注册 `/api/ntdpet` |
 | `microsoft/TypeScript` | Apache-2.0 | **依赖**（根 `devDependencies`，仅编译期，不进入运行时） | NOTICE §三 + §3.1（一旦以任何形式分发其本体，须补附上游 NOTICE） |
@@ -48,6 +49,7 @@
 |---|---|---|---|
 | `guansss/pixi-live2d-display` | MIT | **计划依赖**（S5） | NOTICE §五 已登记 |
 | `pixi.js` | MIT | **计划依赖**（S5） | NOTICE §五 |
+| `wlipsync` | MIT | **计划依赖**（S5 嘴型同步，按音频振幅驱动口型参数） | NOTICE §五 已登记 |
 | `Live2D/CubismWebSamples` | 专有（SDK 协议） | 参考 API 用法 | NOTICE §六（禁止分发） |
 | `Live2D/CubismWebFramework` | 专有 | 不用（不可再分发） | NOTICE §六 |
 | `Untitled-Story/untitled-pixi-live2d-engine` | MIT | 备选依赖（PixiJS v8 兼容） | 采用时登记 |
@@ -146,7 +148,7 @@
 | `electron/electron` | MIT | **依赖**（已登记） | NOTICE §三 |
 | `electron-userland/electron-builder` | MIT | **计划依赖**（S1 打包） | NOTICE §五 |
 | `electron/forge` | MIT | 备选（官方打包） | 采用时登记 |
-| `alex8088/electron-vite` | MIT | **依赖候选**（构建体验；注意先前误写为 `electron-vite/electron-vite`，该仓库 404） | 采用时登记 |
+| `alex8088/electron-vite` | MIT | **计划依赖**（S1 构建与打包；注意先前误写为 `electron-vite/electron-vite`，该仓库 404） | NOTICE §五 已登记 |
 | `vercel/hazel` | MIT | 观察（自托管更新） | — |
 | `electron/update.electronjs.org` | 未声明 | 不用 | — |
 | `ArekSredzki/electron-release-server` | MIT | 不用（停更） | — |
@@ -174,6 +176,7 @@
 | `nut-tree/nut.js` | 未声明 | 暂不用（许可待确认） | — |
 | `xushengfeng/eSearch` | GPL-3.0 | 参考（截屏/OCR 实现） | CREDITS |
 | `sw33tLie/macshot` | GPL-3.0 | 参考（macOS 截屏） | CREDITS |
+| `ADBKeyboard`（输入法 APK） | GPL-2.0-only | **不用**（与 AGPL 不兼容）；仅引导用户自行安装为独立 APK | NOTICE §六（禁止分发） |
 
 ### 2.11 参考设计与范式
 
