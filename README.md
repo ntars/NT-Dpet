@@ -359,6 +359,7 @@ const result = await dialogue.chat(
 | `@nt-dpet/dialogue` 轻量对话通道 | **已实现** | 端到端实测返回文本（见下）＋ 12 个单元测试（分片映射、中断与失败区分、reasoning 过滤） |
 | `packages/ui/web` 界面壳 | **已实现（纯静态）** | 14 项交互冒烟测试；数据为演示数据，未接后端 |
 | `@nt-dpet/memory` 记忆双层 | **已实现（存储与检索）** | 19 个单元测试；提炼器与 SQLite 持久化待接 |
+| `@nt-dpet/rhythm` 分条与节奏 | **已实现** | 15 个单元测试 |
 | 项目介绍页 `index.html` | **已实现** | 已部署 |
 | `@nt-dpet/pet-mobile` 移动端桌宠 | 占位（默认禁用） | 无实现 |
 | 其余 27 个包 | 骨架 | 仅通过编译 |
@@ -384,7 +385,7 @@ const result = await dialogue.chat(
 3. **情感不持久**：默认存储实现为内存，进程退出即丢失；存储端口已预留，待 `storage` 落地后替换
 4. **界面对接未知**：界面壳使用静态数据，未与插件服务连通
 5. **包划分未定稿**：见 §二 引用块
-6. **测试覆盖不均**：`emotion`（21 例）与 `dialogue`（12 例）有单元测试，其余包尚无
+6. **测试覆盖不均**：`emotion`(21) / `dialogue`(12) / `memory`(19) / `rhythm`(15) 有测试，其余包尚无
 7. **人格文本为空**：四套关系内核尚未撰写
 8. **移动端未实现**：仅保留位置
 
@@ -531,7 +532,7 @@ S0 完成前不会发布任何可安装产物。
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 架构设计：进程拓扑、数据模型、接口契约、情感与主动性机制、施工顺序 |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 决策记录：86 项已确认决策，逐项可溯源 |
 | [`docs/CREDITS.md`](docs/CREDITS.md) | 致谢与第三方依赖：使用方式、许可边界、法律红线 |
-| [`CHANGELOG.md`](CHANGELOG.md) | 版本记录（当前 v0.1.0） |
+| [`CHANGELOG.md`](CHANGELOG.md) | 版本记录（0.1.0 里程碑） |
 
 设计过程中的关键判断（含被否决的方案与理由）均记录在上述文档中，未只保留在对话里。
 
