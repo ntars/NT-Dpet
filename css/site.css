@@ -11,7 +11,7 @@
 /* ══ 令牌 ══ */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
              "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -54,8 +54,9 @@
   --topbar-bg: rgba(245, 245, 247, 0.80);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
     --bg: #1C1C1E;
     --surface: #2C2C2F;
     --surface-2: rgba(44, 44, 47, 0.56);
@@ -76,7 +77,6 @@
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.055);
     --shadow-lift: 0 12px 34px rgba(0, 0, 0, 0.44), 0 0 0 1px rgba(255, 255, 255, 0.075);
     --topbar-bg: rgba(28, 28, 30, 0.80);
-  }
 }
 
 /* ══ 基础 ══ */
@@ -802,3 +802,38 @@ strong { font-weight: 600; }
   body { background: #fff; }
   .card, .table-wrap, .table, .road__item { box-shadow: none; border: 1px solid #ddd; }
 }
+
+/* ══ 主题切换（2026-10-23 追加：原本仅跟随系统，现支持手动覆盖） ══ */
+
+.theme-lock,
+.theme-lock *,
+.theme-lock *::before,
+.theme-lock *::after {
+  transition: none !important;
+}
+
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--r-full);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--label-2);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease-out),
+              color var(--dur) var(--ease-out),
+              background var(--dur) var(--ease-out);
+}
+.theme-btn:hover {
+  border-color: var(--label-3);
+  background: var(--surface);
+  color: var(--label);
+}
+.theme-btn svg { display: block; }
+.theme-btn .ico-moon { display: none; }
+:root[data-theme="dark"] .theme-btn .ico-sun { display: none; }
+:root[data-theme="dark"] .theme-btn .ico-moon { display: block; }
