@@ -4,14 +4,16 @@
 /**
  * 演示数据
  *
- * 当前 UI 壳没有后端，所有内容都来自这里。
- * 接入后端时，只需把各个导出改成异步请求（保持字段名一致），
- * 渲染层无需改动。
+ * 当前仍有部分界面靠这里撑着：情绪、关系、人格、会话与日志。
+ * 这些字段接入后端时改成异步请求即可（保持字段名一致），渲染层不用动。
  *
  * 字段语义与数据模型对应关系：
  *   emotion      → docs/ARCHITECTURE.md §7（mood / energy 为实例全局）
  *   relationship → 同 §7（affection / trust / intimacy / familiarity 按人）
- *   memories     → §6（事实条目层）
+ *
+ * 记忆（§6）已经接入真实接口，故这里不再保留演示条目：留着就会有人
+ * 顺手把它接回去，而「她记得我不吃香菜」这种句子一旦是编的，读的人
+ * 根本分辨不出来（见 web/js/memory.js 的说明）。
  */
 
 export const persona = {
@@ -38,14 +40,6 @@ export const relationship = {
   intimacy: 0.35,
   familiarity: 0.55,
 };
-
-/** 事实条目层（演示用 4 条） */
-export const memories = [
-  { text: '不吃香菜，闻到味道就皱眉', at: '3 天前' },
-  { text: '周三常加班到十点，回来时话会变少', at: '5 天前' },
-  { text: '说想在周末去看海，但一直没去成', at: '2 周前' },
-  { text: '怕吵，写东西的时候不喜欢被搭话', at: '1 个月前' },
-];
 
 /**
  * 会话与消息

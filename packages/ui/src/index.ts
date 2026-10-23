@@ -20,11 +20,11 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { API_PREFIX, createApiHandler, injectToken } from './api/handler.js'
 import { resolveToken } from './api/token.js'
-import type { WebServerService } from './api/types.js'
+import type { MemoryEntry, WebServerService } from './api/types.js'
 
 export { API_PREFIX, createApiHandler, injectToken } from './api/handler.js'
 export { createToken, resetTokenCache, resolveToken } from './api/token.js'
-export type { ApiEnvelope, ApiError, ApiErrorCode, MoodReading, WebRequest, WebResponse, WebServerService } from './api/types.js'
+export type { ApiEnvelope, ApiError, ApiErrorCode, MemoryEntry, MoodReading, WebRequest, WebResponse, WebServerService } from './api/types.js'
 
 export const name = 'nt-dpet-ui'
 
@@ -50,6 +50,52 @@ interface EmotionServiceLike {
 
 /** 情绪服务的 Context 键名，与 packages/emotion/src/service.ts 保持一致。 */
 const EMOTION_SERVICE_KEY = 'nt-dpet:emotion'
+
+/** 记忆服务的 Context 键名，与 packages/memory/src/service.ts 保持一致。 */
+const MEMORY_SERVICE_KEY = 'nt-dpet:memory'
+
+/**
+ * 记忆服务里本包用到的那一部分。
+ *
+ * 同样只写结构不 import 类型，理由与 EmotionServiceLike 一致：不让界面编译
+ * 依赖记忆包的内部结构。`recent()` 的语义是「最近若干条原文」，
+ * 与 ARCHITECTURE §6 的原文层对应。
+ */
+interface MemoryServiceLike {
+  recent(sessionKey: string, limit?: number): Promise<{
+    id: string
+    role: 'user' | 'assistant'
+    content: string
+    createdAt: number
+  }[]>
+}
+
+/**
+ * 造一个「读最近记忆」的回调。
+ *
+ * 每次调用现取服务，理由同 createMoodReader：记忆包晚激活时不能永久拿不到。
+ *
+ * `content` 改名 `text` 对外输出，是刻意做的一层隔离：接口的字段名属于对外
+ * 契约，存储层的字段名属于内部实现。将来存储层要把原文拆成多段存储，
+ * 这层映射改一处就够，界面不用跟着动。
+ */
+function createMemoryReader(
+  ctx: Context,
+): (sessionKey: string, limit: number) => Promise<MemoryEntry[] | undefined> {
+  return async (sessionKey, limit) => {
+    const memory = ctx.get(MEMORY_SERVICE_KEY) as MemoryServiceLike | undefined
+    // 服务没挂上，或者挂的是个没 recent 的旧版本：都算「没就绪」
+    if (!memory || typeof memory.recent !== 'function') return undefined
+
+    const raws = await memory.recent(sessionKey, limit)
+    return raws.map((raw) => ({
+      id: raw.id,
+      role: raw.role,
+      text: raw.content,
+      at: raw.createdAt,
+    }))
+  }
+}
 
 /**
  * 造一个「读当前情绪」的回调。
@@ -78,6 +124,7 @@ export function apply(ctx: Context): () => void {
     token,
     origin: webServer.getOrigin(),
     readMood: createMoodReader(ctx),
+    readRecent: createMemoryReader(ctx),
   })
 
   const disposers = [

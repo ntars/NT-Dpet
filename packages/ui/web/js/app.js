@@ -13,6 +13,7 @@ import { conversations, persona } from './data.js';
 import { renderThread, appendMessage, simulateReply } from './chat.js';
 import { renderPanel, refreshIdentity } from './panel.js';
 import { startMoodSync } from './mood.js';
+import { startMemorySync } from './memory.js';
 import { renderLogs, setLogMode } from './log.js';
 import { getPref, setPref } from './prefs.js';
 import { setSegmented } from './segmented.js';
@@ -270,6 +271,8 @@ function start() {
   renderThread(currentConv);
   // 首屏先用 data.js 画出来，真实情绪到了再覆盖：不等请求，避免白屏
   startMoodSync();
+  // 记忆没有演示数据可先画，只能等接口：拉不到就显示「记忆暂不可用」
+  startMemorySync();
 
   // 视图由 class 控制，移除 HTML 上的 hidden 以免两套机制打架
   viewWork.hidden = false;

@@ -708,6 +708,39 @@
   flex: 0 0 auto;
 }
 
+/*
+ * 正文占满剩余宽度，超过两行截断。
+ *
+ * 用 line-clamp 而不是在后端截断字符串：截断数据是有损的，将来点开某条
+ * 想看全文就永远拿不到后半句了；藏一半在样式里，数据本身还是完整的。
+ * min-width: 0 不能省——flex 子项默认 min-width: auto，长串会把时间挤出卡片。
+ */
+.memory-item__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.memory-item__time {
+  flex: 0 0 auto;
+  margin-left: var(--sp-2);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--label-4);
+  white-space: nowrap;
+}
+
+/* 空态与失败态：一行灰字，不画圆点，免得看起来像一条真记忆 */
+.memory-empty {
+  padding: 6px 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--label-3);
+}
+
 /* ══ 桌宠预览 ══ */
 
 .pet-stage {

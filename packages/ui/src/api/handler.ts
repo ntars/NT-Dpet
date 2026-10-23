@@ -17,6 +17,7 @@ import { timingSafeEqual } from 'node:crypto'
 import type {
   ApiEnvelope,
   ApiErrorCode,
+  MemoryEntry,
   MoodReading,
   WebRequest,
   WebResponse,
@@ -28,8 +29,51 @@ export const API_PREFIX = '/api/ntdpet'
 /** 令牌请求头。查询串 `?token=` 作为退路，供不便设头的场景使用。 */
 const TOKEN_HEADER = 'x-ntdpet-token'
 
-/** 已规划、尚未接入的子路径。M0.2 / M0.3 落地后从这张表移走。 */
+/**
+ * 已规划、尚未接入的子路径。M0.2 / M0.3 落地后从这张表移走。
+ *
+ * 注意 `/memory` 这行要留到记忆的其余子路径（事实列表、编辑、删除）也接上为止：
+ * 只有 `/memory/recent` 一条被单独处理，同前缀的其他路径仍是占位，
+ * 提前把它删掉会让这些请求变成 404「无此接口」——那意味着「写错了地址」，
+ * 跟「还没做」是两回事，排查时容易白跑一趟。
+ */
 const PENDING_PATHS = ['/memory', '/chat', '/status']
+
+/**
+ * 记忆列表的默认条数。
+ *
+ * 8 这个数取自 ROADMAP M0.2.3；右栏卡片一口气放 8 条不用滚动，
+ * 再多就得先在卡片里滚一遍才知道有几条，反而不如点「全部」。
+ */
+const DEFAULT_MEMORY_LIMIT = 8
+
+/**
+ * 上限 50。
+ *
+ * 这个接口没有分页——真要翻更早的记忆得专门做检索页。放着不设上限，
+ * 一个手写的 `?limit=100000` 就能让服务端把整库读出来塞进内存，
+ * 而这条路由跟宿主同端口，卡住的是整个页面。
+ */
+const MAX_MEMORY_LIMIT = 50
+
+/**
+ * 本机阶段的默认会话键。
+ *
+ * 会话键的真实构造规则见 ARCHITECTURE §5.1：`c2c:<platform_uid>` /
+ * `group:<platform_gid>`。但现在还没接通道（M2 才做），没有平台账号可依据。
+ * 与其临时编一套编号，不如明确用一个带 `local` 字样的键：等通道接上以后，
+ * 一眼就能看出这是 M0 阶段的过渡值，不会跟真实会话撞在一起。
+ */
+export const DEFAULT_SESSION_KEY = 'c2c:local'
+
+/**
+ * 会话键格式。
+ *
+ * 校验放在进存储层之前不是洁癖：SQLite 那边用的是参数绑定，注入不了，
+ * 但一个带换行或超长字符的键会被原样写进库，之后按会话查总是查不到，
+ * 表现成「明明聊过却没有记忆」，查起来要翻三层。格式不对就直接拒。
+ */
+const SESSION_KEY_PATTERN = /^(c2c|group):[\w-]{1,64}$/
 
 const encoder = new TextEncoder()
 
@@ -51,20 +95,34 @@ export interface ApiHandlerOptions {
    * 给默认值等于凭空造一个「0.5 的心情」，界面无从分辨真假。
    */
   readMood?: (() => MoodReading | undefined) | undefined
+  /**
+   * 读某个会话最近的原文记忆。
+   *
+   * 与 readMood 同一个思路：接口层不知道记忆存在哪，只认这个回调。
+   * 返回值有三态，别混：数组 = 有结果（空数组就是「真的没有记忆」）、
+   * `undefined` = 服务没起来、抛异常 = 服务坏了（由外层兜成 500）。
+   * 把「没起来」和「没有记忆」分开很要紧——前者该提示稍后再试，
+   * 后者该老老实实显示「暂无记忆」，混在一起就永远分不清是坏了还是空的。
+   */
+  readRecent?:
+    | ((sessionKey: string, limit: number) => Promise<MemoryEntry[] | undefined> | MemoryEntry[] | undefined)
+    | undefined
 }
 
-export type ApiHandler = (req: WebRequest, res: WebResponse) => void
+export type ApiHandler = (req: WebRequest, res: WebResponse) => void | Promise<void>
 
 /**
  * 造一个可挂到 `webServer.register()` 的 handler。
  *
- * 返回的函数是同步的：所有分支都立刻写响应，不存在「挂住不返回」的路径。
+ * 返回值可能是个 Promise：记忆接口要等存储层读完才有结果。除了这一段，
+ * 其余分支都在第一个 `await` 之前就把响应写完了，所以同步调用方（测试里
+ * 直接 `handler(req, res)` 再断言）看到的行为跟以前一样。
  */
 export function createApiHandler(options: ApiHandlerOptions): ApiHandler {
   const now = options.now ?? Date.now
   const startedAt = now()
 
-  return function handle(req: WebRequest, res: WebResponse): void {
+  return async function handle(req: WebRequest, res: WebResponse): Promise<void> {
     try {
       // 鉴权先于一切：连路径都不解析，避免未授权请求触发额外计算
       if (!isAuthorized(req, options)) {
@@ -110,6 +168,45 @@ export function createApiHandler(options: ApiHandlerOptions): ApiHandler {
         return
       }
 
+      if (path === '/memory/recent') {
+        if (method !== 'GET' && method !== 'HEAD') {
+          sendError(res, 405, 'METHOD_NOT_ALLOWED', '该接口只接受 GET')
+          return
+        }
+
+        const url = parseUrl(req.url, options.origin)
+        const sessionKey = resolveSessionKey(url)
+        if (sessionKey === null) {
+          sendError(res, 400, 'BAD_REQUEST', '会话键格式不正确')
+          return
+        }
+
+        const limit = resolveLimit(url)
+        if (limit === null) {
+          sendError(res, 400, 'BAD_REQUEST', 'limit 必须是正整数')
+          return
+        }
+
+        const readRecent = options.readRecent
+        if (!readRecent) {
+          sendError(res, 503, 'NOT_READY', '记忆服务未就绪')
+          return
+        }
+
+        // 这里是全函数唯一会等的地方。等的是本地存储，不是网络，
+        // 毫秒级；真卡住说明存储层出了问题，界面那边有 8 秒超时兜着。
+        const items = await readRecent(sessionKey, limit)
+        if (!items) {
+          sendError(res, 503, 'NOT_READY', '记忆服务未就绪')
+          return
+        }
+
+        // limit 回传实际生效值：请求 limit=999 会被压到 50，
+        // 不告诉调用方的话，界面会以为自己拿到了 999 条。
+        sendJson(res, 200, { ok: true, data: { session: sessionKey, limit, items } })
+        return
+      }
+
       if (isPending(path)) {
         sendError(res, 503, 'NOT_READY', '该接口尚未接入')
         return
@@ -138,7 +235,9 @@ export function injectToken(html: string, token: string): string {
 
 // ── 内部实现 ────────────────────────────────────────────────
 
-/** 从请求里取子路径，形如 `/health`；取不到就返回 `/`。 */
+/**
+ * 从请求里取子路径，形如 `/health`；取不到就返回 `/`。
+ */
 function subPath(rawUrl: string | undefined, origin: string): string {
   let pathname: string
   try {
@@ -149,6 +248,36 @@ function subPath(rawUrl: string | undefined, origin: string): string {
   if (!pathname.startsWith(API_PREFIX)) return '/'
   const rest = pathname.slice(API_PREFIX.length).replace(/\/+$/, '')
   return rest === '' ? '/' : rest
+}
+
+/** 解析查询串。地址坏掉时返回 null，由调用方按「没传参数」处理。 */
+function parseUrl(rawUrl: string | undefined, origin: string): URL | null {
+  try {
+    return new URL(rawUrl ?? '/', origin)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 取会话键。
+ *
+ * 三种结果：字符串 = 可用；`DEFAULT_SESSION_KEY` = 没指定，用本机默认；
+ * `null` = 传了但不合格式，调用方应回 400，不要悄悄换成默认值。
+ */
+function resolveSessionKey(url: URL | null): string | null {
+  const raw = url?.searchParams.get('session')
+  if (raw === null || raw === undefined || raw.trim() === '') return DEFAULT_SESSION_KEY
+  return SESSION_KEY_PATTERN.test(raw) ? raw : null
+}
+
+/** 取条数。没传或传空用默认值；不是正整数返回 null（→ 400）；超过上限压到上限。 */
+function resolveLimit(url: URL | null): number | null {
+  const raw = url?.searchParams.get('limit')
+  if (raw === null || raw === undefined || raw.trim() === '') return DEFAULT_MEMORY_LIMIT
+  const value = Number(raw)
+  if (!Number.isInteger(value) || value < 1) return null
+  return Math.min(value, MAX_MEMORY_LIMIT)
 }
 
 function isPending(path: string): boolean {

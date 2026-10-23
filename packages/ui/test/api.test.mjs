@@ -69,6 +69,25 @@ function call(options, extra = {}) {
   return { res, json: res.body ? JSON.parse(res.body) : null }
 }
 
+/**
+ * 同 call，但等 handler 的异步分支写完响应。
+ *
+ * 记忆接口要等存储层读完才写响应，不等就会断言到一个 `statusCode: 0` 的
+ * 空响应——那不是功能坏了，是测试没等。
+ */
+async function callAsync(options, extra = {}) {
+  const handler = createApiHandler({
+    token: TOKEN,
+    origin: ORIGIN,
+    now: () => 1_700_000_000_000,
+    ...extra,
+  })
+  const req = fakeReq(options)
+  const res = fakeRes()
+  await handler(req, res)
+  return { res, json: res.body ? JSON.parse(res.body) : null }
+}
+
 describe('健康检查', () => {
   it('带正确令牌时返回 200 与统一的成功结构', () => {
     const { res, json } = call({})
@@ -126,8 +145,10 @@ describe('鉴权', () => {
 
 describe('子路径分发', () => {
   it('已规划但未接入的接口返回 503 NOT_READY', () => {
-    // /mood 已由 M0.2.2 接入，从这张表移走，改由「情绪接口」一组单独覆盖
-    for (const path of ['/memory/recent', '/chat', '/status']) {
+    // /mood 由 M0.2.2 接入、/memory/recent 由 M0.2.3 接入，都有各自的
+    // 分支与用例；这里换成同前缀下仍未接入的 /memory/facts，
+    // 顺带守住「只有 /memory/recent 被挖走，其余记忆子路径仍然占位」这条边界。
+    for (const path of ['/memory/facts', '/chat', '/status']) {
       const { res, json } = call({ url: API_PREFIX + path })
       assert.equal(res.statusCode, 503, path)
       assert.equal(json.error.code, 'NOT_READY', path)
@@ -194,6 +215,128 @@ describe('情绪接口', () => {
   it('情绪接口不缓存', () => {
     const { res } = call({ url: API_PREFIX + '/mood' }, { readMood: () => reading })
     assert.equal(res.headers['cache-control'], 'no-store')
+  })
+})
+
+describe('记忆接口', () => {
+  const items = [
+    { id: 'raw_1', role: 'user', text: '不吃香菜', at: 1_700_000_000_000 },
+    { id: 'raw_2', role: 'assistant', text: '那我记下了', at: 1_700_000_001_000 },
+  ]
+
+  it('有数据时原样返回条目', async () => {
+    const { res, json } = await callAsync(
+      { url: API_PREFIX + '/memory/recent' },
+      { readRecent: () => items },
+    )
+    assert.equal(res.statusCode, 200)
+    assert.equal(json.ok, true)
+    assert.deepEqual(json.data.items, items)
+  })
+
+  it('没传参数时用默认会话键与默认 8 条', async () => {
+    let seen = null
+    await callAsync(
+      { url: API_PREFIX + '/memory/recent' },
+      { readRecent: (session, limit) => { seen = { session, limit }; return [] } },
+    )
+    assert.deepEqual(seen, { session: 'c2c:local', limit: 8 })
+  })
+
+  it('会话键与条数按入参生效', async () => {
+    let seen = null
+    const { json } = await callAsync(
+      { url: API_PREFIX + '/memory/recent?session=group:887766&limit=3' },
+      { readRecent: (session, limit) => { seen = { session, limit }; return [] } },
+    )
+    assert.deepEqual(seen, { session: 'group:887766', limit: 3 })
+    // 回传实际生效值，调用方不必猜
+    assert.equal(json.data.session, 'group:887766')
+    assert.equal(json.data.limit, 3)
+  })
+
+  it('条数超过上限时压到 50，并如实回传', async () => {
+    let seen = null
+    const { json } = await callAsync(
+      { url: API_PREFIX + '/memory/recent?limit=999' },
+      { readRecent: (session, limit) => { seen = limit; return [] } },
+    )
+    assert.equal(seen, 50)
+    assert.equal(json.data.limit, 50)
+  })
+
+  it('条数不是正整数时返回 400，不悄悄换成默认值', async () => {
+    for (const bad of ['0', '-1', 'abc', '1.5']) {
+      const { res, json } = await callAsync(
+        { url: API_PREFIX + '/memory/recent?limit=' + encodeURIComponent(bad) },
+        { readRecent: () => items },
+      )
+      assert.equal(res.statusCode, 400, bad)
+      assert.equal(json.error.code, 'BAD_REQUEST', bad)
+    }
+  })
+
+  it('会话键格式不对时返回 400', async () => {
+    // 退回默认值会让界面展示另一段会话的记忆：看起来正常，内容却是错的
+    for (const bad of ['c2c:', 'telegram:1', 'c2c:含汉字', 'c2c:a b']) {
+      const { res, json } = await callAsync(
+        { url: API_PREFIX + '/memory/recent?session=' + encodeURIComponent(bad) },
+        { readRecent: () => items },
+      )
+      assert.equal(res.statusCode, 400, bad)
+      assert.equal(json.error.code, 'BAD_REQUEST', bad)
+    }
+  })
+
+  it('空数组是「没有记忆」，返回 200 而不是 503', async () => {
+    const { res, json } = await callAsync(
+      { url: API_PREFIX + '/memory/recent' },
+      { readRecent: () => [] },
+    )
+    assert.equal(res.statusCode, 200)
+    assert.deepEqual(json.data.items, [])
+  })
+
+  it('记忆服务没起来时返回 503', async () => {
+    const { res, json } = await callAsync({ url: API_PREFIX + '/memory/recent' })
+    assert.equal(res.statusCode, 503)
+    assert.equal(json.error.code, 'NOT_READY')
+  })
+
+  it('读回调返回 undefined 时同样 503', async () => {
+    const { res, json } = await callAsync(
+      { url: API_PREFIX + '/memory/recent' },
+      { readRecent: () => undefined },
+    )
+    assert.equal(res.statusCode, 503)
+    assert.equal(json.error.code, 'NOT_READY')
+  })
+
+  it('存储层抛异常时兜成 500，且不回显异常内容', async () => {
+    const { res, json } = await callAsync(
+      { url: API_PREFIX + '/memory/recent' },
+      { readRecent: () => { throw new Error('db file is locked at /Users/x/memory.db') } },
+    )
+    assert.equal(res.statusCode, 500)
+    assert.equal(json.error.code, 'INTERNAL')
+    assert.ok(!res.body.includes('memory.db'))
+  })
+
+  it('POST 到记忆接口返回 405', async () => {
+    const { res, json } = await callAsync(
+      { url: API_PREFIX + '/memory/recent', method: 'POST' },
+      { readRecent: () => items },
+    )
+    assert.equal(res.statusCode, 405)
+    assert.equal(json.error.code, 'METHOD_NOT_ALLOWED')
+  })
+
+  it('记忆接口同样要过鉴权', async () => {
+    const { res } = await callAsync(
+      { url: API_PREFIX + '/memory/recent', headers: { 'x-ntdpet-token': 'b'.repeat(64) } },
+      { readRecent: () => items },
+    )
+    assert.equal(res.statusCode, 401)
   })
 })
 

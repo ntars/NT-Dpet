@@ -9,7 +9,7 @@
  * affection / trust / intimacy / familiarity 按人各一份。
  */
 
-import { emotion, relationship, memories, persona } from './data.js';
+import { emotion, relationship, persona } from './data.js';
 import { getPref } from './prefs.js';
 
 /** 关系标识到中文的映射，与设置面板的四选一保持一致（决策 32） */
@@ -63,11 +63,20 @@ function fillMetrics(container, defs, source) {
   });
 }
 
-function renderMemories(list) {
+/**
+ * 渲染记忆条目。
+ *
+ * 只认 `{ text, time }`，不认后端字段名：字段翻译放在 memory.js 里做，
+ * 这里保持「给什么画什么」，换数据源不用动渲染。
+ *
+ * @param {{ text: string, time?: string }[]} items 已过滤好的条目
+ */
+export function renderMemories(items) {
   const container = document.getElementById('memoryList');
+  if (!container) return;
   container.textContent = '';
 
-  list.forEach((item) => {
+  items.forEach((item) => {
     const li = document.createElement('li');
     li.className = 'memory-item';
 
@@ -75,11 +84,43 @@ function renderMemories(list) {
     mark.className = 'memory-item__mark';
 
     const text = document.createElement('span');
+    text.className = 'memory-item__text';
     text.textContent = item.text;
 
     li.append(mark, text);
+
+    // 没有时间就整块不画，不留一条空白占位——空 span 会让右边空出一截
+    if (item.time) {
+      const time = document.createElement('span');
+      time.className = 'memory-item__time';
+      time.textContent = item.time;
+      li.append(time);
+    }
+
     container.appendChild(li);
   });
+}
+
+/**
+ * 画一条占位说明（没有记忆、或者暂时读不到）。
+ *
+ * 与「加载中」分开是必须的：把两种情况都写成一行灰字，主人看不出
+ * 是后端没起来还是真的没记过事，前者等一会儿就好，后者要真的聊两句。
+ *
+ * @param {string} text 主文案，如「暂无记忆」
+ * @param {string} [reason] 原因，挂在 title 上供悬停查看
+ */
+export function renderMemoryEmpty(text, reason) {
+  const container = document.getElementById('memoryList');
+  if (!container) return;
+  container.textContent = '';
+
+  const li = document.createElement('li');
+  li.className = 'memory-empty';
+  li.textContent = text;
+  if (reason) li.title = reason;
+
+  container.appendChild(li);
 }
 
 export function renderPanel() {
@@ -93,8 +134,14 @@ export function renderPanel() {
   // 关系四项
   fillMetrics(document.getElementById('relationList'), RELATION_METRICS, relationship);
 
-  // 记忆
-  renderMemories(memories);
+  /*
+   * 记忆列表不在这里画。
+   *
+   * 它是异步来的（memory.js 拉完再渲染），而这个函数是同步的启动绘制；
+   * 在这里顺手画一遍，会出现「先闪一下空态、再被真实数据盖掉」，
+   * 或者反过来——真实数据先到，被这里的一笔画清空。
+   * 谁的数据谁负责画，所以记忆列表交给 memory.js 独占。
+   */
 
   // 名字与关系标签
   refreshIdentity();

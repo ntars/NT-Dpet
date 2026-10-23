@@ -25,9 +25,14 @@ export interface ApiError {
  * 前三个是任务要求（UNAUTHORIZED / NOT_READY / INTERNAL）；
  * NOT_FOUND 与 METHOD_NOT_ALLOWED 是 HTTP 语义必需，否则「路径写错」会被
  * 误报成「功能没做好」，排查时容易走偏。
+ *
+ * BAD_REQUEST 专给「参数格式不对」用。不做静默兜底是有原因的：记忆按会话键
+ * 分区，会话键写错却悄悄退回默认值，界面就会展示另一段会话的记忆——看起来
+ * 一切正常，内容却是错的，这种错误没人能发现。
  */
 export type ApiErrorCode =
   | 'UNAUTHORIZED'
+  | 'BAD_REQUEST'
   | 'NOT_FOUND'
   | 'METHOD_NOT_ALLOWED'
   | 'NOT_READY'
@@ -45,6 +50,18 @@ export interface MoodReading {
   mood: number
   /** 此刻精力，0..1 */
   energy: number
+}
+
+/** 一条原文记忆，对应 `GET /api/ntdpet/memory/recent` 返回的条目。 */
+export interface MemoryEntry {
+  /** 原文 id，用于界面去重与将来「点开看上下文」 */
+  id: string
+  /** `user` 是主人说的，`assistant` 是她说的 */
+  role: 'user' | 'assistant'
+  /** 原话，不截断：卡片里显示几行由 CSS 决定，数据层不做有损处理 */
+  text: string
+  /** 写入时间（epoch 毫秒）。界面自己翻译成「3 天前」，与情绪读数同一个约定 */
+  at: number
 }
 
 /** 宿主注册路由的入参，只保留本项目用到的两个字段。 */export interface WebServerRoute {
