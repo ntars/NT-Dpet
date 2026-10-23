@@ -24,7 +24,7 @@ import type { WebServerService } from './api/types.js'
 
 export { API_PREFIX, createApiHandler, injectToken } from './api/handler.js'
 export { createToken, resetTokenCache, resolveToken } from './api/token.js'
-export type { ApiEnvelope, ApiError, ApiErrorCode, WebRequest, WebResponse, WebServerService } from './api/types.js'
+export type { ApiEnvelope, ApiError, ApiErrorCode, MoodReading, WebRequest, WebResponse, WebServerService } from './api/types.js'
 
 export const name = 'nt-dpet-ui'
 
@@ -37,13 +37,48 @@ export const name = 'nt-dpet-ui'
  */
 export const inject = ['webServer']
 
+/**
+ * 情绪服务里本包真正用到的那一部分。
+ *
+ * 只描述这两个字段，不 import `@nt-dpet/emotion` 的类型：一旦 import，
+ * ui 就多一条编译期依赖，emotion 改一次内部结构就牵连界面编译。
+ * 结构对得上就能用，对不上会在运行时表现为「这个接口没数据」，不会静默出错。
+ */
+interface EmotionServiceLike {
+  readGlobal(): { mood: number; energy: number }
+}
+
+/** 情绪服务的 Context 键名，与 packages/emotion/src/service.ts 保持一致。 */
+const EMOTION_SERVICE_KEY = 'nt-dpet:emotion'
+
+/**
+ * 造一个「读当前情绪」的回调。
+ *
+ * 关键在「每次调用都现取服务」：emotion 与 ui 谁先激活没有保证。启动时取一次
+ * 并缓存的话，若 emotion 晚到，这个回调会永久拿到 undefined——表现成接口一直
+ * 503，重启又好了，是那种最难查的时序 bug。
+ */
+function createMoodReader(ctx: Context): () => { mood: number; energy: number } | undefined {
+  return () => {
+    const emotion = ctx.get(EMOTION_SERVICE_KEY) as EmotionServiceLike | undefined
+    if (!emotion) return undefined
+
+    const { mood, energy } = emotion.readGlobal()
+    return { mood, energy }
+  }
+}
+
 export function apply(ctx: Context): () => void {
   // 上游包不带类型声明，Context 上没有 webServer 字段，这里做一次局部收窄
   const webServer = (ctx as Context & { webServer?: WebServerService }).webServer
   if (!webServer) return () => {}
 
   const token = resolveToken()
-  const handler = createApiHandler({ token, origin: webServer.getOrigin() })
+  const handler = createApiHandler({
+    token,
+    origin: webServer.getOrigin(),
+    readMood: createMoodReader(ctx),
+  })
 
   const disposers = [
     webServer.register({ kind: 'prefix', path: API_PREFIX, handler }),

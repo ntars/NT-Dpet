@@ -39,9 +39,10 @@
   - 内容：`baseURL()`（优先 `window.__NTDPET_API__`，其次 `location.origin`，再次 `http://127.0.0.1:9061`）、`getToken()`（从查询串取 `token`，存 `sessionStorage`）、`request()`（超时 8 秒、统一错误对象）、`streamChat()`（`fetch` + `ReadableStream` 逐块解析 `data:`）。
   - 约束：不引入第三方库；不把 token 打进日志。
   - 验收：在浏览器控制台手动调用三个方法均返回预期结构。
-- [ ] **M0.2.2** 情绪面板接 `/api/ntdpet/mood`。
+- [x] **M0.2.2** 情绪面板接 `/api/ntdpet/mood`。
   - 做法：启动时拉取一次，之后每 30 秒刷新；失败时使用 `js/data.js` 并在顶部加「演示数据」标识（复用现有 `.pill`）。
   - 验收：停掉后端后刷新页面，界面不白屏，标识出现。
+  - 实现补记：接口 `/mood` 原先只是 `PENDING_PATHS` 里的占位（恒 503），只做前端会永远停在演示数据上，故本轮同时补齐后端读数：`packages/ui/src/index.ts` 用 `ctx.get('nt-dpet:emotion')` 取服务（不写成必选 inject，避免 emotion 缺席时整个插件不激活），`src/api/handler.ts` 新增 `/mood` 分支，读不到即 503。前端见 `packages/ui/web/js/mood.js`。
 - [ ] **M0.2.3** 右栏记忆接 `/api/ntdpet/memory/recent?limit=8`。
   - 做法：空列表显示「暂无记忆」，不使用演示数据冒充。
   - 验收：有数据时展示条目与时间；无数据时文案正确。

@@ -12,6 +12,7 @@ import { initTheme, setThemeMode } from './theme.js';
 import { conversations, persona } from './data.js';
 import { renderThread, appendMessage, simulateReply } from './chat.js';
 import { renderPanel, refreshIdentity } from './panel.js';
+import { startMoodSync } from './mood.js';
 import { renderLogs, setLogMode } from './log.js';
 import { getPref, setPref } from './prefs.js';
 import { setSegmented } from './segmented.js';
@@ -267,6 +268,8 @@ function start() {
 
   renderPanel();
   renderThread(currentConv);
+  // 首屏先用 data.js 画出来，真实情绪到了再覆盖：不等请求，避免白屏
+  startMoodSync();
 
   // 视图由 class 控制，移除 HTML 上的 hidden 以免两套机制打架
   viewWork.hidden = false;

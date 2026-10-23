@@ -353,9 +353,9 @@ DeepSeek、Live2D、微信、QQ、企业微信、飞书、钉钉、Telegram、Di
 | `@nt-dpet/memory` 记忆双层 | 已实现 | 23 个单元测试，含 SQLite 持久化与 0600/0700 权限校验 |
 | `@nt-dpet/rhythm` 分条与节奏 | 已实现 | 15 个单元测试 |
 | `@nt-dpet/persona` 人格与称呼 | 已实现 | 13 个单元测试；五份人格锚点已撰写 |
-| `packages/ui/web` 界面壳 | 已实现（静态） | 14 项交互冒烟测试 |
+| `@nt-dpet/ui` 接口层与界面壳 | 已实现（接口 `/health`、`/mood`；情绪面板接真实数据，记忆与对话仍为演示数据） | 24 个单元测试 + 14 项交互冒烟 |
 | `@nt-dpet/pet-mobile` 移动端桌宠 | 占位（默认禁用） | 无实现 |
-| 其余 25 个插件包 | 骨架 | 仅通过编译；含 `@nt-dpet/ui` 的插件入口（其静态界面见上一行，`src/index.ts` 仍为骨架） |
+| 其余 25 个插件包 | 骨架 | 仅通过编译 |
 | 安装器、三端打包 | 未开始（`desktop/src/main.ts` 为骨架） | 无可运行产物；`@nt-dpet/desktop` 仅声明 electron 开发依赖 |
 
 端到端实测记录（真实插件，非测试桩）：

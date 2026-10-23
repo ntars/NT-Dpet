@@ -610,6 +610,26 @@
   font-weight: 500;
 }
 
+/**
+ * 「演示数据」标识
+ *
+ * 用告警橙而不是强调蓝：它的含义是「眼前这些数不是真的」，
+ * 和旁边表示情绪档位的蓝色胶囊必须一眼能分开。
+ *
+ * margin-right: auto 把它摁在标题旁边，胶囊留在右端——
+ * 卡片头是 space-between，三个元素等分的话标识会悬在正中间，看着像另一个标题。
+ */
+.pill--demo {
+  margin-right: auto;
+  background: color-mix(in srgb, var(--dot-warn) 16%, transparent);
+  color: color-mix(in srgb, var(--dot-warn) 78%, var(--label));
+}
+
+/* .pill 自己设了 display，UA 的 [hidden] 压不住它，必须显式关掉 */
+.pill--demo[hidden] {
+  display: none;
+}
+
 /* ══ 数值条 ══ */
 
 .metric-list {

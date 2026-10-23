@@ -17,6 +17,7 @@ import { timingSafeEqual } from 'node:crypto'
 import type {
   ApiEnvelope,
   ApiErrorCode,
+  MoodReading,
   WebRequest,
   WebResponse,
 } from './types.js'
@@ -28,7 +29,7 @@ export const API_PREFIX = '/api/ntdpet'
 const TOKEN_HEADER = 'x-ntdpet-token'
 
 /** 已规划、尚未接入的子路径。M0.2 / M0.3 落地后从这张表移走。 */
-const PENDING_PATHS = ['/mood', '/memory', '/chat', '/status']
+const PENDING_PATHS = ['/memory', '/chat', '/status']
 
 const encoder = new TextEncoder()
 
@@ -39,6 +40,17 @@ export interface ApiHandlerOptions {
   origin: string
   /** 注入时钟，便于测试。 */
   now?: () => number
+  /**
+   * 读当前全局情绪。
+   *
+   * 做成回调而不是直接依赖 emotion 包：接口层不该知道情绪状态存在哪，
+   * 也不该为了一个 GET 把 ui 的 inject 列表绑死在 emotion 上——那样 emotion
+   * 没加载时整个插件都不激活，页面和接口会一起消失，比「这个接口没数据」糟得多。
+   *
+   * 返回 `undefined` 表示情绪服务此刻不可用，按 503 处理而不是给默认值：
+   * 给默认值等于凭空造一个「0.5 的心情」，界面无从分辨真假。
+   */
+  readMood?: (() => MoodReading | undefined) | undefined
 }
 
 export type ApiHandler = (req: WebRequest, res: WebResponse) => void
@@ -77,6 +89,24 @@ export function createApiHandler(options: ApiHandlerOptions): ApiHandler {
             uptimeMs: now() - startedAt,
           },
         })
+        return
+      }
+
+      if (path === '/mood') {
+        if (method !== 'GET' && method !== 'HEAD') {
+          sendError(res, 405, 'METHOD_NOT_ALLOWED', '该接口只接受 GET')
+          return
+        }
+
+        // 服务在但读不出值，与「服务根本没起来」都归 503：
+        // 对界面而言结论一样——暂时没有真实数据，先按演示数据处理。
+        const reading = options.readMood?.()
+        if (!reading) {
+          sendError(res, 503, 'NOT_READY', '情绪服务未就绪')
+          return
+        }
+
+        sendJson(res, 200, { ok: true, data: reading })
         return
       }
 

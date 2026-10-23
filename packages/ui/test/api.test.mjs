@@ -50,8 +50,19 @@ function fakeReq(options = {}) {
   }
 }
 
-function call(options) {
-  const handler = createApiHandler({ token: TOKEN, origin: ORIGIN, now: () => 1_700_000_000_000 })
+/**
+ * 发一次请求。
+ *
+ * @param {object} options 请求侧参数
+ * @param {object} [extra] 追加的 handler 选项，用于注入 readMood 之类
+ */
+function call(options, extra = {}) {
+  const handler = createApiHandler({
+    token: TOKEN,
+    origin: ORIGIN,
+    now: () => 1_700_000_000_000,
+    ...extra,
+  })
   const req = fakeReq(options)
   const res = fakeRes()
   handler(req, res)
@@ -115,7 +126,8 @@ describe('鉴权', () => {
 
 describe('子路径分发', () => {
   it('已规划但未接入的接口返回 503 NOT_READY', () => {
-    for (const path of ['/mood', '/memory/recent', '/chat', '/status']) {
+    // /mood 已由 M0.2.2 接入，从这张表移走，改由「情绪接口」一组单独覆盖
+    for (const path of ['/memory/recent', '/chat', '/status']) {
       const { res, json } = call({ url: API_PREFIX + path })
       assert.equal(res.statusCode, 503, path)
       assert.equal(json.error.code, 'NOT_READY', path)
@@ -138,6 +150,50 @@ describe('子路径分发', () => {
     const { res } = call({ headers: { 'x-ntdpet-token': 'c'.repeat(64) } })
     assert.ok(!res.body.includes('c'.repeat(64)))
     assert.ok(!res.body.includes(TOKEN))
+  })
+})
+
+describe('情绪接口', () => {
+  const reading = { mood: 0.68, energy: 0.42 }
+
+  it('注入读数时返回 200 与两维数值', () => {
+    const { res, json } = call({ url: API_PREFIX + '/mood' }, { readMood: () => reading })
+    assert.equal(res.statusCode, 200)
+    assert.equal(json.ok, true)
+    assert.deepEqual(json.data, reading)
+  })
+
+  it('情绪服务没起来时返回 503，而不是编一个默认值', () => {
+    const { res, json } = call({ url: API_PREFIX + '/mood' })
+    assert.equal(res.statusCode, 503)
+    assert.equal(json.error.code, 'NOT_READY')
+    // 关键：不能出现 mood 字段，否则界面会把默认值当成真实情绪
+    assert.equal(json.data, undefined)
+  })
+
+  it('服务在但读不出值时同样 503', () => {
+    const { res, json } = call({ url: API_PREFIX + '/mood' }, { readMood: () => undefined })
+    assert.equal(res.statusCode, 503)
+    assert.equal(json.error.code, 'NOT_READY')
+  })
+
+  it('POST 到情绪接口返回 405', () => {
+    const { res, json } = call({ url: API_PREFIX + '/mood', method: 'POST' }, { readMood: () => reading })
+    assert.equal(res.statusCode, 405)
+    assert.equal(json.error.code, 'METHOD_NOT_ALLOWED')
+  })
+
+  it('情绪接口同样要过鉴权', () => {
+    const { res } = call(
+      { url: API_PREFIX + '/mood', headers: { 'x-ntdpet-token': 'b'.repeat(64) } },
+      { readMood: () => reading },
+    )
+    assert.equal(res.statusCode, 401)
+  })
+
+  it('情绪接口不缓存', () => {
+    const { res } = call({ url: API_PREFIX + '/mood' }, { readMood: () => reading })
+    assert.equal(res.headers['cache-control'], 'no-store')
   })
 })
 

@@ -33,8 +33,21 @@ export type ApiErrorCode =
   | 'NOT_READY'
   | 'INTERNAL'
 
-/** 宿主注册路由的入参，只保留本项目用到的两个字段。 */
-export interface WebServerRoute {
+/**
+ * `GET /api/ntdpet/mood` 的响应正文：实例全局的两维。
+ *
+ * 只给数值，不给「有点累但见到你心情好了些」这类句子。原因不是省事——
+ * 情绪服务只产出数字，把它翻译成人话是界面的事（见 web/js/mood.js）。
+ * 若在这里写死文案，换一种说法就得改后端再发版，而且后端会开始「编」状态。
+ */
+export interface MoodReading {
+  /** 此刻心情，0..1 */
+  mood: number
+  /** 此刻精力，0..1 */
+  energy: number
+}
+
+/** 宿主注册路由的入参，只保留本项目用到的两个字段。 */export interface WebServerRoute {
   kind: 'exact' | 'prefix'
   path: string
   handler: (req: WebRequest, res: WebResponse) => void | Promise<void>
