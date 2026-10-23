@@ -15,8 +15,11 @@
  *             向量检索路（等 sqlite-vec）、提炼器的具体提示词
  */
 
+import { join } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import { MEMORY_SERVICE_KEY, createMemoryService } from './service.js'
+import { createMemoryStore } from './store.js'
+import { createSqliteStore } from './store-sqlite.js'
 
 export { MEMORY_SERVICE_KEY } from './service.js'
 export type { FactExtractor, MemoryService } from './service.js'
@@ -24,6 +27,7 @@ export type { DecayTier, MemoryFact, MemoryRaw } from './types.js'
 export { DECAY_HALF_LIFE, DEFAULT_DECAY_TIER, RECALL_WEIGHTS } from './types.js'
 export { bigrams, recall, recencyScore, semanticScore } from './recall.js'
 export { createMemoryStore } from './store.js'
+export { createSqliteStore } from './store-sqlite.js'
 export type { MemoryStore } from './store.js'
 
 export const name = 'nt-dpet-memory'
@@ -31,8 +35,28 @@ export const name = 'nt-dpet-memory'
 /** 本包提供的服务名。 */
 export const provide = MEMORY_SERVICE_KEY
 
+/**
+ * 选存储：配置了 `NTDPET_HOME` 就用 SQLite（落 `user/memory.db`），
+ * 否则退回内存实现。打不开 SQLite 也不阻塞启动——记忆降级总比整套起不来好。
+ */
+function selectStore() {
+  const home = process.env['NTDPET_HOME']
+  if (!home) return createMemoryStore()
+  try {
+    return createSqliteStore(join(home, 'user', 'memory.db'))
+  } catch (err) {
+    ctx_log('SQLite 打开失败，退回内存存储：' + (err as Error).message)
+    return createMemoryStore()
+  }
+}
+
+/** 极简日志：本包不依赖 ctx.logger，避免在选存储阶段就要求上下文。 */
+function ctx_log(msg: string): void {
+  process.emitWarning(msg, 'NtDpetMemory')
+}
+
 export function apply(ctx: Context): () => void {
-  const handle = createMemoryService()
+  const handle = createMemoryService(selectStore())
   ctx.provide(MEMORY_SERVICE_KEY, handle.service)
   return handle.dispose
 }

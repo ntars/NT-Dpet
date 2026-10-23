@@ -104,8 +104,8 @@
 | 项目 | 许可 | 怎么用 | 声明动作 |
 |---|---|---|---|
 | `asg017/sqlite-vec` | Apache-2.0 / MIT | **依赖候选**（向量检索） | NOTICE §五 已登记 |
-| `WiseLibs/better-sqlite3` | MIT | **依赖候选**（持久化，二选一） | NOTICE §五 |
-| `nodejs/node`（`node:sqlite`） | MIT | **依赖候选**（零依赖，二选一） | NOTICE §四 |
+| `WiseLibs/better-sqlite3` | MIT | 备选（若 node:sqlite 的实验 API 变动过大） | 采用时登记 |
+| `nodejs/node`（`node:sqlite`） | MIT | **已采用**（记忆持久化，Node 22.22 无需 flag） | NOTICE §四（Node 运行时） |
 | `mem0ai/mem0` | Apache-2.0 | 参考（抽取/去重/更新语义） | CREDITS |
 | `letta-ai/letta` | Apache-2.0 | 参考（记忆分块） | CREDITS |
 | `getzep/graphiti` | Apache-2.0 | 参考（时序知识图谱） | CREDITS |
