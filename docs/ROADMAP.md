@@ -35,7 +35,7 @@
 
 ### M0.2 界面接入真实服务
 
-- [ ] **M0.2.1** 新增 `packages/ui/web/js/api.js`。
+- [x] **M0.2.1** 新增 `packages/ui/web/js/api.js`。
   - 内容：`baseURL()`（优先 `window.__NTDPET_API__`，其次 `location.origin`，再次 `http://127.0.0.1:9061`）、`getToken()`（从查询串取 `token`，存 `sessionStorage`）、`request()`（超时 8 秒、统一错误对象）、`streamChat()`（`fetch` + `ReadableStream` 逐块解析 `data:`）。
   - 约束：不引入第三方库；不把 token 打进日志。
   - 验收：在浏览器控制台手动调用三个方法均返回预期结构。
