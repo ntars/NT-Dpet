@@ -4,6 +4,8 @@
 > 扫描日期：**2026-10-23**。数据来源：GitHub Search API + Repos API（star 数、许可证、最后提交时间均为当日抓取）。
 > 口径：共 68 组关键词、200+ 仓库，去重后逐一过筛；**只收录与本项目能力域相关的**，无关结果（如政治类、无关教程）直接剔除，不在此列出。
 
+> **采用决策见 [ADOPTION-REGISTER.md](ADOPTION-REGISTER.md)**：逐项写明怎么用、声明动作、法律口径。本文件是「有什么」，登记册是「用哪个、怎么声明」。
+
 ## 一、怎么读这份表
 
 | 采纳级别 | 含义 | 义务 |
@@ -53,7 +55,7 @@
 | `RVC-Boss/GPT-SoVITS` | 63.6k | MIT | 2026-10-19 | 少样本音色克隆 + 中文 TTS，本地部署 | **运行时调用** |
 | `RVC-Project/Retrieval-based-Voice-Conversion-WebUI` | 38.9k | MIT | 2026-08-04 | 音色转换（RVC） | **运行时调用** |
 | `QwenAudio/CosyVoice` | 24.1k | Apache-2.0 | 2026-05-25 | 阿里多语种 TTS，质量高 | 运行时调用（备选） |
-| `2noise/ChatTTS` | 39.9k | AGPL-3.0 | 2026-04-10 | 对话式 TTS，**AGPL 会传染本项目** | **禁止分发**（仅可独立进程调用） |
+| `2noise/ChatTTS` | 39.9k | AGPL-3.0 | 2026-04-10 | 对话式 TTS。**本项目同为 AGPL-3.0，同族兼容、可以分发** | 运行时备选（体积大） |
 | `index-tts/index-tts` | 24.7k | 未声明 | 2026-09-29 | 字节 IndexTTS，零样本克隆；许可未声明，需人工确认 | 待确认 |
 | `SWivid/F5-TTS` | 15.4k | MIT | 2026-10-14 | 流匹配 TTS，快 | 运行时调用（备选） |
 | `rany2/edge-tts` | 12.4k | 未声明（GPL 争议） | 2026-10-14 | 微软 Edge 在线语音，**逆向接口，非官方** | 不适用（合规风险） |
@@ -74,7 +76,7 @@
 |---|---|---|---|---|---|
 | `NapNeko/NapCatQQ` | 11.3k | 未声明（有限再分发） | 2026-10-22 | QQ 个人号协议端（NTQQ） | **禁止分发**（仅引导自装） |
 | `LagrangeDev/Lagrange.Core` | 3k | 未声明 | 2026-09-07 | 另一条 QQ 协议端路线 | 禁止分发 |
-| `LLOneBot/LuckyLilliaBot` | 3.7k | GPL-2.0 | 2026-10-19 | OneBot 实现 | 禁止分发 |
+| `LLOneBot/LuckyLilliaBot` | 3.7k | **GPL-2.0-only** | 2026-10-19 | OneBot 实现；GPLv2-only 与 AGPLv3 不兼容 | 禁止分发 |
 | `Mrs4s/go-cqhttp` | 10.6k | AGPL-3.0 | 2026-10-20 | 老牌 QQ 协议端（已趋停更） | 不适用 |
 | `nonebot/nonebot2` | 7.8k | MIT | 2026-10-22 | Python 机器人框架；适配器抽象参考 | 参考实现 |
 | `AstrBotDevs/AstrBot` | 42.9k | AGPL-3.0 | 2026-10-23 | 多平台 Agent 框架，插件市场与适配器设计参考 | 参考实现（勿复制） |
@@ -200,7 +202,7 @@
 
 | 项目 | 排除理由 |
 |---|---|
-| `ChatTTS`（AGPL） | 会传染本项目许可；若要用只能独立进程、不打包 |
+| ~~`ChatTTS`（AGPL）~~ | **已纠正**：本项目同为 AGPL-3.0，可兼容使用；体积原因暂列运行时备选 |
 | `edge-tts` | 逆向微软在线接口，非官方，合规风险 |
 | `WeChatFerry` / NapCat / Lagrange | 平台限制（Windows-only / 有限再分发），只能引导用户自装 |
 | `go-cqhttp` | 已趋停更，官方亦不推荐新项目使用 |
