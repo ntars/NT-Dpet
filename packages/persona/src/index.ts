@@ -2,18 +2,29 @@
 // Copyright (C) 2026 Ntarstudio（星玖工作室）
 
 /**
- * @nt-dpet/persona — 人格包加载、变量替换、角色卡导入
+ * @nt-dpet/persona — 人格配置、关系称呼联动、L1 锚点拼装
  *
- * 状态：骨架，尚未实现
- * 设计依据：docs/ARCHITECTURE.md §8
- * 决策依据：docs/DECISIONS.md 决策 28-33
+ * 设计依据：docs/ARCHITECTURE.md §8（人格系统）、§8.1（称呼默认值随关系走）
+ * 决策依据：决策 28-33、69-72、87
+ *
+ * 当前范围：配置与变量替换、猫娘浓度注入、变体拼装都可用；
+ * 五份 L1 文本已撰写（personas/xiaojingyu/variants/）。
  */
 
 import type { Context } from '@deepseek-ai/cordis'
+import { PERSONA_SERVICE_KEY, createPersonaService } from './service.js'
+
+export { PERSONA_SERVICE_KEY } from './service.js'
+export type { ComposedAnchor, ComposedEntry, PersonaService } from './service.js'
+export type { CatLevel, L1Entry, L1Variant, PersonaConfig, Relation } from './types.js'
+export { CAT_LEVEL_HINT, DEFAULT_ADDRESS, buildVars, substitute } from './vars.js'
 
 export const name = 'nt-dpet-persona'
 
-export function apply(ctx: Context): void {
-  // TODO: 实现见 docs/ARCHITECTURE.md §8
-  void ctx
+export const provide = PERSONA_SERVICE_KEY
+
+export function apply(ctx: Context): () => void {
+  const handle = createPersonaService()
+  ctx.provide(PERSONA_SERVICE_KEY, handle.service)
+  return handle.dispose
 }
