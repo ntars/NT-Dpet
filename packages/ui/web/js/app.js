@@ -10,7 +10,8 @@
 
 import { initTheme, setThemeMode } from './theme.js';
 import { conversations, persona } from './data.js';
-import { renderThread, appendMessage, simulateReply } from './chat.js';
+import { renderThread, appendMessage } from './chat.js';
+import { sendMessage } from './send.js';
 import { renderPanel, refreshIdentity } from './panel.js';
 import { startMoodSync } from './mood.js';
 import { startMemorySync } from './memory.js';
@@ -36,6 +37,9 @@ const devNotice = document.getElementById('devNotice');
 
 let currentConv = conversations[0];
 let currentView = 'chat';
+
+/** 是否正在等一条回复。它决定发送按钮能不能点，见 updateSendState()。 */
+let busy = false;
 
 /* ── 开发者模式 ── */
 
@@ -122,22 +126,48 @@ function autoGrow() {
   input.style.height = `${Math.min(input.scrollHeight, MAX_INPUT_HEIGHT)}px`;
 }
 
+/**
+ * 发送按钮的可用状态。
+ *
+ * 两个条件都要满足才可点：输入框有内容、当前没有正在生成。
+ * 生成期间不禁用的后果很实在——连点两下会发两条，第二条的流会和第一条的
+ * 回复抢同一块位置；而且服务端那边是两次真实的模型调用，钱照付。
+ *
+ * busy 由本文件自己记，不直接读 send.js 的 isSending()：那个状态在
+ * `await sendMessage()` 之后才有意义，而按钮要在**调用之前**就变灰，
+ * 否则「点了没反应」会一直持续到第一块正文到达。
+ */
 function updateSendState() {
-  sendBtn.disabled = input.value.trim().length === 0;
+  sendBtn.disabled = busy || input.value.trim().length === 0;
 }
 
-function send() {
+async function send() {
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || busy) return;
 
   appendMessage(currentConv, { from: 'me', type: 'text', text });
 
   input.value = '';
   autoGrow();
-  updateSendState();
   input.focus();
 
-  simulateReply(currentConv);
+  busy = true;
+  updateSendState();
+
+  try {
+    const outcome = await sendMessage(currentConv, text);
+
+    // 失败时把原文放回输入框：提示写着「可重试」，就得真能一键重发。
+    // 只在输入框空着时回填，免得覆盖用户已经开始敲的下一句
+    if (outcome.status === 'error' && input.value.trim() === '') {
+      input.value = text;
+    }
+  } finally {
+    busy = false;
+    autoGrow();
+    updateSendState();
+    input.focus();
+  }
 }
 
 /* ── 事件绑定 ── */

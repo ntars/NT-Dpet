@@ -52,9 +52,17 @@
     3. `limit` 默认 8、上限 50，超限压到 50 并回传实际生效值；非正整数回 400。
     4. 「服务没起来」（503）与「确实没有记忆」（200 + 空数组）分开，前端对应「记忆暂不可用」与「暂无记忆」两种文案。
   - 前端：新增 `web/js/memory.js`；`panel.js` 导出 `renderMemories()` / `renderMemoryEmpty()`；`data.js` 删除演示记忆（已无引用）。
-- [ ] **M0.2.4** 对话发送接 `POST /api/ntdpet/chat`。
+- [x] **M0.2.4** 对话发送接 `POST /api/ntdpet/chat`。
   - 做法：发送后逐块渲染；渲染期间禁用发送按钮；`stopReason=aborted` 显示「已中断」，`error` 显示「发送失败，可重试」。
   - 验收：浏览器完成一次真实对话；关闭窗口时请求中止且不报错。
+  - 实现补记：与 M0.2.2 / M0.2.3 同一个坑——后端只有 `PENDING_PATHS` 占位，故同时补齐 `/chat` 分支。要点六条：
+    1. 响应是事件流（`text/event-stream`），事件只有三种：`{type:'delta',text}` / `{type:'done',stopReason}` / `{type:'error',message}`。字段名与 M0.2.1 的 `classify()` 对齐，前端不用改解析。
+    2. 状态码只有一次机会：`headSent` 之前出错还能回 503/500，第一个 delta 之后就只能把失败当作流里的一条 `error` 事件。因此「对话服务没起来」必须由实现层抛 `NotReadyError`，而不是返回空结果。
+    3. 正文自己按块攒（宿主没给解析接口），上限 64KB；消息 trim 后不得为空、不超过 4000 字，超限回 400 而不是截断——截断等于替主人删字。
+    4. 对端断开时 `res.on('close')` → `AbortController.abort()` → 一路传到模型请求。不这么做，浏览器关了模型还在算，token 白烧。
+    5. 前端新增 `web/js/send.js`：一个请求一个气泡，`chat.js` 新增 `beginReply()` 交出「追加正文 / 补状态小字」的句柄；打字指示在第一次正文到达时被替换，不会留三颗点。失败时把原文回填输入框，让「可重试」不只停在文案上。
+    6. 模型参数（`magpie` / `group/ntars` / 1024）暂写在 `packages/ui/src/index.ts`：配置层还没有「模型选择」这一项，取值依据 `TECH-RESEARCH.md` §5.10.1 实测走通的路由。
+  - 验证：全量构建通过；ui 单测 51/51（新增 15 项）；冒烟 14/14；真实浏览器 + 真实模型网关（`127.0.0.1:3425`）端到端 13/13，含逐块增长、生成期间按钮禁用、失败文案与回填、关页面后上游 `signal.aborted === true`。
 - [ ] **M0.2.5** 更新冒烟测试。
   - 做法：`packages/ui/web/test/smoke.mjs` 增加接口桩（拦截 `fetch` 返回固定数据）、降级路径、发送态禁用、错误态文案，目标 ≥ 18 项。
   - 验收：`node packages/ui/web/test/smoke.mjs` 全绿。

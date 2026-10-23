@@ -5,7 +5,10 @@
  * 对话区渲染
  *
  * 只负责把消息数组变成 DOM，不含任何业务逻辑。
- * 真实接入时，消息数组来自 dialogue 包，结构保持不变。
+ * 消息数组的结构与 dialogue 包保持一致的形状，接后端时不用改结构。
+ *
+ * 流式回复的 DOM 由 `beginReply()` 交出的句柄来推进：先放一个打字指示，
+ * 第一段正文到了再换成文字。这样「点击 → 有反应」之间不会空着一块。
  */
 
 import { persona } from './data.js';
@@ -132,31 +135,11 @@ export function appendMessage(conv, msg) {
   scrollToBottom();
 }
 
-let typingEl = null;
-
-export function showTyping() {
-  if (typingEl) return;
-
-  typingEl = document.createElement('div');
-  typingEl.className = 'msg msg--them msg--gap';
-
-  const bubble = document.createElement('div');
-  bubble.className = 'msg__bubble typing';
-  bubble.append(
-    document.createElement('i'),
-    document.createElement('i'),
-    document.createElement('i'),
-  );
-
-  typingEl.appendChild(bubble);
-  threadEl.appendChild(typingEl);
-  scrollToBottom();
-}
-
-export function hideTyping() {
-  if (!typingEl) return;
-  typingEl.remove();
-  typingEl = null;
+/** 三颗跳动的点，用于「正在输入」。 */
+function makeDots() {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 3; i += 1) frag.appendChild(document.createElement('i'));
+  return frag;
 }
 
 export function scrollToBottom() {
@@ -165,35 +148,72 @@ export function scrollToBottom() {
   });
 }
 
-/* ── 演示回复（后端接入后删除） ── */
-
-const DEMO_REPLIES = [
-  ['嗯……那你早点休息喵', '明天还要早起呢'],
-  ['我知道啦', '（尾巴轻轻扫了一下）不是生气，就是有点想你'],
-  ['主人', '你说话的时候我有在听'],
-  ['那你忙完了叫我', '我不吵你'],
-];
-
-let demoIndex = 0;
+/* ── 流式回复 ── */
 
 /**
- * 模拟一次回复：先显示正在输入，再逐条落下
+ * 开一个「她正在说」的气泡，返回推进它的句柄。
+ *
+ * 为什么要有这个句柄而不是让调用方自己拼 DOM：一块块追加正文时，
+ * 最容易写错的是「先建气泡再判断有没有内容」——顺序一乱就会出现空气泡，
+ * 或者第一次 delta 把打字指示覆盖掉却忘了清掉 typing 类，三颗点一直转。
+ * 把这三件事（换掉打字指示、追加正文、收尾小字）收在一个地方，
+ * 调用方只管 `append` 就行。
+ *
+ * 消息同时也写进 conv.messages：切走会话再切回来重新渲染时，
+ * 已经说过的话不能凭空消失。
+ *
  * @param {object} conv 当前会话
+ * @returns {{append: (text: string) => void, note: (text: string) => void, text: string}}
  */
-export function simulateReply(conv) {
-  showTyping();
+export function beginReply(conv) {
+  const row = document.createElement('div');
+  row.className = 'msg msg--them msg--gap';
 
-  const lines = DEMO_REPLIES[demoIndex % DEMO_REPLIES.length];
-  demoIndex += 1;
+  const bubble = document.createElement('div');
+  bubble.className = 'msg__bubble typing';
+  bubble.appendChild(makeDots());
 
-  setTimeout(() => {
-    hideTyping();
-    lines.forEach((text, i) => {
-      setTimeout(() => {
-        appendMessage(conv, { from: 'them', type: 'text', text });
-      }, i * 1200);
-    });
-  }, 1100);
+  const bodyEl = document.createElement('span');
+  bodyEl.className = 'msg__text';
+  const noteEl = document.createElement('span');
+  noteEl.className = 'msg__note';
+  noteEl.hidden = true;
+
+  row.appendChild(bubble);
+  threadEl.appendChild(row);
+  scrollToBottom();
+
+  const msg = { from: 'them', type: 'text', text: '' };
+  conv.messages.push(msg);
+
+  // 打字指示只在「还没有一个字」时存在，第一次写入内容时一并换掉
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    bubble.classList.remove('typing');
+    bubble.textContent = '';
+    bubble.append(bodyEl, noteEl);
+  };
+
+  return {
+    append(text) {
+      start();
+      msg.text += text;
+      bodyEl.textContent = msg.text;
+      scrollToBottom();
+    },
+    /** 在正文下面补一行状态小字：已中断 / 发送失败，可重试。 */
+    note(text) {
+      start();
+      noteEl.textContent = text;
+      noteEl.hidden = false;
+      scrollToBottom();
+    },
+    get text() {
+      return msg.text;
+    },
+  };
 }
 
 export { persona };

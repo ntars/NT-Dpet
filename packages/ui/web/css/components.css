@@ -414,6 +414,26 @@
   30% { opacity: 1; transform: translateY(-2px); }
 }
 
+/* 气泡里的状态小字：已中断 / 发送失败，可重试
+   单独一行、浅一档颜色：它说明的是这次发送的结局，不是她说的话，
+   混在正文里读起来会像她又补了一句。 */
+.msg__note {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--label-3);
+}
+
+/*
+ * [hidden] 要显式写。
+ * .msg__note 自己声明了 display:block，UA 样式表里的 [hidden]{display:none}
+ * 优先级最低，压不住它——只有看计算样式才发现「藏不住」。
+ * 同类问题在 .devnotice[hidden] 上踩过一次。
+ */
+.msg__note[hidden] {
+  display: none;
+}
+
 /* 群聊：气泡上方显示说话人 */
 .msg__group {
   display: flex;

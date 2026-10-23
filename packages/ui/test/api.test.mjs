@@ -17,7 +17,7 @@ import { dirname, join } from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-import { API_PREFIX, createApiHandler, injectToken } from '../dist/api/handler.js'
+import { API_PREFIX, createApiHandler, injectToken, NotReadyError } from '../dist/api/handler.js'
 import { resolveToken, resetTokenCache } from '../dist/api/token.js'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -25,29 +25,60 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const TOKEN = 'a'.repeat(64)
 const ORIGIN = 'http://127.0.0.1:3189'
 
-/** 假响应：只记录状态码、响应头与正文，够断言用。 */
+/**
+ * 假响应：只记录状态码、响应头与正文，够断言用。
+ *
+ * `write` 与 `end` 都往同一个 body 里拼：事件流是一块块写出来的，
+ * 断言时要看到完整的拼接结果；普通 JSON 响应只走 end，行为与以前一样。
+ */
 function fakeRes() {
   return {
     statusCode: 0,
     headers: {},
     body: '',
+    closed: false,
     setHeader(name, value) {
       this.headers[name.toLowerCase()] = value
     },
+    flushHeaders() {
+      this.flushed = true
+    },
+    write(chunk) {
+      this.body += chunk ?? ''
+    },
     end(chunk) {
-      this.body = chunk ?? ''
+      this.body += chunk ?? ''
+    },
+    on(event, listener) {
+      if (event === 'close') this.onClose = listener
     },
   }
 }
 
-/** 假请求：默认带正确令牌，按需覆盖。 */
+/**
+ * 假请求：默认带正确令牌，按需覆盖。
+ *
+ * 传了 body 才会挂上异步迭代器——没有正文的请求本来就不该有，
+ * 顺带把「没有正文来源时按空串处理」这条兜底路径测到。
+ */
 function fakeReq(options = {}) {
-  const { method = 'GET', url = API_PREFIX + '/health', headers = {} } = options
-  return {
+  const { method = 'GET', url = API_PREFIX + '/health', headers = {}, body, rawChunks } = options
+  const req = {
     method,
     url,
     headers: { 'x-ntdpet-token': TOKEN, ...headers },
   }
+
+  const chunks = rawChunks ?? (body === undefined ? null : [body])
+  if (chunks) {
+    req[Symbol.asyncIterator] = async function* push() {
+      for (const chunk of chunks) {
+        yield typeof chunk === 'string' ? new TextEncoder().encode(chunk) : chunk
+      }
+    }
+  }
+
+  return req
 }
 
 /**
@@ -69,11 +100,24 @@ function call(options, extra = {}) {
   return { res, json: res.body ? JSON.parse(res.body) : null }
 }
 
+/** 正文是 JSON 就解析，不是（比如事件流）就给 null。 */
+function parseJSON(body) {
+  if (!body) return null
+  try {
+    return JSON.parse(body)
+  } catch {
+    return null
+  }
+}
+
 /**
  * 同 call，但等 handler 的异步分支写完响应。
  *
  * 记忆接口要等存储层读完才写响应，不等就会断言到一个 `statusCode: 0` 的
  * 空响应——那不是功能坏了，是测试没等。
+ *
+ * `json` 在正文不是 JSON 时给 null：对话接口回的是事件流，那种响应本来就
+ * 该由 parseEvents 去拆，硬解析只会抛一个与功能无关的语法错误。
  */
 async function callAsync(options, extra = {}) {
   const handler = createApiHandler({
@@ -85,7 +129,7 @@ async function callAsync(options, extra = {}) {
   const req = fakeReq(options)
   const res = fakeRes()
   await handler(req, res)
-  return { res, json: res.body ? JSON.parse(res.body) : null }
+  return { res, json: parseJSON(res.body) }
 }
 
 describe('健康检查', () => {
@@ -145,10 +189,10 @@ describe('鉴权', () => {
 
 describe('子路径分发', () => {
   it('已规划但未接入的接口返回 503 NOT_READY', () => {
-    // /mood 由 M0.2.2 接入、/memory/recent 由 M0.2.3 接入，都有各自的
-    // 分支与用例；这里换成同前缀下仍未接入的 /memory/facts，
-    // 顺带守住「只有 /memory/recent 被挖走，其余记忆子路径仍然占位」这条边界。
-    for (const path of ['/memory/facts', '/chat', '/status']) {
+    // /mood 由 M0.2.2 接入、/memory/recent 由 M0.2.3 接入、/chat 由 M0.2.4 接入，
+    // 都有各自的分支与用例；这里换成同前缀下仍未接入的路径，
+    // 顺带守住「只有被单独处理的子路径才离开占位」这条边界。
+    for (const path of ['/memory/facts', '/status']) {
       const { res, json } = call({ url: API_PREFIX + path })
       assert.equal(res.statusCode, 503, path)
       assert.equal(json.error.code, 'NOT_READY', path)
@@ -337,6 +381,202 @@ describe('记忆接口', () => {
       { readRecent: () => items },
     )
     assert.equal(res.statusCode, 401)
+  })
+})
+
+describe('对话接口', () => {
+  /** 造一个假运行器：依次吐出给定分块，按指定原因结束。 */
+  function runner(deltas, stopReason = 'stop') {
+    const seen = {}
+    return {
+      seen,
+      run: async (input, sink) => {
+        seen.input = input
+        seen.signal = sink.signal
+        for (const text of deltas) sink.delta(text)
+        return { stopReason }
+      },
+    }
+  }
+
+  /** 发一次对话请求。默认正文里带一句正常消息。 */
+  const chatCall = (options = {}, extra = {}) =>
+    callAsync(
+      {
+        method: 'POST',
+        url: API_PREFIX + '/chat',
+        body: JSON.stringify({ text: '在吗' }),
+        ...options,
+      },
+      extra,
+    )
+
+  /** 把事件流正文拆成事件对象。 */
+  function parseEvents(body) {
+    return body
+      .split('\n\n')
+      .map((chunk) => chunk.trim())
+      .filter((chunk) => chunk.startsWith('data:'))
+      .map((chunk) => JSON.parse(chunk.slice(5).trim()))
+  }
+
+  it('非 POST 返回 405，且先于「未接入」判断', async () => {
+    // 方法判断必须在前：否则一个 GET 会得到 503「没接入」，
+    // 而真正的原因是方法用错了，排查会走错方向
+    const { res, json } = await chatCall({ method: 'GET' })
+    assert.equal(res.statusCode, 405)
+    assert.equal(json.error.code, 'METHOD_NOT_ALLOWED')
+  })
+
+  it('没有注入运行器时返回 503，而不是假装收到了消息', async () => {
+    const { res, json } = await chatCall()
+    assert.equal(res.statusCode, 503)
+    assert.equal(json.error.code, 'NOT_READY')
+  })
+
+  it('正文不是 JSON 时返回 400', async () => {
+    const { res, json } = await chatCall({ body: '不是 json' }, { chat: runner([]).run })
+    assert.equal(res.statusCode, 400)
+    assert.equal(json.error.code, 'BAD_REQUEST')
+  })
+
+  it('消息为空或全空格时返回 400', async () => {
+    for (const body of ['', '{}', JSON.stringify({ text: '   ' }), JSON.stringify({ text: 1 })]) {
+      const { res, json } = await chatCall({ body }, { chat: runner([]).run })
+      assert.equal(res.statusCode, 400, body)
+      assert.equal(json.error.code, 'BAD_REQUEST', body)
+    }
+  })
+
+  it('消息超过 4000 字时返回 400，不把整段塞进模型', async () => {
+    const long = '字'.repeat(4001)
+    const { res, json } = await chatCall(
+      { body: JSON.stringify({ text: long }) },
+      { chat: runner([]).run },
+    )
+    assert.equal(res.statusCode, 400)
+    assert.equal(json.error.code, 'BAD_REQUEST')
+  })
+
+  it('请求正文超过 64KB 时返回 400，不整段读进内存', async () => {
+    const huge = JSON.stringify({ text: 'a'.repeat(70 * 1024) })
+    const { res, json } = await chatCall({ body: huge }, { chat: runner([]).run })
+    assert.equal(res.statusCode, 400)
+    assert.equal(json.error.code, 'BAD_REQUEST')
+  })
+
+  it('会话键格式不对时返回 400', async () => {
+    const { res, json } = await chatCall(
+      { body: JSON.stringify({ text: '在吗', session: 'telegram:1' }) },
+      { chat: runner([]).run },
+    )
+    assert.equal(res.statusCode, 400)
+    assert.equal(json.error.code, 'BAD_REQUEST')
+  })
+
+  it('正常一轮：先 delta 后 done，走事件流而不是 JSON', async () => {
+    const r = runner(['你', '好呀'])
+    const { res } = await chatCall({}, { chat: r.run })
+
+    assert.equal(res.statusCode, 200)
+    assert.match(res.headers['content-type'], /text\/event-stream/)
+    assert.equal(res.headers['cache-control'], 'no-store')
+    assert.deepEqual(parseEvents(res.body), [
+      { type: 'delta', text: '你' },
+      { type: 'delta', text: '好呀' },
+      { type: 'done', stopReason: 'stop' },
+    ])
+  })
+
+  it('交给运行器的是 trim 过的原文与默认会话键', async () => {
+    const r = runner(['嗯'])
+    await chatCall({ body: JSON.stringify({ text: '  在吗 \n' }) }, { chat: r.run })
+    assert.deepEqual(r.seen.input, { sessionKey: 'c2c:local', text: '在吗' })
+  })
+
+  it('运行器说服务没起来时，仍能用 503 说清楚', async () => {
+    // 这条守住「第一块正文之前还能改状态码」这个约定：
+    // 一旦写过 delta，响应头已经发出，503 就再也发不出去了
+    const { res, json } = await chatCall(
+      {},
+      {
+        chat: async () => {
+          throw new NotReadyError('对话服务未就绪')
+        },
+      },
+    )
+    assert.equal(res.statusCode, 503)
+    assert.equal(json.error.code, 'NOT_READY')
+  })
+
+  it('生成中途出错时，把失败当成流里的一条事件交出去', async () => {
+    const { res } = await chatCall(
+      {},
+      {
+        chat: async (input, sink) => {
+          sink.delta('我说到一半')
+          throw new Error('provider 断了')
+        },
+      },
+    )
+    // 状态码已经发出去了，改不了；关键是不能一个字都不给就断
+    assert.equal(res.statusCode, 200)
+    const events = parseEvents(res.body)
+    assert.equal(events[0].type, 'delta')
+    assert.equal(events.at(-1).type, 'error')
+    // 异常原文不外泄
+    assert.ok(!res.body.includes('provider 断了'))
+  })
+
+  it('中断时 done 事件的 stopReason 是 aborted，界面据此显示「已中断」', async () => {
+    const r = runner(['说到一半'], 'aborted')
+    const { res } = await chatCall({}, { chat: r.run })
+    assert.equal(parseEvents(res.body).at(-1).stopReason, 'aborted')
+  })
+
+  it('正文为空也照常发头与终态，前端不会一直等', async () => {
+    const { res } = await chatCall({}, { chat: runner([]).run })
+    assert.equal(res.statusCode, 200)
+    assert.deepEqual(parseEvents(res.body), [{ type: 'done', stopReason: 'stop' }])
+  })
+
+  it('汉字被拆在两个数据块里也能正确解码', async () => {
+    // 一个汉字三字节。按字节切块是真实网络的常态，
+    // 用 `decode(chunk)` 而不是 `decode(chunk, { stream: true })` 就会出乱码
+    const bytes = new TextEncoder().encode(JSON.stringify({ text: '你好' }))
+    const { res } = await chatCall(
+      { rawChunks: [bytes.slice(0, 17), bytes.slice(17)] },
+      { chat: runner([]).run },
+    )
+    assert.equal(res.statusCode, 200)
+  })
+
+  it('对端断开时中止上游，模型不会白算到结束', async () => {
+    let signal = null
+    const handler = createApiHandler({
+      token: TOKEN,
+      origin: ORIGIN,
+      chat: async (input, sink) => {
+        signal = sink.signal
+        // 一直等到被中止，模拟一个还没生成完的长回复
+        await new Promise((resolve) => sink.signal.addEventListener('abort', resolve, { once: true }))
+        return { stopReason: 'aborted' }
+      },
+    })
+
+    const res = fakeRes()
+    const pending = handler(
+      fakeReq({ method: 'POST', url: API_PREFIX + '/chat', body: JSON.stringify({ text: '在吗' }) }),
+      res,
+    )
+
+    // 读正文是异步的，等一轮微任务再触发关闭，否则 signal 还没建出来
+    await new Promise((resolve) => setImmediate(resolve))
+    res.onClose()
+    await pending
+
+    assert.equal(signal !== null, true)
+    assert.equal(signal.aborted, true)
   })
 })
 

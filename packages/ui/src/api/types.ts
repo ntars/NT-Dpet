@@ -70,18 +70,36 @@ export interface MemoryEntry {
   handler: (req: WebRequest, res: WebResponse) => void | Promise<void>
 }
 
-/** 请求对象：与 Node 的 IncomingMessage 兼容的最小子集。 */
+/**
+ * 请求对象：与 Node 的 IncomingMessage 兼容的最小子集。
+ *
+ * 只读正文的接口（`/chat`）需要拿到消息体。Node 的 IncomingMessage 本身是
+ * 异步可迭代的，所以这里不声明 `on`、`data` 那套事件写法，让调用方直接
+ * `for await` 拼正文——事件写法要自己处理 `end` 与 `error` 的先后，多一处出错点。
+ * 类型上仍可省略：命令行直调或单测里的假请求没有正文，按空串处理。
+ */
 export interface WebRequest {
   method?: string | undefined
   url?: string | undefined
   headers: Record<string, string | string[] | undefined>
+  [Symbol.asyncIterator]?: () => AsyncIterator<Uint8Array | string>
 }
 
-/** 响应对象：与 Node 的 ServerResponse 兼容的最小子集。 */
+/**
+ * 响应对象：与 Node 的 ServerResponse 兼容的最小子集。
+ *
+ * `write` 是流式对话要用的（`/chat` 逐块吐出增量）；`flushHeaders` 与 `on` 都是
+ * 可选的：前者让响应头立刻发出，避免第一块正文被浏览器攒着不渲染；
+ * 后者用来感知对端断开——用户关掉窗口时要顺着这条信号把上游模型请求也停掉，
+ * 否则模型会一直算到结束，白烧额度。
+ */
 export interface WebResponse {
   statusCode: number
   setHeader(name: string, value: string): unknown
+  write(chunk: string): unknown
   end(chunk?: string): unknown
+  flushHeaders?(): unknown
+  on?(event: 'close', listener: () => void): unknown
 }
 
 /** 宿主提供的 `webServer` 服务，签名见 §5.11.1 与 §5.11.7。 */
