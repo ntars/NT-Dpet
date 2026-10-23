@@ -75,7 +75,7 @@
 
 ### M0.3 启动自检
 
-- [x] **M0.3.1** 新增 `packages/startup-check/src/index.ts`。（commit 待回填）
+- [x] **M0.3.1** 新增 `packages/startup-check/src/index.ts`。（commit 80d690c）
   - 做法：`inject: ['profileContext']`（若无此服务则改为读取配置树快照）；比对配置树条目数与激活数；读取 `session-log-deepseek`、`plugin-package-inventory-deepseek` 两项开关；检查 emotion / memory / dialogue / persona 是否在激活列表。
   - 输出：`{ ok, checks: [{ id, ok, detail }] }`，通过 `ctx.provide('nt-dpet:startup-check', ...)` 暴露。
   - 验收：单测覆盖四种场景（全通过、条目缺失、隐私开启、关键包缺失）。
