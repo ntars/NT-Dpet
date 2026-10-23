@@ -217,6 +217,39 @@ NT-Dpet 的隔离布局（路径以 macOS 为例，Windows 换成 `%APPDATA%`，
 
 端口仍可调：环境变量 `NTDPET_PORT`，或启动参数 `--port`。被占用时按 `9060 → 9061 → …` 递增重试；若用户显式指定端口且绑定失败，**不静默改端口**，报错并说明原因。
 
+#### 2.3.3 命名体系覆盖一切可自定义处
+
+凡是我们自己命名、且可能与上游或其他软件撞车的地方，一律加 `nt-dpet` / `NT-DPet` / `ntdpet` 前缀，**不借用上游的名字**：
+
+| 类别 | 规则 | 示例 |
+|---|---|---|
+| 服务键（`ctx.provide`） | `nt-dpet:<域>:<名>` | `nt-dpet:emotion`、`nt-dpet:dialogue` |
+| 插件 entry id | `nt-dpet:<组>:<名>` | `nt-dpet:channel:wechat-official` |
+| 环境变量 | `NTDPET_*`（仅 `DSH_HOME` / `DSH_AGENTS_HOME` 沿用上游约定） | `NTDPET_PORT`、`NTDPET_HOME` |
+| 类名前缀 | `Ntd*` / `NtDpet*` | `NtdEmotionState` |
+| HTTP User-Agent | `NT-Dpet/<version>` | 所有对外请求 |
+| 本地存储键 | `ntdpet.` 前缀 | `ntdpet.theme`、`ntdpet.persona` |
+| Cookie / Header | `ntdpet_*` / `X-NTDPet-*` | 内部服务通信 |
+| 日志前缀 | `[nt-dpet]` / `[nt-dpet:<包>]` | 便于与官方日志分离排查 |
+| 数据库 / 锁 / pid 文件 | `nt-dpet.db`、`nt-dpet.lock`、`nt-dpet.pid` | 全部落在 `…/NT-Dpet/` |
+| 组合包命名空间 | `nt-dpet-<name>` | `nt-dpet-starter` |
+
+原则：**能被外部观察到的标识都属于隔离面**。少改一个，就多一处可能与官方 DSH 混淆的痕迹。
+
+### 2.4 不限制实现语言
+
+本项目**不规定必须用什么语言编写**。语言只是手段，判据是「这个组件的最优解是什么」：
+
+| 组件 | 当前/预期实现 | 理由 |
+|---|---|---|
+| 插件、界面、宿主逻辑 | TypeScript | 与 DSH 插件模型同构，ESM 直载，无跨语言桥 |
+| 本地语音（GPT-SoVITS / RVC） | Python 子进程 | 生态只有 Python 实现，重写无意义 |
+| macOS 原生能力（透明窗区域模糊等） | Swift / Objective-C++ 原生模块 | 只有原生层能调用系统 API |
+| 性能敏感的数据处理（可选） | Rust / Go | 若无明显收益则不引入，避免多一套工具链 |
+
+约束不是语言，而是**接口与边界**：跨语言组件必须通过明确的进程边界或 HTTP/JSON 契约通信，不得以 FFI 方式把两套运行时绑死；任何一个外部进程崩溃，都不得带走主进程。
+
+
 ---
 
 ## 3. 进程拓扑
