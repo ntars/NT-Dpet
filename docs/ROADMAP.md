@@ -28,10 +28,10 @@
   - 判据：能拿到可注册路由的服务 → 方案 A；拿不到 → 方案 B。
   - 验收：在 `docs/TECH-RESEARCH.md` 新增小节，写明结论、证据（命令与输出）、与两方案的取舍。
 - [ ] **M0.1.2** 按结论落地接口层。
-  - 方案 A：在 `packages/ui/src/server.ts` 中用上游路由服务注册 `/api/ntdpet/*`，复用网关鉴权。
-  - 方案 B：新建 `packages/ui/server/server.ts`（`node:http`），监听 `NTDPET_API_PORT`（默认 9061），仅绑 `127.0.0.1`，独立进程由 desktop 拉起。
+  - 结论依据：§5.11 与 §5.11.7，选定**方案 A**；方案 B 仅作退路保留，不实现。
+  - 方案 A：在 `packages/ui/src/index.ts` 中 `inject: ['webServer']`，只注册**一条** `prefix` 路由 `/api/ntdpet`，由单一 handler 内部按子路径分发；自鉴权按 §5.11.4 执行（`tapIndex()` 注入 token、校验 `X-NTDPet-Token`、`no-store`、校验 `Origin`）。
   - 实现要点：统一 `{ ok, data, error }` 响应结构；错误码含 `UNAUTHORIZED`、`NOT_READY`、`INTERNAL`；不打印请求正文。
-  - 验收：`curl -s http://127.0.0.1:9061/api/ntdpet/health` 返回 `{"ok":true,...}`；端口不占用 9060。
+  - 验收：与宿主同端口 `curl -s -H "X-NTDPet-Token: <token>" http://127.0.0.1:<宿主端口>/api/ntdpet/health` 返回 `{"ok":true,...}`；带错 token 返回 `401`；不新增监听端口，9060 仍空闲。
 
 ### M0.2 界面接入真实服务
 

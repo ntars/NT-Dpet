@@ -686,6 +686,36 @@ HTTP 200
 
 同一现象此前在 README 路径上误导过两次。今后遇到路径类「文件不存在」而 `ls` 明明列得出来时，先打印码点，不要靠眼看。
 
+#### 5.11.7 二次复核：类型声明与独立复现 `[已核实，2026-10-23 晚]`
+
+同一天晚间的复核，补两件上一轮没记的事。
+
+**类型声明确实存在于 npm 包**（App 内 `lib/` 不带 `.d.ts`，见 §5.11.2；npm 包带，可作为长期依据）：
+
+```
+$ npm pack @deepseek-ai/dsh-host-webserver@0.2.1-rc.2
+$ tar xzf … && ls package/lib/types
+index.d.ts  injections.d.ts
+```
+
+`index.d.ts` 原文可查到的契约：`register(route) → disposer`、`registerUpgrade`、`registerFallback`（单一所有者，重复注册抛错）、`tapIndex`、`getOrigin()`；匹配顺序写死为「先 exact 表，再最长前缀，最后 fallback」；`host` 拒绝通配地址、端口写 0 由系统分配。包许可 **MIT**（`package.json` 的 `license` 字段），与 §3 许可矩阵一致，M0.1.2 引入时按 MIT 登记。
+
+**独立复现**（临时目录，不进入仓库，只装 cordis + webserver 两个包，绑 `127.0.0.1:9061`）：
+
+```
+[probe] webServer 就绪 origin = http://127.0.0.1:9061
+[probe] 可用方法 = register,registerUpgrade,registerFallback,tapIndex,getOrigin
+[probe] 重复注册抛错: webserver: duplicate exact route "/api/ntdpet/health"
+$ curl -s http://127.0.0.1:9061/api/ntdpet/health
+{"ok":true,"service":"nt-dpet","path":"/api/ntdpet/health","at":1792758630228}
+$ curl -s "http://127.0.0.1:9061/api/ntdpet/mood/recent?limit=3"
+{"ok":true,"matched":"prefix","path":"/api/ntdpet/mood/recent?limit=3"}
+$ curl -o /dev/null -w '%{http_code}' http://127.0.0.1:9061/api/ntdpet/other
+404
+```
+
+结论不变：**方案 A**。同时纠正一处口误——M0.1.2 验收里写的「curl `127.0.0.1:9061`」在方案 A 下不成立：路由挂在宿主自己的监听端口上（`getOrigin()` 给的就是它），不存在第二个端口。9061 只在将来真的退到方案 B 时才用；「端口不占用 9060」这条仍然有效，因为方案 A 压根不新增监听。
+
 ---
 
 ## 6. 参考项目清单
