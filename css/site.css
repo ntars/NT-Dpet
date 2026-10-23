@@ -706,18 +706,6 @@ strong { font-weight: 600; }
 .foot__links a { color: var(--label-2); }
 .foot__links a:hover { color: var(--label); }
 
-.foot__meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  color: var(--label-3);
-}
-
-.foot__dot { color: var(--label-3); opacity: 0.7; }
-
 .foot__beian {
   display: block;
   margin-top: 10px;
@@ -728,6 +716,13 @@ strong { font-weight: 600; }
 }
 
 .foot__beian:hover { text-decoration: underline; }
+
+.foot__copyright {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--label-3);
+  text-align: center;
+}
 
 /* ══ 响应式 ══ */
 
