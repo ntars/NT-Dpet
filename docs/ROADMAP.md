@@ -27,7 +27,7 @@
   - 做法：读 App 内 `@deepseek-ai/dsh-web-app`、`@deepseek-ai/dsh-api-gateway` 等包的入口与类型；检索 `router`、`route`、`http`、`webserver` 等服务名；用最小探针插件尝试 `ctx.get('http')` 或等价服务。
   - 判据：能拿到可注册路由的服务 → 方案 A；拿不到 → 方案 B。
   - 验收：在 `docs/TECH-RESEARCH.md` 新增小节，写明结论、证据（命令与输出）、与两方案的取舍。
-- [ ] **M0.1.2** 按结论落地接口层。
+- [x] **M0.1.2** 按结论落地接口层。（commit PENDING）
   - 结论依据：§5.11 与 §5.11.7，选定**方案 A**；方案 B 仅作退路保留，不实现。
   - 方案 A：在 `packages/ui/src/index.ts` 中 `inject: ['webServer']`，只注册**一条** `prefix` 路由 `/api/ntdpet`，由单一 handler 内部按子路径分发；自鉴权按 §5.11.4 执行（`tapIndex()` 注入 token、校验 `X-NTDPet-Token`、`no-store`、校验 `Origin`）。
   - 实现要点：统一 `{ ok, data, error }` 响应结构；错误码含 `UNAUTHORIZED`、`NOT_READY`、`INTERNAL`；不打印请求正文。

@@ -34,6 +34,7 @@ NT-Dpet 本身没有发明多少东西。人格结构、消息协议、语音合
 |---|---|---|---|
 | **DeepSeek Harness** | MIT | 插件宿主、工具系统、模型适配层。NT-Dpet 是它的发行版 | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) |
 | **Cordis** | MIT | 插件树、依赖注入、可逆副作用模型。整个插件体系的骨架 | [cordiverse/cordis](https://github.com/cordiverse/cordis) |
+| **@deepseek-ai/dsh-host-webserver** | MIT | 宿主 HTTP 服务。接口层借它注册路由，不另起端口 | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) |
 | **Node.js** | MIT（含少量其他许可组件） | 运行时 | [nodejs/node](https://github.com/nodejs/node) |
 | **Electron** | MIT | 安装器与桌宠共用的外壳 | [electron/electron](https://github.com/electron/electron) |
 | **pnpm** | MIT | 工作区与包管理。硬链接机制是还原点能做得轻的关键 | [pnpm/pnpm](https://github.com/pnpm/pnpm) |

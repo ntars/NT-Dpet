@@ -96,6 +96,7 @@ Apache-2.0 第 4(d) 条要求：若分发含该组件的产物，须随附其 `N
 |---|---|---|---|
 | **DeepSeek-Harness**（`@deepseek-ai/dsh`、`@deepseek-ai/dsh-desktop`） | `0.2.1-rc.2` | **MIT** | 插件宿主、工具系统、模型调用 seam。NT-Dpet 是它的发行版，非衍生分支 |
 | `@deepseek-ai/dsh-llm` | 随宿主 `0.2.1-rc.2` | **BSD-3-Clause**（npm 公开版本 `0.0.1-rc.1` 标注） | 模型调用服务。本项目仅声明其接口形状，不引入其代码 |
+| `@deepseek-ai/dsh-host-webserver` | 随宿主 `0.2.1-rc.2` | **MIT** | 宿主 HTTP 服务。接口层通过 `webServer.register()` 复用宿主监听端口，未引入其代码，仅按实测契约做结构化声明（见 `packages/ui/src/api/types.ts`） |
 | **Node.js** | ≥ 22（实测 `22.22.2`） | **MIT** 及若干组件各自许可 | 运行时；记忆持久化使用内置 `node:sqlite`（Node 22.22 无需 flag，仍标记为实验特性） |
 | **pnpm** | 9.x（实测 `9.15.9`） | **MIT** | 工作区与依赖管理，仅开发期使用 |
 

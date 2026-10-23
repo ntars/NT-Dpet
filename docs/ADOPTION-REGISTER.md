@@ -37,6 +37,7 @@
 |---|---|---|---|
 | `deepseek-ai/deepseek-harness` | MIT | 运行时（宿主） | NOTICE §四 |
 | `@deepseek-ai/cordis` | MIT | **依赖**（peer+dev） | NOTICE §三 |
+| `@deepseek-ai/dsh-host-webserver` | MIT | 运行时（宿主服务，不写入任何 `package.json`） | NOTICE §四；M0.1.2 起用它注册 `/api/ntdpet` |
 | `microsoft/TypeScript` | Apache-2.0 | **依赖**（根 `devDependencies`，仅编译期，不进入运行时） | NOTICE §三 + §3.1（一旦以任何形式分发其本体，须补附上游 NOTICE） |
 | `ruvnet/ruflo` | MIT | 参考（插件分层） | CREDITS |
 | `humanlayer/12-factor-agents` | 未声明 | 参考（只读原则，不复制） | CREDITS |
