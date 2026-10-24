@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "tsc -p tsconfig.json && node --test test/memory.test.mjs test/memory-sqlite.test.mjs test/memory-extractor.test.mjs test/memory-bridge.test.mjs"
+    "test": "tsc -p tsconfig.json && node --test test/memory.test.mjs test/memory-sqlite.test.mjs test/memory-extractor.test.mjs test/memory-bridge.test.mjs test/memory-dedupe.test.mjs"
   },
   "dsh": {
     "bundle": {

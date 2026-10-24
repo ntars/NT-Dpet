@@ -106,6 +106,15 @@ export function createSqliteStore(dbPath: string): MemoryStore {
         fact.supersededBy, fact.manuallyEdited ? 1 : 0, fact.deletedAt,
       )
     },
+    async updateFact(fact) {
+      // 与 appendFact 同一条 SQL（INSERT OR REPLACE 本身就是幂等覆盖），
+      // 分开命名只是为了让调用方一眼看出「这是在改已有的行」
+      insertFact.run(
+        fact.id, fact.sessionKey, fact.subjectId, fact.predicate, fact.object,
+        fact.confidence, fact.importance, fact.sourceRawId, fact.createdAt,
+        fact.supersededBy, fact.manuallyEdited ? 1 : 0, fact.deletedAt,
+      )
+    },
     async listRaw(sessionKey, limit) {
       return (selectRaw.all(sessionKey, limit) as unknown as RawRow[]).map(toRaw)
     },

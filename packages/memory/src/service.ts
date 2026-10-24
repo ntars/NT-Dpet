@@ -8,6 +8,7 @@
  * 记什么、注入多少，由 dialogue / persona / worldbook 决定。
  */
 
+import { planFactWrite } from './dedupe.js'
 import { recall } from './recall.js'
 import type { RecalledFact } from './recall.js'
 import { createMemoryStore } from './store.js'
@@ -56,7 +57,14 @@ export interface MemoryService {
     assistantText: string
     at?: number
   }): Promise<void>
-  /** 直接写一条事实（提炼器或用户手动编辑都走这里） */
+  /**
+   * 直接写一条事实（提炼器或用户手动编辑都走这里）。
+   *
+   * 写入经过去重裁决：同会话同「主语+谓词+宾语」已有生效事实时，
+   * 只留重要度高的一条生效，其余标 `supersededBy`；用户手改过的永不被覆盖。
+   * 返回值是**实际入库的那一行**，它可能生下来就是失效行
+   * （本次判断输给了库里已有的旧事实，`supersededBy` 指向胜者）。
+   */
   addFact(fact: Omit<MemoryFact, 'id' | 'createdAt'> & { at?: number }): Promise<MemoryFact>
   /** 三层裁决检索 */
   recall(sessionKey: string, query: string, topK?: number): Promise<RecalledFact[]>
@@ -115,6 +123,30 @@ export function createMemoryService(
   }
 
   /**
+   * 唯一的事实写入口：所有事实（提炼出来的、用户手改的）都从这里进库。
+   *
+   * 写入前先跟库里同键的有效事实比一场（M0.4.3）：
+   *   - 没撞上 → 直接写
+   *   - 撞上了 → 留重要度高的那条生效，其余打 `supersededBy`；
+   *     用户手改过的那条不受重要度影响，永远不被覆盖（决策 24）
+   * 返回真正入库的那一行：它可能生下来就带 `supersededBy`（本次判断输给了旧事实）。
+   */
+  async function writeFact(
+    input: Omit<MemoryFact, 'id' | 'createdAt'>,
+    at: number,
+  ): Promise<MemoryFact> {
+    const candidate: MemoryFact = { ...input, id: nextId('fact', at), createdAt: at }
+    const existing = await store.listFacts(candidate.sessionKey)
+    const plan = planFactWrite(existing, candidate)
+
+    for (const old of plan.supersede) {
+      await store.updateFact({ ...old, supersededBy: plan.winnerId })
+    }
+    await store.appendFact(plan.fact)
+    return plan.fact
+  }
+
+  /**
    * 提炼一批原文。
    *
    * `sessionKey` 为 null 表示「全局取一批」（手动触发、或首次挂载时清积压）。
@@ -139,8 +171,13 @@ export function createMemoryService(
     }
 
     const at = Date.now()
+    let superseded = 0
     for (const d of drafts) {
-      await store.appendFact({ ...d, id: nextId('fact', at), createdAt: at })
+      const written = await writeFact(d, at)
+      if (written.supersededBy !== null) superseded += 1
+    }
+    if (superseded > 0) {
+      warn(`本轮 ${superseded} 条事实与库中已有记录重复，已标记取代`)
     }
 
     // 只标记成功的那些：失败会话的原文留着，下轮调度还会取到它。
@@ -212,23 +249,10 @@ export function createMemoryService(
     },
 
     async addFact(input) {
-      const at = input.at ?? Date.now()
-      const fact: MemoryFact = {
-        id: nextId('fact', at),
-        sessionKey: input.sessionKey,
-        subjectId: input.subjectId,
-        predicate: input.predicate,
-        object: input.object,
-        confidence: input.confidence,
-        importance: input.importance,
-        sourceRawId: input.sourceRawId,
-        createdAt: at,
-        supersededBy: input.supersededBy,
-        manuallyEdited: input.manuallyEdited,
-        deletedAt: input.deletedAt,
-      }
-      await store.appendFact(fact)
-      return fact
+      const { at: givenAt, ...fields } = input
+      // 手改走同一条去重通道：`manuallyEdited` 为真的新事实在裁决里直接胜出，
+      // 不会被「模型上次给的分数更高」顶回去（决策 24）。
+      return writeFact(fields, givenAt ?? Date.now())
     },
 
     async recall(sessionKey, query, topK = 8) {

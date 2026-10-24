@@ -16,6 +16,14 @@ import type { MemoryFact, MemoryRaw } from './types.js'
 export interface MemoryStore {
   appendRaw(entry: MemoryRaw): Promise<void>
   appendFact(fact: MemoryFact): Promise<void>
+  /**
+   * 整条覆盖写入一条已存在的事实。
+   *
+   * 只为一件事存在：去重时给让位的那条打上 `supersededBy`（M0.4.3）。
+   * 不提供「改某个字段」的细粒度接口——事实一旦写进去就是一条历史记录，
+   * 能改的只有「它还作不作数」和「被谁取代」。少开口子，少出事。
+   */
+  updateFact(fact: MemoryFact): Promise<void>
   /** 取某会话最近的原文，按时间倒序 */
   listRaw(sessionKey: string, limit: number): Promise<MemoryRaw[]>
   /** 取某会话全部事实（含已失效的，由上层裁决） */
@@ -46,6 +54,10 @@ export function createMemoryStore(): MemoryStore {
     },
     async appendFact(fact) {
       facts.set(fact.id, { ...fact })
+    },
+    async updateFact(fact) {
+      // 内存实现里「覆盖」就是再 set 一次；先查一下，避免把不存在的 id 凭空造出来
+      if (facts.has(fact.id)) facts.set(fact.id, { ...fact })
     },
     async listRaw(sessionKey, limit) {
       return [...raws.values()]

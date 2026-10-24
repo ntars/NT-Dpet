@@ -75,4 +75,31 @@ describe('SQLite 持久化', () => {
     })
     assert.equal((await svc.service.recall('s2', '咖啡')).length, 0)
   })
+
+  it('去重打上的 supersededBy 会落盘，重开后仍只有一条生效', async () => {
+    const base = {
+      sessionKey: 's3', subjectId: 'u1', predicate: '在用', object: 'MacBook',
+      confidence: 0.8, sourceRawId: null, supersededBy: null,
+      manuallyEdited: false, deletedAt: null,
+    }
+    const svc1 = createMemoryService(createSqliteStore(dbPath()))
+    const older = await svc1.service.addFact({ ...base, importance: 0.3, at: Date.now() - 1000 })
+    const newer = await svc1.service.addFact({ ...base, importance: 0.9 })
+
+    // 换一个全新的 store 实例，模拟进程重启
+    const store2 = createSqliteStore(dbPath())
+    const all = await store2.listFacts('s3')
+    assert.equal(all.length, 2, '两行都该在库里')
+    const active = all.filter((f) => f.supersededBy === null)
+    assert.equal(active.length, 1)
+    assert.equal(active[0].id, newer.id)
+    assert.equal(active[0].importance, 0.9)
+    assert.equal(
+      all.find((f) => f.id === older.id)?.supersededBy, newer.id,
+      '弱的那条应落盘为被取代',
+    )
+
+    const svc2 = createMemoryService(store2)
+    assert.equal((await svc2.service.recall('s3', 'MacBook')).length, 1)
+  })
 })
