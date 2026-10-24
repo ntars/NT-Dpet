@@ -72,6 +72,15 @@ export interface ExtractorOptions {
   maxChars?: number
   /** 日志出口；默认走 process.emitWarning，便于在不依赖上下文的场景使用。 */
   log?: (message: string) => void
+  /**
+   * 某个会话提炼失败时回调。
+   *
+   * 存在的理由：提炼器自己吞掉错误（对外不抛，免得把调度器带崩），
+   * 但「吞了」不等于「可以当成成功」。存储层拿这个消息才知道哪些会话
+   * 这批没提炼成，从而不把它们标成已提炼——否则一次模型抖动，
+   * 那段原文就永远不再被提炼，等于静默丢记忆。
+   */
+  onSessionFail?: (sessionKey: string, reason: string) => void
 }
 
 function defaultLog(message: string): void {
@@ -131,10 +140,11 @@ const SYSTEM_PROMPT = [
   '- importance：0 到 1 的小数，这条事实有多重要',
   '- subjectId：事实主语的参与者 id；不指向具体某个人时填 null',
   '规则：',
-  '1. 只记长期有效的：喜好、身份、关系、习惯、计划、明确说过的事实。',
-  '2. 不记寒暄、客套、临时的情绪和状态、只在这一句话里成立的内容。',
-  '3. 一条只表达一件事，能拆就拆。',
-  '4. 没有可提炼的内容就输出 []。',
+  '1. 只记以后还用得上的：喜好、身份、关系、习惯、计划、待办、约定、身体状况、明确说过的事实。',
+  '2. 用户提到「明天 / 下周 / 等下」要做的事、要去的地方、要见的人，一律要记。这类时效信息恰恰最该被记住，不要因为「只在这几天有效」就丢掉。',
+  '3. 不记寒暄、客套、一时的情绪（如「今天有点累」「心情不好」）、只在这一句话里成立的内容。',
+  '4. 一条只表达一件事，能拆就拆。',
+  '5. 没有可提炼的内容就输出 []。',
 ].join('\n')
 
 /**
@@ -291,6 +301,7 @@ export function createLlmExtractor(
   const model = options.model ?? ''
   const maxRaw = options.maxRaw ?? EXTRACT_MAX_RAW
   const maxChars = options.maxChars ?? EXTRACT_MAX_CHARS
+  const onSessionFail = options.onSessionFail
 
   return async function extract(raws) {
     const batch = truncateRaw(raws, maxRaw, maxChars)
@@ -318,6 +329,7 @@ export function createLlmExtractor(
         }
       } catch (err) {
         log(`提炼调用失败，本次丢弃（会话 ${sessionKey}）：${(err as Error).message}`)
+        onSessionFail?.(sessionKey, `调用失败：${(err as Error).message}`)
         continue
       }
 
@@ -330,6 +342,7 @@ export function createLlmExtractor(
       } catch (err) {
         // 解析失败整批作废：宁可这一轮什么都不记，也不写半条错的
         log(`提炼结果无法解析，本次丢弃（会话 ${sessionKey}）：${(err as Error).message}`)
+        onSessionFail?.(sessionKey, `解析失败：${(err as Error).message}`)
       }
     }
 

@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "tsc -p tsconfig.json && node --test test/api.test.mjs"
+    "test": "tsc -p tsconfig.json && node --test test/api.test.mjs test/chat-memory.test.mjs"
   },
   "dsh": {
     "bundle": {

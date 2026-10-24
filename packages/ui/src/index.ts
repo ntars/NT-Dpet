@@ -116,6 +116,18 @@ interface MemoryServiceLike {
     content: string
     createdAt: number
   }[]>
+  /**
+   * 写一轮对话到原文层（M0.4.2）。
+   *
+   * 记忆包里这个方法自带「5 秒后异步提炼」的调度，所以调用方只管交原文，
+   * 不需要也不应该在请求路径上等提炼完成。
+   */
+  appendTurn(input: {
+    sessionKey: string
+    speakerId: string | null
+    userText: string
+    assistantText: string
+  }): Promise<void>
 }
 
 /**
@@ -174,6 +186,32 @@ function createMoodReader(ctx: Context): () => { mood: number; energy: number } 
 }
 
 /**
+ * 把一轮对话写进记忆原文层（M0.4.2）。
+ *
+ * 三条取舍：
+ *   1. **不 await**。记忆写入与提炼都不该拖住这一轮的收尾——用户已经看到回复，
+ *      再把流的关闭往后推几百毫秒只为了让数据库写盘，属于本末倒置。
+ *   2. **不抛**。写入失败只记一条告警：记忆出问题不该让对话报错。
+ *   3. `speakerId` 留 null。M0 阶段还没有平台账号（通道是 M2 的事），
+ *      临时编一个 uid 只会让将来的数据分不清「真人」与「占位值」。
+ */
+function rememberTurn(ctx: Context, input: ChatInput, assistantText: string): void {
+  const memory = ctx.get(MEMORY_SERVICE_KEY) as MemoryServiceLike | undefined
+  if (!memory || typeof memory.appendTurn !== 'function') return
+
+  void memory
+    .appendTurn({
+      sessionKey: input.sessionKey,
+      speakerId: null,
+      userText: input.text,
+      assistantText,
+    })
+    .catch((err: unknown) => {
+      process.emitWarning(`本轮记忆写入失败：${(err as Error).message}`, 'NtDpetUi')
+    })
+}
+
+/**
  * 造一个「跑一轮对话」的回调。
  *
  * 三层职责分得很清：这里只负责把「HTTP 请求 → dialogue 的一轮参数」翻译过去，
@@ -187,8 +225,10 @@ function createMoodReader(ctx: Context): () => { mood: number; energy: number } 
  * 服务缺席时抛 NotReadyError 而不是返回空：接口层要靠这个类型决定回 503
  * （服务没起来）还是 500（真出错），混在一起就没法区分「还没配好模型」
  * 与「模型报错了」——这两种情况主人该做的事完全不同。
+ *
+ * 导出是为了单测能直接验「对话结束后有没有写记忆」，不必起 HTTP 服务。
  */
-function createChatRunner(ctx: Context): ChatRunner {
+export function createChatRunner(ctx: Context): ChatRunner {
   return async (input: ChatInput, sink: ChatSink) => {
     const dialogue = ctx.get(DIALOGUE_SERVICE_KEY) as DialogueServiceLike | undefined
     if (!dialogue || typeof dialogue.chat !== 'function') {
@@ -212,6 +252,13 @@ function createChatRunner(ctx: Context): ChatRunner {
         }
       },
     )
+
+    // 只有「生成失败」才整轮不记：那种情况正文可能是空的，
+    // 硬写进原文层只会让提炼器拿半条对话去猜。
+    // 中断（aborted）照写——用户已经看到的字是真的，那句问话也是真的。
+    if (result.stopReason !== 'error') {
+      rememberTurn(ctx, input, result.text)
+    }
 
     return { stopReason: result.stopReason }
   }

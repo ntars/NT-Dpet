@@ -88,6 +88,9 @@ export function createSqliteStore(dbPath: string): MemoryStore {
   const selectPending = db.prepare(
     `SELECT * FROM memory_raw WHERE extracted = 0 ORDER BY created_at ASC LIMIT ?`,
   )
+  const selectPendingBySession = db.prepare(
+    `SELECT * FROM memory_raw WHERE extracted = 0 AND session_key = ? ORDER BY created_at ASC LIMIT ?`,
+  )
 
   return {
     async appendRaw(entry) {
@@ -117,6 +120,9 @@ export function createSqliteStore(dbPath: string): MemoryStore {
     },
     async listUnextracted(limit) {
       return (selectPending.all(limit) as unknown as RawRow[]).map(toRaw)
+    },
+    async listUnextractedBySession(sessionKey, limit) {
+      return (selectPendingBySession.all(sessionKey, limit) as unknown as RawRow[]).map(toRaw)
     },
   }
 }

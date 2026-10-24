@@ -17,8 +17,35 @@ import type { DecayTier, MemoryFact, MemoryRaw } from './types.js'
 
 export const MEMORY_SERVICE_KEY = 'nt-dpet:memory'
 
-/** 提炼器：给定一批原文，产出一批事实。由上层注入（需要 llm）。 */
+/** 单次提炼最多消化多少条原文。与 M0.4.1 的提炼器上限一致。 */
+const EXTRACT_BATCH = 20
+
+/**
+ * 「全局一轮」在定时器表里的键。
+ *
+ * 会话键的格式是 `c2c:x` / `group:x`（ARCHITECTURE §5.1），不可能是空串，
+ * 所以空串可以安全地当哨兵，不必额外用一个 Symbol 去判断。
+ */
+const ALL_SESSIONS = ''
+
+/**
+ * 提炼器：给定一批原文，产出一批事实。由上层注入（需要 llm）。
+ *
+ * 约定：提炼器**自己吞掉模型错误**（对外不抛）。真抛了服务也会兜住，
+ * 但那样服务只能整轮放弃、不知道是哪个会话坏了，失败会话的原文就分不出来。
+ */
 export type FactExtractor = (raw: MemoryRaw[]) => Promise<Omit<MemoryFact, 'id' | 'createdAt'>[]>
+
+/** 服务的可选参数。 */
+export interface MemoryServiceOptions {
+  /**
+   * 异步提炼延迟，默认 5 秒（决策 22：先回用户，再消化）。
+   *
+   * 留出这个口子只为一件事：单测要真的等一次调度，5 秒×N 个用例太慢。
+   * 生产代码不要传它。
+   */
+  extractDelayMs?: number
+}
 
 export interface MemoryService {
   /** 写一轮对话（用户一句 + 她一句），同步落原文层 */
@@ -39,6 +66,16 @@ export interface MemoryService {
   setExtractor(extractor: FactExtractor | null): void
   /** 手动触发一次提炼（调试用） */
   extractNow(): Promise<number>
+  /**
+   * 由提炼器上报「这个会话这批没提炼成」。
+   *
+   * 存在的理由：提炼器自己不抛错（会把调度器带崩），但「吞了」不等于
+   * 「可以当成功」。这条消息让服务知道该会话的原文**不能**标记为已提炼，
+   * 否则一次模型抖动，那段原文就再也不会被取到，等于静默丢记忆。
+   *
+   * 不重试、不回溯：下轮调度自然会再取到这批原文（失败即没标记）。
+   */
+  reportExtractFailure(sessionKey: string, reason: string): void
   /** 切换衰减档位 */
   setDecayTier(tier: DecayTier): void
   dispose(): void
@@ -55,34 +92,106 @@ export interface MemoryServiceHandle {
   dispose(): void
 }
 
-export function createMemoryService(store: MemoryStore = createMemoryStore()): MemoryServiceHandle {
+export function createMemoryService(
+  store: MemoryStore = createMemoryStore(),
+  options: MemoryServiceOptions = {},
+): MemoryServiceHandle {
+  const delayMs = options.extractDelayMs ?? EXTRACT_DELAY_MS
   let tier: DecayTier = DEFAULT_DECAY_TIER
   let extractor: FactExtractor | null = null
-  let timer: ReturnType<typeof setTimeout> | null = null
   let disposed = false
 
-  async function runExtract(): Promise<number> {
+  /** 每个会话一个定时器：同会话连发多轮只跑一次，跨会话互不顶掉。 */
+  const timers = new Map<string, ReturnType<typeof setTimeout>>()
+  /** 提炼是串行的：模型调用并发上去只会把上游打满，还让失败归因变糊。 */
+  let running = false
+  /** 跑提炼途中又来了新轮次：记一笔，等这一轮收尾后再排一次。 */
+  let pendingAgain = false
+  /** 本轮提炼中失败的会话 → 原因。每轮开始清空。 */
+  let failed = new Map<string, string>()
+
+  function warn(message: string): void {
+    process.emitWarning(message, 'NtDpetMemory')
+  }
+
+  /**
+   * 提炼一批原文。
+   *
+   * `sessionKey` 为 null 表示「全局取一批」（手动触发、或首次挂载时清积压）。
+   */
+  async function runOne(sessionKey: string | null): Promise<number> {
     if (!extractor) return 0
-    const pending = await store.listUnextracted(20)
+
+    const pending = sessionKey === null
+      ? await store.listUnextracted(EXTRACT_BATCH)
+      : await store.listUnextractedBySession(sessionKey, EXTRACT_BATCH)
     if (pending.length === 0) return 0
+
+    failed = new Map()
+    let drafts: Omit<MemoryFact, 'id' | 'createdAt'>[]
+    try {
+      drafts = await extractor(pending)
+    } catch (err) {
+      // 提炼器本该自己吞错。真漏出来也不能让定时器炸出去——
+      // 那就成了一条记忆没提炼上，整个进程收到未捕获异常。
+      warn(`提炼器抛出异常，本轮放弃：${(err as Error).message}`)
+      return 0
+    }
+
     const at = Date.now()
-    const drafts = await extractor(pending)
     for (const d of drafts) {
       await store.appendFact({ ...d, id: nextId('fact', at), createdAt: at })
     }
-    await store.markExtracted(pending.map((r) => r.id))
+
+    // 只标记成功的那些：失败会话的原文留着，下轮调度还会取到它。
+    // 反过来（无条件全标）意味着一次模型抖动就把那段原文永久判死。
+    const succeeded = pending.filter((r) => !failed.has(r.sessionKey))
+    if (succeeded.length > 0) {
+      await store.markExtracted(succeeded.map((r) => r.id))
+    }
+    if (failed.size > 0) {
+      warn(`${failed.size} 个会话本轮未提炼成功，原文保留待下轮`)
+    }
+
     return drafts.length
   }
 
-  function scheduleExtract(): void {
+  async function runExtract(sessionKey?: string): Promise<number> {
+    if (!extractor) return 0
+    if (running) {
+      // 已经在跑：不并发进第二个模型调用，改为收尾后补一轮
+      pendingAgain = true
+      return 0
+    }
+
+    running = true
+    try {
+      return await runOne(sessionKey ?? null)
+    } catch (err) {
+      // 存储层出错（磁盘满、库损坏）同样不能炸出去
+      warn(`提炼流程异常：${(err as Error).message}`)
+      return 0
+    } finally {
+      running = false
+      if (pendingAgain && !disposed) {
+        pendingAgain = false
+        scheduleExtract()
+      }
+    }
+  }
+
+  function scheduleExtract(sessionKey?: string): void {
     if (disposed || !extractor) return
-    if (timer) clearTimeout(timer)
+    const key = sessionKey ?? ALL_SESSIONS
+    const current = timers.get(key)
+    if (current) clearTimeout(current)
     // 异步提炼是硬要求：先回用户，再消化（决策 22）
-    timer = setTimeout(() => {
-      timer = null
-      void runExtract()
-    }, EXTRACT_DELAY_MS)
+    const timer = setTimeout(() => {
+      timers.delete(key)
+      void runExtract(sessionKey)
+    }, delayMs)
     timer.unref?.()
+    timers.set(key, timer)
   }
 
   const service: MemoryService = {
@@ -99,7 +208,7 @@ export function createMemoryService(store: MemoryStore = createMemoryStore()): M
           role: 'assistant', content: assistantText, createdAt: at + 1, extracted: false,
         })
       }
-      scheduleExtract()
+      scheduleExtract(sessionKey)
     },
 
     async addFact(input) {
@@ -133,11 +242,17 @@ export function createMemoryService(store: MemoryStore = createMemoryStore()): M
 
     setExtractor(fn) {
       extractor = fn
+      // 挂上提炼器时补一次全局轮：进程刚起来时原文层可能已有积压，
+      // 不补就要等到下一次有人说话才消化。
       if (fn) scheduleExtract()
     },
 
     async extractNow() {
       return runExtract()
+    },
+
+    reportExtractFailure(sessionKey, reason) {
+      failed.set(sessionKey, reason)
     },
 
     setDecayTier(next) {
@@ -146,10 +261,8 @@ export function createMemoryService(store: MemoryStore = createMemoryStore()): M
 
     dispose() {
       disposed = true
-      if (timer) {
-        clearTimeout(timer)
-        timer = null
-      }
+      for (const timer of timers.values()) clearTimeout(timer)
+      timers.clear()
     },
   }
 

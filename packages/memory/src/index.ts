@@ -10,9 +10,10 @@
  *
  * 当前实现范围：
  *   - 已实现：双层结构、原文写入、事实写入、三层裁决检索（关键词退化）、
- *             衰减档位、异步提炼调度、提炼器（`createLlmExtractor`，
- *             严格 JSON 提示词 + 失败即丢弃 + 20 条 / 3000 字截断）
- *   - 未实现：向量检索路（等 sqlite-vec）、提炼器挂到对话链上（M0.4.2）
+ *             衰减档位、异步提炼调度（按会话合并 + 串行不并发）、
+ *             提炼器（`createLlmExtractor`，严格 JSON 提示词 + 失败即丢弃
+ *             + 20 条 / 3000 字截断）、提炼器挂载到服务（M0.4.2）
+ *   - 未实现：向量检索路（等 sqlite-vec）
  */
 
 import { join } from 'node:path'
@@ -20,6 +21,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import { MEMORY_SERVICE_KEY, createMemoryService } from './service.js'
 import { createMemoryStore } from './store.js'
 import { createSqliteStore } from './store-sqlite.js'
+import { createLlmExtractor, resolveLlm } from './extractor.js'
 
 export { MEMORY_SERVICE_KEY } from './service.js'
 export type { FactExtractor, MemoryService } from './service.js'
@@ -75,6 +77,26 @@ function ctx_log(msg: string): void {
 
 export function apply(ctx: Context): () => void {
   const handle = createMemoryService(selectStore())
-  ctx.provide(MEMORY_SERVICE_KEY, handle.service)
+  const service = handle.service
+  ctx.provide(MEMORY_SERVICE_KEY, service)
+
+  // 有 llm 就顺手挂上提炼器（M0.4.2）。挂不上也不是故障：
+  // memory 的职责是存与取，提炼只是「更好用」，不该成为起不来的理由。
+  const llm = resolveLlm(ctx)
+  if (llm) {
+    service.setExtractor(
+      createLlmExtractor(llm, {
+        // 失败会话必须回报给服务，否则这批原文会被当成「已提炼」永久判死。
+        // 这里只记日志、不重试：下轮调度自然会再取到它们。
+        onSessionFail: (sessionKey, reason) => {
+          ctx_log(`提炼失败（会话 ${sessionKey}）：${reason}；原文保留待下轮`)
+          service.reportExtractFailure(sessionKey, reason)
+        },
+      }),
+    )
+  } else {
+    ctx_log('未找到 llm 服务，本轮只存不提炼（原文层照常累积）')
+  }
+
   return handle.dispose
 }

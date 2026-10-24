@@ -26,6 +26,14 @@ export interface MemoryStore {
   softDeleteFact(id: string, at: number): Promise<void>
   /** 取尚未提炼的原文，按时间正序 */
   listUnextracted(limit: number): Promise<MemoryRaw[]>
+  /**
+   * 取某个会话里尚未提炼的原文，按时间正序。
+   *
+   * 为什么要单开一个方法而不是「取全局再过滤」：全局取有 20 条上限，
+   * 别的会话积压一多，本会话的原文就永远挤不进这一批，
+   * 表现成「某个群聊的记忆一直不更新，另一个群聊一切正常」。
+   */
+  listUnextractedBySession(sessionKey: string, limit: number): Promise<MemoryRaw[]>
 }
 
 export function createMemoryStore(): MemoryStore {
@@ -61,6 +69,12 @@ export function createMemoryStore(): MemoryStore {
     async listUnextracted(limit) {
       return [...raws.values()]
         .filter((r) => !r.extracted)
+        .sort((a, b) => a.createdAt - b.createdAt)
+        .slice(0, limit)
+    },
+    async listUnextractedBySession(sessionKey, limit) {
+      return [...raws.values()]
+        .filter((r) => !r.extracted && r.sessionKey === sessionKey)
         .sort((a, b) => a.createdAt - b.createdAt)
         .slice(0, limit)
     },
