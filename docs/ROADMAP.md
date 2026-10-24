@@ -103,10 +103,14 @@
 
 ### M0.4 记忆提炼器
 
-- [ ] **M0.4.1** 新增 `packages/memory/src/extractor.ts`。
+- [x] **M0.4.1** 新增 `packages/memory/src/extractor.ts`。（commit b1e146e）
   - 做法：输入 `MemoryRaw[]`，构造提示词要求严格 JSON 数组，字段 `predicate/object/confidence/importance/subjectId`；用 `ctx.llm.stream()` 收集正文；解析失败时丢弃本次结果并记录日志。
   - 约束：单次输入不超过 20 条、总字数不超过 3000；超长截断，不拆多次调用。
   - 验收：单测覆盖正常 JSON、带 ``` 包裹、非法 JSON、空数组、超长截断。
+  - 实现说明：①`ctx.llm` 在未声明 `inject` 时读属性会抛 `cannot get property "llm" without inject`，故取服务走 `resolveLlm()` → `ctx.get('llm', false)`，取不到就退回「只存不提炼」——memory 包不该因为宿主没挂模型而起不来，挂载由 M0.4.2 负责。②`store.listUnextracted()` 是跨会话全局取的，一批里混着多个 `sessionKey`，故按会话分组各调一次；否则事实会挂到错的会话上，`recall()` 直接串台。③分数只认真数字与可解析的数字字符串：`Number(null)` 是 `0`，直接转会把手滑漏填的 `importance` 判成「一点都不重要」，在检索加权里永远排不上。
+  - 验证：全量构建 33 包通过；`@nt-dpet/memory` 42/42（原有 23 + 新增 19）；界面冒烟 49/49。
+  - 真实模型实测（非桩数据）：本地网关 `group/ntars`，喂 3 条混入寒暄（「今天天气不错」）的原文，模型输出**纯 JSON 数组、无围栏无解释**，产出「在用 NT-Dpet / 习惯 每天早上七点提醒喝水 / 不喜欢 喝冰水 / 身体状况 胃不好」4 条，寒暄被正确忽略，`parseFacts` 全数解析成功、结构性字段（`sessionKey`、`supersededBy`、`manuallyEdited` 等）由本地补齐。
+  - 未引入新依赖，NOTICE / CREDITS / ADOPTION-REGISTER 三处无需改动。
 - [ ] **M0.4.2** 接入 dialogue。
   - 做法：`appendTurn()` 后 5 秒触发；同一会话合并调度，避免并发；失败只记日志不重试。
   - 验收：连续 5 轮后 `recall()` 命中 ≥ 1 条；失败路径不抛异常。
