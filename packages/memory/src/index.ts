@@ -10,9 +10,9 @@
  *
  * 当前实现范围：
  *   - 已实现：双层结构、原文写入、事实写入、三层裁决检索（关键词退化）、
- *             衰减档位、异步提炼调度（提炼器需由上层注入）
- *   - 未实现：SQLite 持久化（现在是内存实现，重启即丢）、
- *             向量检索路（等 sqlite-vec）、提炼器的具体提示词
+ *             衰减档位、异步提炼调度、提炼器（`createLlmExtractor`，
+ *             严格 JSON 提示词 + 失败即丢弃 + 20 条 / 3000 字截断）
+ *   - 未实现：向量检索路（等 sqlite-vec）、提炼器挂到对话链上（M0.4.2）
  */
 
 import { join } from 'node:path'
@@ -29,6 +29,24 @@ export { bigrams, recall, recencyScore, semanticScore } from './recall.js'
 export { createMemoryStore } from './store.js'
 export { createSqliteStore } from './store-sqlite.js'
 export type { MemoryStore } from './store.js'
+export {
+  EXTRACT_DEFAULT_PROVIDER,
+  EXTRACT_MAX_CHARS,
+  EXTRACT_MAX_RAW,
+  ExtractParseError,
+  buildExtractMessages,
+  createLlmExtractor,
+  parseFacts,
+  resolveLlm,
+  truncateRaw,
+} from './extractor.js'
+export type {
+  ExtractorLlm,
+  ExtractorMessage,
+  ExtractorOptions,
+  ExtractorChunk,
+  FactDraft,
+} from './extractor.js'
 
 export const name = 'nt-dpet-memory'
 
