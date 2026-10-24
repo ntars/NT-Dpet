@@ -15,6 +15,7 @@ import { sendMessage } from './send.js';
 import { renderPanel, refreshIdentity } from './panel.js';
 import { startMoodSync } from './mood.js';
 import { startMemorySync } from './memory.js';
+import { startStatusSync } from './status.js';
 import { renderLogs, setLogMode } from './log.js';
 import { getPref, setPref } from './prefs.js';
 import { setSegmented } from './segmented.js';
@@ -303,6 +304,8 @@ function start() {
   startMoodSync();
   // 记忆没有演示数据可先画，只能等接口：拉不到就显示「记忆暂不可用」
   startMemorySync();
+  // 自检只在有异常时出现，正常时界面上什么都不多
+  startStatusSync();
 
   // 视图由 class 控制，移除 HTML 上的 hidden 以免两套机制打架
   viewWork.hidden = false;

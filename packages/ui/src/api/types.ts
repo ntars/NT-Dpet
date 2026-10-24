@@ -52,6 +52,46 @@ export interface MoodReading {
   energy: number
 }
 
+/**
+ * 自检项失败的严重程度，取值与 `@nt-dpet/startup-check` 一致。
+ *
+ * - `fatal`：产品底线被破，界面走「已拒绝启动」样式。
+ * - `warn`：能力降级，照常可用，但必须让人看见缺了什么。
+ *
+ * 前端拿这个字段决定样式，而不是靠 id 名字硬编码判断——判定逻辑留在自检包，
+ * 渲染层只负责表现，将来新增判据不必再改前端。
+ */
+export type CheckSeverity = 'fatal' | 'warn'
+
+/**
+ * 一条自检项，对应 `GET /api/ntdpet/status` 返回的 `checks[]`。
+ *
+ * `id` 刻意是 string 而不是联合类型：它是展示用的标识，多一条判据就要多一个
+ * 枚举值，而前端只把它原样印出来。写成联合类型等于每次加判据都要改接口层，
+ * 换来的只是编译期一个用不上的约束。
+ */
+export interface StartupCheckItem {
+  /** 判据标识，例如 `privacy-switches` */
+  id: string
+  /** 是否通过 */
+  ok: boolean
+  /** 给人看的说明：通过时写统计口径，失败时写原因与涉及的条目 */
+  detail: string
+  severity: CheckSeverity
+}
+
+/**
+ * 启动自检的整体结果，对应 `GET /api/ntdpet/status`。
+ *
+ * 只给结果不给「建议」：该不该拦、横幅写什么，是界面的事。后端一句话说清
+ * 哪条没通过、为什么，比它替产品做决定更稳。
+ */
+export interface StartupStatus {
+  /** 全部通过才是 true */
+  ok: boolean
+  checks: StartupCheckItem[]
+}
+
 /** 一条原文记忆，对应 `GET /api/ntdpet/memory/recent` 返回的条目。 */
 export interface MemoryEntry {
   /** 原文 id，用于界面去重与将来「点开看上下文」 */
@@ -64,7 +104,8 @@ export interface MemoryEntry {
   at: number
 }
 
-/** 宿主注册路由的入参，只保留本项目用到的两个字段。 */export interface WebServerRoute {
+/** 宿主注册路由的入参，只保留本项目用到的两个字段。 */
+export interface WebServerRoute {
   kind: 'exact' | 'prefix'
   path: string
   handler: (req: WebRequest, res: WebResponse) => void | Promise<void>

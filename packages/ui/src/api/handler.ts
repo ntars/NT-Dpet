@@ -19,6 +19,7 @@ import type {
   ApiErrorCode,
   MemoryEntry,
   MoodReading,
+  StartupStatus,
   WebRequest,
   WebResponse,
 } from './types.js'
@@ -37,7 +38,7 @@ const TOKEN_HEADER = 'x-ntdpet-token'
  * 提前把它删掉会让这些请求变成 404「无此接口」——那意味着「写错了地址」，
  * 跟「还没做」是两回事，排查时容易白跑一趟。
  */
-const PENDING_PATHS = ['/memory', '/status']
+const PENDING_PATHS = ['/memory']
 
 /**
  * 记忆列表的默认条数。
@@ -182,6 +183,15 @@ export interface ApiHandlerOptions {
    * 而不是发出去一句然后永远等不到回复。
    */
   chat?: ChatRunner | undefined
+  /**
+   * 取自检结果。
+   *
+   * 三态与 readRecent 同一个约定：对象 = 有结果、`undefined` = 自检还没跑完
+   * 或服务没挂上。**这里不给「重跑一次」的入口**：自检要等配置树 settle 之后
+   * 才有意义，请求此刻触发一次，会把还在启动的条目全算成未激活，报出一堆
+   * 只存在几秒的假异常。宁可回 503 让界面稍后再来，也不要给一份错的结论。
+   */
+  readStatus?: (() => StartupStatus | undefined) | undefined
 }
 
 export type ApiHandler = (req: WebRequest, res: WebResponse) => void | Promise<void>
@@ -240,6 +250,24 @@ export function createApiHandler(options: ApiHandlerOptions): ApiHandler {
         }
 
         sendJson(res, 200, { ok: true, data: reading })
+        return
+      }
+
+      if (path === '/status') {
+        if (method !== 'GET' && method !== 'HEAD') {
+          sendError(res, 405, 'METHOD_NOT_ALLOWED', '该接口只接受 GET')
+          return
+        }
+
+        const status = options.readStatus?.()
+        // 自检要等配置树 settle，请求早到时它还没跑完。回 503 而不是给一个
+        // 「全部通过」的空壳：后者会让界面以为一切正常，把真异常盖掉。
+        if (!status) {
+          sendError(res, 503, 'NOT_READY', '启动自检尚未就绪')
+          return
+        }
+
+        sendJson(res, 200, { ok: true, data: status })
         return
       }
 

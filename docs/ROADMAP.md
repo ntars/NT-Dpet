@@ -88,9 +88,18 @@
     6. 输出比任务书多一个 `severity` 字段（`fatal | warn`）：M0.3.2 要求隐私异常时界面走「已拒绝启动」样式，其余只出横幅。没有这个字段，前端只能靠 id 名字硬编码判断，那是把判定逻辑漏进渲染层。同时导出 `failingChecks(result, severity)` 供按档筛选。
   - 验证：全量构建 33 包通过；startup-check 单测 25/25；界面冒烟 36/36；真实 cordis 实例四组边界实测——无 `profileContext` 时插件完全不激活、隐私开启时 `ok=false` 且 `fatal` 项正是 `privacy-switches`、关键包缺失时只列缺的那几个、无 `loader` 时插件不崩且如实报「配置树不可读」。
   - 附带改动：`bundles/starter/bundle.yaml` 的 G6 组补上本包（不进组合包就永远装不上，M0.3.2 的接口也就取不到服务）；README 与 NOTICE 里「32 个插件包」按实际校正为 33。未引入新依赖，`cordis` 三处声明原已登记，无需改动。
-- [ ] **M0.3.2** 自检结果呈现。
+- [x] **M0.3.2** 自检结果呈现。（commit PENDING）
   - 做法：`/api/ntdpet/status` 返回自检结果；界面顶部横幅仅在有异常时出现，列出 `id` 与原因；隐私项异常时文案为「已拒绝启动」样式。
   - 验收：人为挂一个不存在的插件，启动后界面出现横幅且列出该 `id`。
+  - 实现补记：要点五条。
+    1. 后端**只读不跑**：`/status` 取 `ctx.get('nt-dpet:startup-check').last()`，不提供「重跑」入口。自检要在配置树 settle 之后才有意义，一个 HTTP 请求随时可能落在还没 settle 的时刻，此刻补跑会把还在路上的条目全算成未激活，报出一堆只存在几秒的假异常。
+    2. 未就绪一律回 503，**绝不回空结论**。若在此时给一个 `{ok:true, checks:[]}`，界面会判定「一切正常」并把横幅收起来，真异常永远不露面。前端把 503 当**正常路径**，按 1.5s / 4s / 9s / 20s 四级阶梯重试（约 35 秒），只对 `NOT_READY` 重试；401、连不上、500 重试多少次结果都一样，反复刷只会把控制台填满。
+    3. 两档样式由数据决定，不靠 id 名字硬编码：隐私项 `fatal` 走「已拒绝启动」红色，其余 `warn` 走「部分能力降级」橙色。判定逻辑留在自检包，渲染层只负责表现。
+    4. `fatal` 档必须写明「本轮只做呈现、尚未锁定输入」：横幅说已拒绝启动、而输入框此刻仍能用，两件事摆在一起会被当成界面坏了。与其看起来像 bug，不如说清这是本轮的边界——保证「问题被看见」，不假装「问题已拦住」。
+    5. 失败条目的标签不能只印 id：运行期 `loader.create()` 挂上的条目拿到的是八位随机码（实测 `a8d6cdaa`），横幅上只写这个码等于没说。故 `checks.ts` 在「id 里认不出包名」时补成 `a8d6cdaa（this-plugin-does-absolutely-not-exist）`，认得出就只印 id，免得 `nt-dpet:core:memory` 后面再拖一个重复的包名。
+  - 验证：全量构建 33 包通过；startup-check 27/27；ui 59/59；界面冒烟 49/49（新增 13 项，覆盖全通过 / 告警 / 致命 / 一直未就绪四态）。
+  - 端到端实测（真实链路，非桩数据）：真实 `cordis` + 真实 `cordis-plugin-loader` + 真实 `dsh-host-webserver` + 真实 ui 插件，`loader.create({ name: 'this-plugin-does-absolutely-not-exist' })` 挂一个不存在的插件 → 自检报 `未激活：a8d6cdaa（this-plugin-does-absolutely-not-exist）` → 真实 HTTP `/status` 200 → 无令牌 401 → 真实 Chrome 载入页面后横幅自动出现、`hidden` 撤除、套用 `selfcheck--fatal`、标题「已拒绝启动」、原因与处理指引齐全，**完全满足本任务验收口径**。
+  - 未引入新依赖，NOTICE / CREDITS / ADOPTION-REGISTER 三处无需改动。
 
 ### M0.4 记忆提炼器
 

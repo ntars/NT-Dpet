@@ -353,7 +353,8 @@ DeepSeek、Live2D、微信、QQ、企业微信、飞书、钉钉、Telegram、Di
 | `@nt-dpet/memory` 记忆双层 | 已实现 | 23 个单元测试，含 SQLite 持久化与 0600/0700 权限校验 |
 | `@nt-dpet/rhythm` 分条与节奏 | 已实现 | 15 个单元测试 |
 | `@nt-dpet/persona` 人格与称呼 | 已实现 | 13 个单元测试；五份人格锚点已撰写 |
-| `@nt-dpet/ui` 接口层与界面壳 | 已实现（接口 `/health`、`/mood`、`/memory/recent`、`/chat`；情绪面板、右栏记忆与对话发送均接真实数据） | 51 个单元测试 + 36 项交互冒烟 |
+| `@nt-dpet/ui` 接口层与界面壳 | 已实现（接口 `/health`、`/mood`、`/memory/recent`、`/chat`、`/status`；情绪面板、右栏记忆、对话发送与启动自检横幅均接真实数据） | 59 个单元测试 + 49 项交互冒烟 |
+| `@nt-dpet/startup-check` 启动自检 | 已实现 | 27 个单元测试；真实 cordis 实例上验证「挂不存在的插件会被报出」 |
 | `@nt-dpet/pet-mobile` 移动端桌宠 | 占位（默认禁用） | 无实现 |
 | 其余 25 个插件包 | 骨架 | 仅通过编译 |
 | 安装器、三端打包 | 未开始（`desktop/src/main.ts` 为骨架） | 无可运行产物；`@nt-dpet/desktop` 仅声明 electron 开发依赖 |
@@ -373,7 +374,7 @@ DeepSeek、Live2D、微信、QQ、企业微信、飞书、钉钉、Telegram、Di
 1. 不提供安装包，当前仅可源码构建
 2. 记忆为 SQLite 持久化，但事实提炼提示词尚未编写
 3. 情感状态默认使用内存存储，进程退出即丢失；存储端口已预留
-4. 界面壳尚未全部联通插件服务：接口层（`/api/ntdpet` 路由与自鉴权）已落地，情绪面板、右栏记忆与对话发送已接真实数据；启动自检、记忆管理页仍用静态数据（`docs/ROADMAP.md` M0.2.5 起）
+4. 界面壳尚未全部联通插件服务：接口层（`/api/ntdpet` 路由与自鉴权）已落地，情绪面板、右栏记忆、对话发送与启动自检横幅已接真实数据；记忆管理页仍用静态数据（`docs/ROADMAP.md` M0.2.5 起）
 5. 包划分未定稿
 6. 测试覆盖不均：五个模块有单元测试，其余包尚无
 7. 人格文本尚未经真实对话校验
@@ -447,7 +448,7 @@ npx pnpm@9 --filter '@nt-dpet/rhythm' run test
 # 人格：13 个用例
 npx pnpm@9 --filter '@nt-dpet/persona' run test
 
-# 界面交互冒烟：36 项（含接口桩、降级路径、发送态、错误态）
+# 界面交互冒烟：49 项（含接口桩、降级路径、发送态、错误态、启动自检四态）
 node packages/ui/web/test/smoke.mjs
 ```
 

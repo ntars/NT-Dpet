@@ -33,11 +33,30 @@ function shortName(name: string): string {
   return parts[parts.length - 1] ?? name
 }
 
-/** 把一串 id 折成一句可读的话，超过上限就省略。 */
-function listIds(ids: string[]): string {
-  if (ids.length <= MAX_LISTED) return ids.join('、')
-  const head = ids.slice(0, MAX_LISTED).join('、')
-  return `${head} 等 ${ids.length} 个`
+/** 把一串条目折成一句可读的话，超过上限就省略。 */
+function listIds(labels: string[]): string {
+  if (labels.length <= MAX_LISTED) return labels.join('、')
+  const head = labels.slice(0, MAX_LISTED).join('、')
+  return `${head} 等 ${labels.length} 个`
+}
+
+/**
+ * 给一个失败条目造可读标签。
+ *
+ * 为什么不能只印 id：条目 id 未必是人写的。配置树里显式声明过的条目 id 通常
+ * 自带语义（`nt-dpet:core:memory`），但运行期用 `loader.create()` 挂上去的条目
+ * 拿到的是八位随机码（实测 `dbc76ec5`）。横幅上只写这个随机码，主人看到的是
+ * 「有个叫 dbc76ec5 的东西没起来」，既认不出是哪个插件，也无从去配置里搜。
+ *
+ * 判据是「id 里能不能认出包名」：认得出来就只印 id，免得 `nt-dpet:core:memory`
+ * 后面再拖一个 `（@nt-dpet/memory）` 显得啰嗦；认不出来才补上包名——
+ * 这一补，随机码才有意义。
+ */
+function labelOf(entry: EntrySnapshot): string {
+  if (entry.name === null) return entry.id
+  const short = shortName(entry.name)
+  if (short.length > 0 && entry.id.toLowerCase().includes(short.toLowerCase())) return entry.id
+  return `${entry.id}（${entry.name}）`
 }
 
 /** 配置树读不到时，三项都无法判定，统一给出同一条原因。 */
@@ -96,8 +115,8 @@ function checkEntryCount(entries: EntrySnapshot[]): CheckResult {
   }
 
   // 启动失败与「没起来」分开写：前者要去翻日志，后者多半是依赖没到位。
-  const failed = inactive.filter((entry) => entry.error).map((entry) => entry.id)
-  const pending = inactive.filter((entry) => !entry.error).map((entry) => entry.id)
+  const failed = inactive.filter((entry) => entry.error).map(labelOf)
+  const pending = inactive.filter((entry) => !entry.error).map(labelOf)
   const parts: string[] = []
   if (failed.length) parts.push(`启动失败：${listIds(failed)}`)
   if (pending.length) parts.push(`未激活：${listIds(pending)}`)

@@ -189,10 +189,20 @@ describe('鉴权', () => {
 
 describe('子路径分发', () => {
   it('已规划但未接入的接口返回 503 NOT_READY', () => {
-    // /mood 由 M0.2.2 接入、/memory/recent 由 M0.2.3 接入、/chat 由 M0.2.4 接入，
-    // 都有各自的分支与用例；这里换成同前缀下仍未接入的路径，
+    // /mood 由 M0.2.2 接入、/memory/recent 由 M0.2.3 接入、/chat 由 M0.2.4 接入、
+    // /status 由 M0.3.2 接入，都有各自的分支与用例；这里只留同前缀下仍未接入的路径，
     // 顺带守住「只有被单独处理的子路径才离开占位」这条边界。
-    for (const path of ['/memory/facts', '/status']) {
+    for (const path of ['/memory/facts']) {
+      const { res, json } = call({ url: API_PREFIX + path })
+      assert.equal(res.statusCode, 503, path)
+      assert.equal(json.error.code, 'NOT_READY', path)
+    }
+  })
+
+  it('/memory 这条前缀仍留在占位表里', () => {
+    // 只有 /memory/recent 被单独处理。提前删掉 /memory 会让「记忆列表还没做」
+    // 变成 404「地址写错了」，排查时白跑一趟——这条断言守住那个区分。
+    for (const path of ['/memory', '/memory/']) {
       const { res, json } = call({ url: API_PREFIX + path })
       assert.equal(res.statusCode, 503, path)
       assert.equal(json.error.code, 'NOT_READY', path)
@@ -577,6 +587,90 @@ describe('对话接口', () => {
 
     assert.equal(signal !== null, true)
     assert.equal(signal.aborted, true)
+  })
+})
+
+/**
+ * 自检结果的形状。
+ *
+ * 三项判据的 id 与 severity 都是对外契约：界面按 severity 分档、按 id 找原因，
+ * 改名字等于改协议。这里固定一份真实的形状来测，而不是造个 {ok:true} 糊过去。
+ */
+const STATUS_OK = {
+  ok: true,
+  checks: [
+    { id: 'entry-count', ok: true, detail: '配置树 12 个条目，全部已激活', severity: 'warn' },
+    { id: 'privacy-switches', ok: true, detail: '两项隐私开关均为 enabled: false', severity: 'fatal' },
+    { id: 'key-packages', ok: true, detail: '4 个关键包均已激活', severity: 'warn' },
+  ],
+}
+
+const STATUS_BAD = {
+  ok: false,
+  checks: [
+    { id: 'entry-count', ok: true, detail: '配置树 12 个条目，全部已激活', severity: 'warn' },
+    { id: 'privacy-switches', ok: false, detail: '隐私开关未硬关：session-log-deepseek 的 enabled 为 true', severity: 'fatal' },
+    { id: 'key-packages', ok: false, detail: '缺少关键包：memory', severity: 'warn' },
+  ],
+}
+
+describe('自检接口', () => {
+  it('注入结果时返回 200 并原样回传', () => {
+    const { res, json } = call({ url: API_PREFIX + '/status' }, { readStatus: () => STATUS_BAD })
+
+    assert.equal(res.statusCode, 200)
+    assert.equal(json.ok, true)
+    // 不做排序、不筛掉通过项：界面要按原顺序列出失败项，
+    // 后端替它挑挑拣拣，排查时就看不出「哪一项本该有却没有」。
+    assert.deepEqual(json.data, STATUS_BAD)
+  })
+
+  it('全部通过时如实回 ok:true，失败列表为空', () => {
+    const { res, json } = call({ url: API_PREFIX + '/status' }, { readStatus: () => STATUS_OK })
+
+    assert.equal(res.statusCode, 200)
+    assert.equal(json.data.ok, true)
+    assert.equal(json.data.checks.filter((item) => !item.ok).length, 0)
+  })
+
+  it('没注入读端口时返回 503', () => {
+    const { res, json } = call({ url: API_PREFIX + '/status' })
+
+    assert.equal(res.statusCode, 503)
+    assert.equal(json.error.code, 'NOT_READY')
+  })
+
+  it('自检还没跑完（返回 undefined）时也是 503，不给空结论', () => {
+    // 这一条是本次最容易写错的地方：若在这里回一个 {ok:true, checks:[]}，
+    // 界面就会在自检没跑完时判定「一切正常」并把横幅收起来，真异常永远不露面。
+    const { res, json } = call({ url: API_PREFIX + '/status' }, { readStatus: () => undefined })
+
+    assert.equal(res.statusCode, 503)
+    assert.equal(json.error.code, 'NOT_READY')
+  })
+
+  it('只接受 GET', () => {
+    for (const method of ['POST', 'PUT', 'DELETE']) {
+      const { res, json } = call({ method, url: API_PREFIX + '/status' }, { readStatus: () => STATUS_OK })
+      assert.equal(res.statusCode, 405, method)
+      assert.equal(json.error.code, 'METHOD_NOT_ALLOWED', method)
+    }
+  })
+
+  it('HEAD 与 GET 同等对待', () => {
+    const { res } = call({ method: 'HEAD', url: API_PREFIX + '/status' }, { readStatus: () => STATUS_OK })
+    assert.equal(res.statusCode, 200)
+  })
+
+  it('未授权时看不到自检结果', () => {
+    const { res, json } = call(
+      { url: API_PREFIX + '/status', headers: { 'x-ntdpet-token': 'b'.repeat(64) } },
+      { readStatus: () => STATUS_BAD },
+    )
+
+    assert.equal(res.statusCode, 401)
+    assert.equal(json.error.code, 'UNAUTHORIZED')
+    assert.ok(!res.body.includes('privacy-switches'))
   })
 })
 

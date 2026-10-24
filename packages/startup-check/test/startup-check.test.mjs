@@ -215,6 +215,26 @@ describe('条目数与激活数', () => {
     const detail = pick(result, 'entry-count').detail
     assert.match(detail, /等 8 个/)
   })
+
+  it('id 是随机码时补上包名，否则横幅上的名字认不出是谁', () => {
+    // 真实复现：运行期用 loader.create({ name }) 挂一个不存在的插件，
+    // 宿主给的是八位随机 id（实测 dbc76ec5）。只印 id 等于没说。
+    const entries = [
+      ...healthyEntries(),
+      entry({ id: 'dbc76ec5', name: 'this-plugin-does-absolutely-not-exist', active: false }),
+    ]
+    const detail = evaluateStartup(snapshot(entries)).checks.find((c) => c.id === 'entry-count').detail
+    assert.match(detail, /dbc76ec5（this-plugin-does-absolutely-not-exist）/)
+  })
+
+  it('id 自身已能认出包名时不再重复补', () => {
+    const entries = healthyEntries().map((item) =>
+      item.id === 'nt-dpet:core:memory' ? { ...item, active: false, error: null } : item,
+    )
+    const detail = pick(evaluateStartup(snapshot(entries)), 'entry-count').detail
+    // nt-dpet:core:memory 里已有 memory，后面不该再拖一个括号
+    assert.doesNotMatch(detail, /nt-dpet:core:memory（/)
+  })
 })
 
 describe('配置树不可读', () => {

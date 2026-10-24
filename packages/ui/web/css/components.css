@@ -1104,6 +1104,117 @@
   padding-top: 2px;
 }
 
+/* ══ 启动自检横幅 ══ */
+
+/**
+ * 与 .devnotice 同一套骨架，但不带按钮：自检结论只报告，不在横幅里就地修。
+ * 「去设置里关掉开关」这种动作跨页面，塞个按钮进来会让人以为点一下就好了。
+ */
+.selfcheck {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  margin: var(--sp-3) var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--dot-warn) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dot-warn) 30%, transparent);
+  flex: 0 0 auto;
+}
+
+/* .selfcheck 自己设了 display，UA 的 [hidden] 压不住它，必须显式关掉 */
+.selfcheck[hidden] {
+  display: none;
+}
+
+/* 底线被破：换成系统红。橙与红在小尺寸下容易看成一类，所以底色与描边一起换 */
+.selfcheck--fatal {
+  background: color-mix(in srgb, var(--dot-danger) 10%, transparent);
+  border-color: color-mix(in srgb, var(--dot-danger) 34%, transparent);
+}
+
+.selfcheck__icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--dot-warn);
+}
+
+.selfcheck--fatal .selfcheck__icon {
+  color: var(--dot-danger);
+}
+
+.selfcheck__icon svg {
+  width: 100%;
+  height: 100%;
+  /* 图标是描边画的，粗细与文字笔画对齐，不额外加粗 */
+  display: block;
+}
+
+.selfcheck__body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.selfcheck__title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 2px;
+}
+
+.selfcheck__text {
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--label-2);
+}
+
+.selfcheck__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--sp-2);
+}
+
+.selfcheck__item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  min-width: 0;
+}
+
+/* id 用等宽体：它是排查时要去配置里找的字符串，形似最重要 */
+.selfcheck__id {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border-radius: var(--r-xs);
+  background: color-mix(in srgb, var(--label) 7%, transparent);
+  color: var(--label);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+.selfcheck__why {
+  min-width: 0;
+  color: var(--label-2);
+  /* 长原因折行，不省略：漏掉后半句往往正好漏掉「怎么解」 */
+  overflow-wrap: anywhere;
+}
+
+.selfcheck__foot {
+  margin-top: var(--sp-2);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--label-3);
+}
+
+.selfcheck__foot[hidden] {
+  display: none;
+}
+
 /* ══ 轻提示 ══ */
 
 .toast {

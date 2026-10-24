@@ -92,6 +92,9 @@
   --dot-online:     #34C759;
   --dot-offline:    #A1A1A6;
   --dot-warn:       #FF9F0A;
+  /* 底线性异常（隐私开关未硬关）。取 Apple 系统红，与告警橙刻意分开：
+     两档该做的事不一样，颜色也不能混成一种「有点黄」。 */
+  --dot-danger:     #FF3B30;
 
   --tag-channel:    #3D8CB8;
   --tag-router:     #8570C4;
@@ -147,6 +150,7 @@
   --dot-online:     #32D74B;
   --dot-offline:    #6E6E73;
   --dot-warn:       #FFB340;
+  --dot-danger:     #FF453A;
 
   --tag-channel:    #6FB3D8;
   --tag-router:     #A995DC;

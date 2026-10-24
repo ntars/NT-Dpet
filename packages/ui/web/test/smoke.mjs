@@ -46,12 +46,15 @@ const MIME = {
  * 断言会看到「先失败再成功」的中间态。
  *
  * 场景由地址里的 `?stub=` 决定，每个场景一次导航：
- *   ok         情绪 0.9 / 精力 0.1，记忆两条，对话一次性吐完
+ *   ok         情绪 0.9 / 精力 0.1，记忆两条，对话一次性吐完，自检全通过
  *   fail       三者全部 503，验降级
  *   empty      记忆为空数组，验「暂无记忆」与「记忆暂不可用」的区分
  *   slow       对话分 250ms 一块推送，验打字指示与生成期间禁用
  *   chat-error 流里回 error 事件，验失败文案与原文回填
  *   chat-abort 流里回 stopReason=aborted，验「已中断」
+ *   status-warn  自检有一条 warn 失败（关键包缺失），验「部分能力降级」横幅
+ *   status-fatal 自检隐私项失败，验「已拒绝启动」样式与处理指引
+ *   status-pending 自检一直未就绪（503），验界面不自作聪明地报「正常」
  *
  * 这个函数会被 toString() 后整段注入页面，**不能引用外部变量**。
  */
@@ -78,6 +81,43 @@ function installApiStub() {
 
   const dataLine = (payload) => ({ raw: `data: ${JSON.stringify(payload)}\n\n` });
   const doneLine = (stopReason) => dataLine({ type: 'done', stopReason });
+
+  /**
+   * 自检结论。
+   *
+   * 三项判据的 id 与 severity 与 packages/startup-check 的输出保持一致——
+   * 这份桩要是自己编一套名字，测出来的就是「前端能渲染任意 JSON」，
+   * 而不是「真实结论能被正确分档」。
+   *
+   * @param {string|null} failedId 要判失败的那一项；null 表示全部通过
+   */
+  const statusPayload = (failedId) => ({
+    ok: failedId === null,
+    checks: [
+      {
+        id: 'entry-count',
+        ok: true,
+        detail: '配置树 12 个条目，全部已激活',
+        severity: 'warn',
+      },
+      {
+        id: 'privacy-switches',
+        ok: failedId !== 'privacy-switches',
+        detail: failedId === 'privacy-switches'
+          ? '隐私开关未硬关：session-log-deepseek 的 enabled 为 true'
+          : '两项隐私开关均为 enabled: false',
+        severity: 'fatal',
+      },
+      {
+        id: 'key-packages',
+        ok: failedId !== 'key-packages',
+        detail: failedId === 'key-packages'
+          ? '缺少关键包：@nt-dpet/memory'
+          : '4 个关键包均已激活',
+        severity: 'warn',
+      },
+    ],
+  });
 
   /** 按步骤推送的 SSE 响应；wait 是「推这一块之前先等多久」。 */
   const sseResponse = (steps) => new Response(new ReadableStream({
@@ -106,6 +146,14 @@ function installApiStub() {
     if (path === '/mood') {
       if (mode === 'fail') return notReady();
       return jsonResponse(200, { ok: true, data: { mood: 0.9, energy: 0.1 } });
+    }
+
+    if (path === '/status') {
+      // status-pending 专测「自检一直没就绪」：这时界面不能自作聪明地报正常
+      if (mode === 'fail' || mode === 'status-pending') return notReady();
+      if (mode === 'status-fatal') return jsonResponse(200, { ok: true, data: statusPayload('privacy-switches') });
+      if (mode === 'status-warn') return jsonResponse(200, { ok: true, data: statusPayload('key-packages') });
+      return jsonResponse(200, { ok: true, data: statusPayload(null) });
     }
 
     if (path === '/memory/recent') {
@@ -500,13 +548,13 @@ try {
   );
   check(
     '令牌随请求头发出',
-    await evaluate('window.__stubLog.length === 2 && window.__stubLog.every((r) => r.token === "smoke-token")'),
+    await evaluate('window.__stubLog.length === 3 && window.__stubLog.every((r) => r.token === "smoke-token")'),
     true,
   );
   check(
     '请求打在接口前缀下',
     await evaluate('window.__stubLog.map((r) => r.path.split("?")[0]).sort().join(",")'),
-    '/api/ntdpet/memory/recent,/api/ntdpet/mood',
+    '/api/ntdpet/memory/recent,/api/ntdpet/mood,/api/ntdpet/status',
   );
 
   /* ── 11. 降级路径：后端整体不可用 ── */
@@ -618,6 +666,98 @@ try {
     '中断时显示已中断',
     await evaluate('document.querySelector(".msg__note:not([hidden])").textContent'),
     '已中断',
+  );
+
+  /*
+   * ── 16. 自检全通过：界面上什么都不多 ──
+   *
+   * 先等请求真的发出去再断言「横幅没出现」，否则这条断言恒真：
+   * 页面刚加载、请求还没回来时，横幅本来也就是隐藏的。
+   */
+  await openWith('ok');
+  await waitFor('window.__stubLog.some((r) => r.path.split("?")[0] === "/api/ntdpet/status")');
+  await new Promise((r) => setTimeout(r, 250));
+
+  check(
+    '自检全通过时没有横幅',
+    await evaluate('document.getElementById("selfCheck").hidden'),
+    true,
+  );
+  check(
+    '自检全通过时列表为空',
+    await evaluate('document.querySelectorAll("#selfCheckList .selfcheck__item").length'),
+    0,
+  );
+
+  /* ── 17. 自检有告警项：横幅列出问题，但不喊「拒绝启动」 ── */
+  await openWith('status-warn');
+  await waitFor('document.getElementById("selfCheck").hidden === false');
+
+  check(
+    '告警项标题为部分能力降级',
+    await evaluate('document.getElementById("selfCheckTitle").textContent'),
+    '部分能力降级',
+  );
+  check(
+    '横幅列出失败项 id',
+    await evaluate('document.querySelector("#selfCheckList .selfcheck__id").textContent'),
+    'key-packages',
+  );
+  check(
+    '横幅带上失败原因',
+    await evaluate('document.querySelector("#selfCheckList .selfcheck__why").textContent.includes("@nt-dpet/memory")'),
+    true,
+  );
+  check(
+    '告警项不套用致命样式',
+    await evaluate('document.getElementById("selfCheck").classList.contains("selfcheck--fatal")'),
+    false,
+  );
+  check(
+    '告警项不显示处理指引',
+    await evaluate('document.getElementById("selfCheckFoot").hidden'),
+    true,
+  );
+
+  /* ── 18. 隐私项失败：走「已拒绝启动」样式 ── */
+  await openWith('status-fatal');
+  await waitFor('document.getElementById("selfCheck").hidden === false');
+
+  check(
+    '隐私异常时标题为已拒绝启动',
+    await evaluate('document.getElementById("selfCheckTitle").textContent'),
+    '已拒绝启动',
+  );
+  check(
+    '隐私异常时套用致命样式',
+    await evaluate('document.getElementById("selfCheck").classList.contains("selfcheck--fatal")'),
+    true,
+  );
+  check(
+    '隐私异常时列出该条目 id',
+    await evaluate('document.querySelector("#selfCheckList .selfcheck__id").textContent'),
+    'privacy-switches',
+  );
+  check(
+    '隐私异常时给出处理指引',
+    await evaluate('document.getElementById("selfCheckFoot").hidden'),
+    false,
+  );
+
+  /* ── 19. 自检一直未就绪：不准报「正常」 ── */
+  await openWith('status-pending');
+  // 等过第一级重试（1.5 秒），确认重试期间也没有冒出横幅或错误结论
+  await new Promise((r) => setTimeout(r, 2000));
+
+  check(
+    '自检未就绪时不出现横幅',
+    await evaluate('document.getElementById("selfCheck").hidden'),
+    true,
+  );
+  check(
+    '自检未就绪时列表为空',
+    await evaluate('document.querySelectorAll("#selfCheckList .selfcheck__item").length'),
+    0,
   );
 
   /* ── 汇总 ── */

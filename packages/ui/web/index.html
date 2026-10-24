@@ -134,6 +134,27 @@
         </div>
       </header>
 
+      <!--
+        启动自检横幅（ROADMAP M0.3.2）
+        全部通过时不出现；失败项由 js/status.js 填进列表。
+        放在顶栏之下、视图之上：顶栏那条是窗口拖拽区与标题，横幅不该挤进去。
+      -->
+      <div class="selfcheck" id="selfCheck" role="status" hidden>
+        <span class="selfcheck__icon" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 3.6 17.2 16.4H2.8z"/>
+            <path d="M10 8.4v3.6"/>
+            <path d="M10 14.3h.01"/>
+          </svg>
+        </span>
+        <div class="selfcheck__body">
+          <p class="selfcheck__title" id="selfCheckTitle"></p>
+          <p class="selfcheck__text" id="selfCheckText"></p>
+          <ul class="selfcheck__list" id="selfCheckList"></ul>
+          <p class="selfcheck__foot" id="selfCheckFoot" hidden></p>
+        </div>
+      </div>
+
       <!-- 对话视图 -->
       <section class="view is-active" id="viewChat" aria-label="对话">
         <div class="thread" id="thread"></div>

@@ -21,12 +21,12 @@ import type { Context } from '@deepseek-ai/cordis'
 import { API_PREFIX, createApiHandler, injectToken, NotReadyError } from './api/handler.js'
 import type { ChatInput, ChatRunner, ChatSink } from './api/handler.js'
 import { resolveToken } from './api/token.js'
-import type { MemoryEntry, WebServerService } from './api/types.js'
+import type { MemoryEntry, StartupStatus, WebServerService } from './api/types.js'
 
 export { API_PREFIX, createApiHandler, injectToken, NotReadyError } from './api/handler.js'
 export type { ChatInput, ChatOutcome, ChatRunner, ChatSink } from './api/handler.js'
 export { createToken, resetTokenCache, resolveToken } from './api/token.js'
-export type { ApiEnvelope, ApiError, ApiErrorCode, MemoryEntry, MoodReading, WebRequest, WebResponse, WebServerService } from './api/types.js'
+export type { ApiEnvelope, ApiError, ApiErrorCode, CheckSeverity, MemoryEntry, MoodReading, StartupCheckItem, StartupStatus, WebRequest, WebResponse, WebServerService } from './api/types.js'
 
 export const name = 'nt-dpet-ui'
 
@@ -58,6 +58,15 @@ const MEMORY_SERVICE_KEY = 'nt-dpet:memory'
 
 /** 对话服务的 Context 键名，与 packages/dialogue/src/service.ts 保持一致。 */
 const DIALOGUE_SERVICE_KEY = 'nt-dpet:dialogue'
+
+/**
+ * 自检服务的 Context 键名，与 packages/startup-check/src/types.ts 保持一致。
+ *
+ * 直接 import 那个常量也能拿到，但那样 ui 就在编译期依赖了 startup-check；
+ * 自检缺席时整个界面插件都不激活，代价太大。写死一个同名字符串，
+ * 对不上时表现成「这个接口没数据」，比页面消失好处理得多。
+ */
+const STARTUP_CHECK_SERVICE_KEY = 'nt-dpet:startup-check'
 
 /**
  * 对话参数。
@@ -107,6 +116,17 @@ interface MemoryServiceLike {
     content: string
     createdAt: number
   }[]>
+}
+
+/**
+ * 自检服务里本包用到的那一部分。
+ *
+ * 同样只写结构不 import `@nt-dpet/startup-check` 的类型，理由与上面两个一致。
+ * 只声明 `last()`，不声明 `run()`：接口层不该有「触发重跑」的能力，
+ * 少一个成员，就少一条被误用的路径。
+ */
+interface StartupCheckServiceLike {
+  last(): StartupStatus | null
 }
 
 /**
@@ -197,6 +217,25 @@ function createChatRunner(ctx: Context): ChatRunner {
   }
 }
 
+/**
+ * 造一个「读自检结果」的回调。
+ *
+ * 只读 `last()`，**不在这里补跑 `run()`**——这一点与 readMood / readRecent
+ * 「现取服务」的做法不同，是有意的：自检要在配置树 settle 之后跑才有意义，
+ * 一个 HTTP 请求随时可能落在还没 settle 的时刻，此刻补跑得到的是
+ * 「一堆包都没激活」的假异常。宁可返回 undefined 让界面稍后再问。
+ *
+ * 返回 undefined 的两种情形对界面是同一件事：自检服务没挂上、或者它还没跑完。
+ * 两者都该「等一等再看」，分得再细也没有不同的处理动作。
+ */
+function createStatusReader(ctx: Context): () => StartupStatus | undefined {
+  return () => {
+    const service = ctx.get(STARTUP_CHECK_SERVICE_KEY) as StartupCheckServiceLike | undefined
+    if (!service || typeof service.last !== 'function') return undefined
+    return service.last() ?? undefined
+  }
+}
+
 export function apply(ctx: Context): () => void {
   // 上游包不带类型声明，Context 上没有 webServer 字段，这里做一次局部收窄
   const webServer = (ctx as Context & { webServer?: WebServerService }).webServer
@@ -209,6 +248,7 @@ export function apply(ctx: Context): () => void {
     readMood: createMoodReader(ctx),
     readRecent: createMemoryReader(ctx),
     chat: createChatRunner(ctx),
+    readStatus: createStatusReader(ctx),
   })
 
   const disposers = [
